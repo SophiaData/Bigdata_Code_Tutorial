@@ -1,5 +1,5 @@
 ## Q1 : debezium for mysql 的简单示例
-
+```
  curl -H "Content-Type: application/json" -X POST -d  '{
       "name" : "test_xxxx_mysql123012",
       "config" : {
@@ -29,3 +29,4 @@
           "database.history.kafka.topic":"history_xxxx_mysql123012"
       }
   }' http://xxxxxx05:8083/connectors 
+```
