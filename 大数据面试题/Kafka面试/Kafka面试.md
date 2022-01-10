@@ -32,4 +32,7 @@ Range partitioning works on a per-topic basis. For each topic, we lay out the av
 
 默认参数为range
 
-![图片]()
+![图片](https://gitee.com/rookiegao/myupic/blob/master/uPic/05tT2Y.png)
+
+roundrobin 使用前提：
+（a）每个主题在使用者实例中具有相同数量的流（b）集合 对于该组中的每个消费者实例，已订阅主题的数量都是相同的。
