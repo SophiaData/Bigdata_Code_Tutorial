@@ -25,7 +25,7 @@
           "transforms.unwrap.delete.handling.mode": "rewrite",
           "transforms.unwrap.add.fields": "source.ts_ms,source.db,source.table,op",
           "converters" : "datetime",
-          "datetime.type"= "com.darcytech.debezium.converter.MySqlDateTimeConverter",
+          "datetime.type" : "com.darcytech.debezium.converter.MySqlDateTimeConverter",
           "datetime.format.date" : "yyyy-MM-dd",
           "datetime.format.time" : "HH:mm:ss",
           "datetime.format.datetime" : "yyyy-MM-dd HH:mm:ss",
