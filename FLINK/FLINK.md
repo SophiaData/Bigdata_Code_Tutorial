@@ -9,3 +9,11 @@ java.nio.file.NoSuchFileException: /tmp/blobStore-39487a05-032e-4605-81f8-d1e9c7
 临时目录被清空，导致文件无法找到。
 
 我的解决方案：将 io 目录从临时目录改为其他目录即可。
+
+## Q2: Flink 官方什么时候支持 oracle sql 连接器？
+
+根据Flink 1.15 的最新快照文档，Flink JDBC 将在 1.15 支持 Flink 
+
+https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/table/jdbc/
+
+![image](https://user-images.githubusercontent.com/34996528/149879850-b7c1164f-5505-4905-a162-b6105f945866.png)
