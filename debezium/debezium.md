@@ -37,7 +37,7 @@
       }
   }' http://xxxx.xxx.xx.xxx:8083/connectors 
 ```
-- note
+> note
 
 debezium 转换mysql 时间类型比较混乱，需要重新做时间转换，具体可以参考
 
