@@ -17,3 +17,11 @@ java.nio.file.NoSuchFileException: /tmp/blobStore-39487a05-032e-4605-81f8-d1e9c7
 https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/table/jdbc/
 
 ![image](https://user-images.githubusercontent.com/34996528/149879850-b7c1164f-5505-4905-a162-b6105f945866.png)
+
+## Q3 Flink Web ui 乱码怎么办？
+
+在 FLink conf 目录下的 flink.conf.ymal 文件里添加
+```
+env.java.opts: "-Dfile.encoding=utf-8"
+```
+
