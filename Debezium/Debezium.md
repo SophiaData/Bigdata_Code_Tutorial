@@ -1,4 +1,4 @@
-## Q1 : debezium for mysql 的简单示例
+## Q1 : Debezium for MySQL 的简单示例
 ```
  curl -H "Content-Type: application/json" -X POST -d  '{
       "name" : "xxxx_2022",
@@ -39,7 +39,7 @@
 ```
 > note
 
-debezium 转换mysql 时间类型比较混乱，需要重新做时间转换，具体可以参考
+Debezium 转换 MySQL 时间类型比较混乱，需要重新做时间转换，具体可以参考
 
 - https://github.com/holmofy/debezium-datetime-converter/blob/master/src/main/java/com/darcytech/debezium/converter/MySqlDateTimeConverter.java
 - https://blog.hufeifei.cn/2021/03/DB/mysql-binlog-parser/index.html
