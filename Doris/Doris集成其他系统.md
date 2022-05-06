@@ -298,29 +298,29 @@ object RDDDemo {
 
 - 1 通用配置项
 
-<img width="955" alt="image" src="https://user-images.githubusercontent.com/34996528/167128268-894412f7-4ae0-4c71-af07-c1097948cdca.png">
+<img width="887" alt="image" src="https://user-images.githubusercontent.com/34996528/167132236-a3a95203-7845-4ee0-901d-1675367e7cf2.png">
 
-<img width="931" alt="image" src="https://user-images.githubusercontent.com/34996528/167128306-fa1d5811-af78-49e8-9e09-f4778f9c2049.png">
+<img width="890" alt="image" src="https://user-images.githubusercontent.com/34996528/167132163-23461f7a-1fca-462f-a612-91e1993d7aab.png">
 
-<img width="956" alt="image" src="https://user-images.githubusercontent.com/34996528/167128380-12cfbccd-d22f-4613-94ef-a52d02323adb.png">
+<img width="895" alt="image" src="https://user-images.githubusercontent.com/34996528/167132357-47304220-e8f8-4d21-8aab-c00cd4107baf.png">
 
-<img width="878" alt="image" src="https://user-images.githubusercontent.com/34996528/167128418-abaad047-6a86-4676-8d8c-dec2353cd11f.png">
+<img width="904" alt="image" src="https://user-images.githubusercontent.com/34996528/167132534-ed6190d0-cb0f-4f69-b992-e55edfecf099.png">
 
 - 2 SQL 和 Dataframe 专有配置
 
-<img width="918" alt="image" src="https://user-images.githubusercontent.com/34996528/167128534-ea526d7b-f01e-46b3-93de-130e3bd7a8ee.png">
+<img width="883" alt="image" src="https://user-images.githubusercontent.com/34996528/167132622-aea37038-c877-4fa4-81c4-bae5658d8b60.png">
 
 - 3 RDD 专有配置
 
-<img width="907" alt="image" src="https://user-images.githubusercontent.com/34996528/167128643-9bee6278-9d24-4da3-a4b0-0cfe52d9367a.png">
+<img width="921" alt="image" src="https://user-images.githubusercontent.com/34996528/167132684-3a3dcbb1-b1c5-4c0d-a5c9-7ce65f63a08b.png">
 
 - 4 Doris 和 Spark 列类型映射关系:
 
-<img width="903" alt="image" src="https://user-images.githubusercontent.com/34996528/167128718-39dc0be3-dc8e-4453-8793-ee78d35c5f00.png">
+<img width="900" alt="image" src="https://user-images.githubusercontent.com/34996528/167132772-19c41625-5c50-47cd-97eb-f97df6983431.png">
 
-<img width="884" alt="image" src="https://user-images.githubusercontent.com/34996528/167128764-59823a7e-196a-4165-9444-15f934bf39b6.png">
+<img width="876" alt="image" src="https://user-images.githubusercontent.com/34996528/167133133-0f219de7-2410-4e48-b576-892f7a6e5064.png">
 
-<img width="881" alt="image" src="https://user-images.githubusercontent.com/34996528/167128807-6cde1cab-78e6-4a81-99c0-12dcb8cf1ef9.png">
+<img width="905" alt="image" src="https://user-images.githubusercontent.com/34996528/167132972-38a871bf-2057-4cfa-baf1-37ff494ab00e.png">
 
 ### 使用 JDBC 的方式（不推荐）
 
