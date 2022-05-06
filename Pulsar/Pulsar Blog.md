@@ -1,5 +1,3 @@
-[pulsar官方文档](https://pulsar.apache.org/docs/en/getting-started-standalone/)
-
 [TGIP-CN 直播合集](https://www.bilibili.com/video/BV1T741147B6?from=search&seid=2966619854114248106)
 
 [Kafka 已落伍，转角遇见 Pulsar！](https://mp.weixin.qq.com/s?__biz=MzU3MzgwNTU2Mg==&mid=2247485469&idx=1&sn=2512066926e23e8f5391f48387688c52&chksm=fd3d4e88ca4ac79edb571d65b71f8896c422407bc71b2573b4ec28f2bcd24ad806a5833f2aa9&mpshare=1&scene=24&srcid=&sharer_sharetime=1589016430328&sharer_shareid=5f0af8bdae5d555684a506bc1addb2f8#rd)

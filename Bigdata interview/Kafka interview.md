@@ -1,12 +1,12 @@
-## Q1 Kafka 如何进行压力测试？
+## Kafka 如何进行压力测试？
 
 Kafka官方自带压力测试脚本（kafka-consumer-perf-test.sh、kafka-producer-perf-test.sh）。Kafka压测时，可以查看到哪个地方出现了瓶颈（CPU，内存，网络IO）。一般都是网络IO达到瓶颈。
 
-## Q2 Kafka 日志保存时间多久合适？
+## Kafka 日志保存时间多久合适？
 
 默认是7天，生产环境一般调整为3天。
 
-## Q3 Kafka 的数据量应该如何计算呢？
+## Kafka 的数据量应该如何计算呢？
 
 每天总数据量100g，每天产生1亿条日志， 10000万/24/60/60=1150条/每秒钟
 平均每秒钟：1150条
@@ -15,16 +15,16 @@ Kafka官方自带压力测试脚本（kafka-consumer-perf-test.sh、kafka-produc
 每条日志大小：0.5k-2k（取1k）
 每秒多少数据量：2.0M-20MB
 
-## Q4 Kafka 的硬盘大小应该为多少？
+## Kafka 的硬盘大小应该为多少？
 
 每天的数据量100g*2个副本*3天/70%
 
-## Q5 Kafka 有多少个 topic？
+## Kafka 有多少个 topic？
 
 通常情况：多少个日志类型就多少个Topic。也有对日志类型进行合并的。
 一般还有各种测试和废弃的topic，几十个到上百个都很正常，常用的会少一些。
 
-## Q6 Kafka 的分区分配策略是什么？
+## Kafka 的分区分配策略是什么？
 
 > Select between the "range" or "roundrobin" strategy for assigning partitions to consumer streams.
 The round-robin partition assignor lays out all the available partitions and all the available consumer threads. It then proceeds to do a round-robin assignment from partition to consumer thread. If the subscriptions of all consumer instances are identical, then the partitions will be uniformly distributed. (i.e., the partition ownership counts will be within a delta of exactly one across all consumer threads.) Round-robin assignment is permitted only if: (a) Every topic has the same number of streams within a consumer instance (b) The set of subscribed topics is identical for every consumer instance within the group.

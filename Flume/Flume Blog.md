@@ -23,4 +23,3 @@
 
 [zabbix部署监控集群，自定义监控Flume（图片多，步骤详细）](https://mp.weixin.qq.com/s?__biz=MzA5NDYyMTU1NQ==&mid=2247483792&idx=1&sn=c62dd8b55d93f8ca719b3f5c5a703dd4&chksm=904a9b8ca73d129a9aafc350a16a8aa3e503a0e3d7d83cf12157584d3dd54987c5da8e23ffdc&mpshare=1&scene=2&srcid=&sharer_sharetime=1589357530719&sharer_shareid=fc2ac64b539199b1ffd7d5942fb8d736&from=timeline#rd)
 
-[flume官网文档](https://flume.apache.org/releases/content/1.9.0/FlumeUserGuide.html)

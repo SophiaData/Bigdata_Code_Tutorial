@@ -1,21 +1,21 @@
-## Q1 MapJoin
+## MapJoin
 
 当处理的数据量比较小的时候，可以采取 map join ，此时 hive 会将小表全部加载至内存中在 map 端进行 join 从而避免在 reducer 处理数据，如不符合 map join 条件，hive 解析器会将 join 
 操作转换为 common join 即在 reduce 端进行 join 这样会增加数据倾斜的概率。
 
-## Q2 行列过滤
+## 行列过滤
 
 由于生产中 hive 分区表的数据通常会有亿级的数据量，此时合适的行列过滤操作对于数据处理来讲是非常必要的
 对于列来讲，只拿需要的列，使用分区过滤，避免使用 select *
 对于行来讲，在分区裁剪中，在进行外关联时，如果将副表的过滤条件写在 where 后面，那么就会先全表关联，再进行过滤操作。
 
-## Q3 列式存储
+## 列式存储
 
 对于大数据存储来将，合适的列存储格式是十分必要的
 
-## Q4 采用分区技术
+## 采用分区技术
 
-## Q5 合理设置Map数
+## 合理设置Map数
 
 mapred.min.split.size: 指的是数据的最小分割单元大小；min的默认值是1B
 
@@ -27,7 +27,7 @@ mapred.max.split.size: 指的是数据的最大分割单元大小；max的默认
 
 https://www.cnblogs.com/swordfall/p/11037539.html
 
-## Q6 合理设置Reduce数
+## 合理设置Reduce数
 
 Reduce个数并不是越多越好
 
@@ -37,7 +37,7 @@ Reduce个数并不是越多越好
 
 在设置Reduce个数的时候也需要考虑这两个原则：处理大数据量利用合适的Reduce数；使单个Reduce任务处理数据量大小要合适；
 
-## Q7 小文件如何产生的？
+## 小文件如何产生的？
 
 （1）动态分区插入数据，产生大量的小文件，从而导致map数量剧增；
 
@@ -45,7 +45,7 @@ Reduce个数并不是越多越好
 
 （3）数据源本身就包含大量的小文件。
 
-## Q8 小文件解决方案
+## 小文件解决方案
 
 （1）在Map执行前合并小文件，减少Map数：CombineHiveInputFormat具有对小文件进行合并的功能（系统默认的格式）。HiveInputFormat没有对小文件合并功能。
 
@@ -61,18 +61,18 @@ SET hive.merge.smallfiles.avgsize = 16777216; -- 当输出文件的平均大小�
 ```
 set mapreduce.job.jvm.numtasks=10
 ```
-## Q9 开启map端combiner（不影响最终业务逻辑）
+## 开启map端combiner（不影响最终业务逻辑）
 ```
 set hive.map.aggr=true；
 ```
-## Q10 压缩（选择快的）
+## 压缩（选择快的）
 设置map端输出、中间结果压缩。（不完全是解决数据倾斜的问题，但是减少了IO读写和网络传输，能提高很多效率）
 ```
 set hive.exec.compress.intermediate=true --启用中间数据压缩
 set mapreduce.map.output.compress=true --启用最终数据压缩
 set mapreduce.map.outout.compress.codec=…; --设置压缩方式
 ```
-## Q11 采用tez引擎或者spark引擎
+## 采用tez引擎或者spark引擎
 
 通过配置 hive on tez 或者 hive on spark 提升数据处理效率
 
