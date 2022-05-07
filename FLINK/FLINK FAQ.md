@@ -25,3 +25,12 @@ https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/table/jdbc/
 env.java.opts: "-Dfile.encoding=utf-8"
 ```
 
+## Q4 Flink Per-Job Mode (deprecated)?
+
+从 Flink 1.15 开始 per-job 被标注为 deprecated，官方在一月份的一次投票中决定将 per-job 标注为 deprecated，预计在 flink 1.17 进行具体实施
+
+原因: Per-job mode is only supported by YARN and has been deprecated in Flink 1.15.
+
+[Per-Job Mode (deprecated)](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/deployment/resource-providers/yarn/#per-job-mode-deprecated)
+
+[投票链接](https://lists.apache.org/thread/v6oz92dfp95qcox45l0f8393089oyjv4)
