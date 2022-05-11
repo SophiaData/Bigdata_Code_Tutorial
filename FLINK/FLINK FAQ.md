@@ -18,6 +18,10 @@ https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/table/jdbc/
 
 ![image](https://user-images.githubusercontent.com/34996528/149879850-b7c1164f-5505-4905-a162-b6105f945866.png)
 
+> flink 1.15 已发布 oracle 方言已支持
+
+[flink 1.15 JDBC SQL Connector](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/connectors/table/jdbc/)
+
 ## Q3 Flink Web ui 乱码怎么办？
 
 在 FLink conf 目录下的 flink.conf.ymal 文件里添加
