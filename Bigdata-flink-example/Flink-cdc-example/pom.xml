@@ -16,24 +16,29 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>com.ververica</groupId>-->
+<!--            <artifactId>flink-connector-oracle-cdc</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--            &lt;!&ndash; the dependency is available only for stable releases. &ndash;&gt;-->
+<!--            <version>${flink_cdc.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.ververica</groupId>
-            <artifactId>flink-connector-oracle-cdc</artifactId>
-            <scope>provided</scope>
-            <!-- the dependency is available only for stable releases. -->
+            <artifactId>flink-sql-connector-mysql-cdc</artifactId>
             <version>${flink_cdc.version}</version>
+            <scope>provided</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.ververica</groupId>-->
+<!--            <artifactId>flink-connector-mongodb-cdc</artifactId>-->
+<!--            <version>${flink_cdc.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>com.ververica</groupId>
-            <artifactId>flink-connector-mysql-cdc</artifactId>
-            <version>${flink_cdc.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ververica</groupId>
-            <artifactId>flink-connector-mongodb-cdc</artifactId>
-            <version>${flink_cdc.version}</version>
-            <scope>provided</scope>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-shaded-guava</artifactId>
+            <version>30.1.1-jre-14.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -100,10 +105,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner-blink_${scala.version}</artifactId>
+            <artifactId>flink-table-planner_${scala.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-jdbc_${scala.version}</artifactId>
