@@ -4,4 +4,4 @@
 
 ## Q2: Dolphinscheduler 失败重试机制有一定 bug 导致重试失败
 
-[Apache DolphinScheduler 22年5月第一次周会]https://www.bilibili.com/video/BV1X44y1u7P2?spm_id_from=333.999.0.0
+[Apache DolphinScheduler 22年5月第一次周会](https://www.bilibili.com/video/BV1X44y1u7P2?spm_id_from=333.999.0.0)
