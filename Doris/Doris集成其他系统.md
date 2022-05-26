@@ -175,7 +175,7 @@ Spark Doris Connector 可以支持通过 Spark 读取 Doris 中存储的数据�
 #### SQL 方式读写数据
 
 ```
-package com.dtinsure.test
+
 
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -216,7 +216,7 @@ object SQLDemo {
 #### DataFrame 方式读写数据（batch）
 
 ```
-package com.dtinsure.test
+
 
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -265,7 +265,6 @@ object DataFrameDemo {
 #### RDD 方式读取数据
 
 ```
-package com.dtinsure.test
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
@@ -327,7 +326,6 @@ object RDDDemo {
 这种方式是早期写法，Spark 无法感知 Doris 的数据分布，会导致打到 Doris 的查询压力非常大。
 
 ```
-package com.dtinsure.test
 
 import java.util.Properties
 import org.apache.spark.SparkConf
