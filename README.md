@@ -112,6 +112,10 @@ Apache Hive™数据仓库软件有助于读取、写入和管理驻留在分布
 
 - [Hive operation](https://github.com/SophiaData/bigdata-FAQ/blob/main/Hive/Hive%20operation.md)
 
+## [Hudi](https://hudi.apache.org/docs/next/overview)
+
+- [Hudi_Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Hudi/Hudi_Blog.md)
+
 ## [InLong](https://inlong.apache.org/zh-CN/docs/introduction)
 
 Apache InLong（应龙）是腾讯捐献给 Apache 社区的一站式海量数据集成框架，提供自动、安全、可靠和高性能的数据传输能力，方便业务构建基于流式的数据分析、建模和应用。 InLong 项目原名 TubeMQ ，专注于高性能、低成本的消息队列服务。为了进一步释放 TubeMQ 周边的生态能力，我们将项目升级为 InLong，专注打造一站式海量数据集成框架。 Apache InLong 依托万亿级别的数据接入和处理能力，整合了数据采集、汇聚、存储、分拣数据处理全流程，拥有简单易用、灵活扩展、稳定可靠等特性。
