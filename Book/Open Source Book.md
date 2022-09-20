@@ -27,3 +27,7 @@
 [《编程之法：面试和算法心得》](https://github.com/julycoding/The-Art-Of-Programming-By-July)
 
 [Java 23种设计模式全归纳](https://github.com/youlookwhat/DesignPattern)
+
+[阿里巴巴2021_flink必知必会](https://www.aliyundrive.com/s/igTHWoyEqcq)
+
+[2022_apache_flink案例集](https://www.aliyundrive.com/s/j5242gMwAod)

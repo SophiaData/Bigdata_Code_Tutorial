@@ -55,18 +55,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka_${scala.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>kafka-clients</artifactId>
-                    <groupId>org.apache.kafka</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge_${scala.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
@@ -154,19 +142,27 @@
             <artifactId>flink-connector-hive_${scala.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>2.12.12</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-kafka_${scala.version}</artifactId>
+            <version>${flink.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>kafka-clients</artifactId>
+                    <groupId>org.apache.kafka</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
+
     <repositories>
         <repository>
             <id>alimaven</id>
@@ -179,6 +175,7 @@
             <url>https://maven.aliyun.com/repository/spring</url>
         </repository>
     </repositories>
+
     <build>
         <plugins>
             <plugin>
@@ -199,6 +196,7 @@
                                     <exclude>log4j:*</exclude>
                                 </excludes>
                             </artifactSet>
+
                             <filters>
                                 <filter>
                                     <!-- Do not copy the signatures in the META-INF folder.
@@ -214,7 +212,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
-<!--                                    <mainClass>***.***</mainClass>-->
+                                    <!--                                    <mainClass>***.***</mainClass>-->
                                 </transformer>
                             </transformers>
                         </configuration>
