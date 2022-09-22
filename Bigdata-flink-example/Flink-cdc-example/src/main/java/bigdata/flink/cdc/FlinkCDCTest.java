@@ -3,7 +3,9 @@ package bigdata.flink.cdc;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
@@ -44,8 +46,14 @@ public class FlinkCDCTest {
         // decimal 设置为 string 避免转换异常
         properties.put("decimal.handling.mode", "string");
         env.setStateBackend(new HashMapStateBackend());
-        env.getCheckpointConfig().setCheckpointStorage("file:///Users/xxx/flink/");
-        env.enableCheckpointing(10000);
+        env.getCheckpointConfig().setCheckpointStorage("file:///Users/flink/FlinkCDCTest");
+        env.enableCheckpointing(30 * 1000);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setCheckpointTimeout(60 * 1000);
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
+        env.getCheckpointConfig().setExternalizedCheckpointCleanup(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+
         MySqlSource<String> sourceFunction =
                 MySqlSource.<String>builder()
                         .hostname(hostname)
