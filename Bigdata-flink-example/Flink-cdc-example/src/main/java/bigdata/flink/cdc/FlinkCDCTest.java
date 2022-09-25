@@ -14,6 +14,8 @@ import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
 
 import java.util.Properties;
 
+import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * (@xxx) (@date 2022/5/7 14:17).
  */
@@ -29,16 +31,30 @@ public class FlinkCDCTest {
         // 参数信息通过 args 传递
         final ParameterTool params = ParameterTool.fromArgs(args);
         try {
-            hostname = params.get("hostname");
-            port = params.getInt("port");
-            username = params.get("username");
-            password = params.get("password");
-            databaseList = params.get("databaseList");
-            tableList = params.get("tableList");
+            hostname = checkNotNull(params.get("hostname"));
+            port = checkNotNull(params.getInt("port"));
+            username = checkNotNull(params.get("username"));
+            password = checkNotNull(params.get("password"));
+            databaseList = checkNotNull(params.get("databaseList"));
+            tableList = checkNotNull(params.get("tableList"));
         } catch (Exception e) {
-            System.err.println("请输入正确的参数: --hostname hostname --port port " +
-                    "--username username --password password --databaseList databaseList " +
-                    "--tableList tableList");
+           throw  new RuntimeException(
+                    String.format("传参失败，当前已接受传参: \n"  +
+                            "--hostname %s \n" +
+                            "--port %s \n" +
+                            "--username %s \n" +
+                            "--password %s \n" +
+                            "--databaseList %s \n" +
+                            "--tableList %s \n" +
+                            "异常原因: %s",
+                            hostname,
+                            port,
+                            username,
+                            password,
+                            databaseList,
+                            tableList,
+                            e)
+            );
         }
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
