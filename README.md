@@ -1,4 +1,4 @@
-# [bigdata-FAQ](https://github.com/rookiegao/bigdata-FAQ)
+# [Bigdata_Note](https://github.com/SophiaData/Bigdata_Note)
 
 The warehouse collects common big data framework related problems, solutions, interviews, documents, blogs, etc. on the Internet.
 
@@ -6,19 +6,19 @@ The warehouse collects common big data framework related problems, solutions, in
 
 ## [Airflow](https://airflow.apache.org/docs/apache-airflow/stable/index.html)
 
-Airflow是一个以编程方式编写、调度和监视工作流的平台。
+Airflow 是一个以编程方式编写、调度和监视工作流的平台。
 
 - [Airflow Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Airflow/Airflow%20Study.md)
 
 ## [Calcite](https://calcite.apache.org/docs/)
 
-Apache Calcite是一个动态数据管理框架。
+Apache Calcite 是一个动态数据管理框架。
 
 - [Calcite_Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Calcite/Calcite_Study.md)
 
 ## [Debezium](https://debezium.io/documentation/reference/nightly/index.html)
 
-Debezium是一组分布式服务，用于捕获数据库中的更改，以便应用程序可以看到这些更改并对其作出响应。
+Debezium 是一组分布式服务，用于捕获数据库中的更改，以便应用程序可以看到这些更改并对其作出响应。
 
 - [Debezium Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Debezium/Debezium%20Blog.md)
 
@@ -42,13 +42,13 @@ Dinky 基于 Apache Flink 实现 Dlink ，增强 Flink 的应用与体验，探�
 
 ## [Doris](https://doris.apache.org/zh-CN/)
 
-现代化的高性能MPP分析型数据库。
+现代化的高性能 MPP 分析型数据库。
 
 - [Doris Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Doris/Doris%20Blog.md)
 
 - [Doris Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Doris/Doris%20Study.md)
 
-- [Doris集成其他系统](https://github.com/SophiaData/bigdata-FAQ/blob/main/Doris/Doris%E9%9B%86%E6%88%90%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F.md)
+- [Doris 集成其他系统](https://github.com/SophiaData/bigdata-FAQ/blob/main/Doris/Doris%E9%9B%86%E6%88%90%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F.md)
 
 ## [Flink](https://nightlies.apache.org/flink/flink-docs-master/zh/docs/dev/datastream/overview/)
 
@@ -64,7 +64,7 @@ Apache Flink 是一个在有界数据流和无界数据流上进行有状态计�
 
 - [Flink Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/Flink%20Study.md)
 
-- [阿里巴巴2021_flink必知必会](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/%E9%98%BF%E9%87%8C%E5%B7%B4%E5%B7%B42021_flink%E5%BF%85%E7%9F%A5%E5%BF%85%E4%BC%9A.pdf)
+- [阿里巴巴 2021_flink必知必会](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/%E9%98%BF%E9%87%8C%E5%B7%B4%E5%B7%B42021_flink%E5%BF%85%E7%9F%A5%E5%BF%85%E4%BC%9A.pdf)
 
 ## [Flink CDC](https://ververica.github.io/flink-cdc-connectors/master/content/about.html)
 
@@ -76,11 +76,11 @@ Apache Flink CDC连接器是 Apache Flink 的一组源连接器，使用更改�
 
 - [Postgres CDC FAQ](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink%20CDC/Postgres%20CDC%20FAQ/Postgres%20CDC%20FAQ.md)
 
-- [FlinkCDC聚合mysql及pg异构数据源并宽表压入es实验报告](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink%20CDC/FlinkCDC%E8%81%9A%E5%90%88mysql%E5%8F%8Apg%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%E5%B9%B6%E5%AE%BD%E8%A1%A8%E5%8E%8B%E5%85%A5es%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A.docx)
+- [ FlinkCDC 聚合 mysql 及 pg 异构数据源并宽表压入 es 实验报告](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink%20CDC/FlinkCDC%E8%81%9A%E5%90%88mysql%E5%8F%8Apg%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%E5%B9%B6%E5%AE%BD%E8%A1%A8%E5%8E%8B%E5%85%A5es%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A.docx)
 
 ## [Flume](https://flume.apache.org/releases/content/1.10.0/FlumeUserGuide.html)
 
-Apache Flume是一个分布式、可靠且可用的系统，用于高效地收集、聚合大量日志数据，并将其从许多不同的源移动到集中的数据存储。
+Apache Flume 是一个分布式、可靠且可用的系统，用于高效地收集、聚合大量日志数据，并将其从许多不同的源移动到集中的数据存储。
 
 - [Flume Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flume/Flume%20Blog.md)
 
@@ -88,7 +88,7 @@ Apache Flume是一个分布式、可靠且可用的系统，用于高效地收�
 
 ## [Greenplum](https://cn.greenplum.org/)
 
-Greenplum 是全球领先的大数据分析引擎，专为分析、机器学习和AI而打造。
+Greenplum 是全球领先的大数据分析引擎，专为分析、机器学习和 AI 而打造。
 
 - [Greenplum Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Greenplum/Greenplum%20Blog.md)
 
@@ -104,7 +104,7 @@ Apache HBase™ 是Hadoop数据库，一个分布式、可扩展的大数据存�
 
 ## [Hive](https://cwiki.apache.org/confluence/display/Hive/Home#Home-UserDocumentation)
 
-Apache Hive™数据仓库软件有助于读取、写入和管理驻留在分布式存储中并使用SQL语法查询的大型数据集。
+Apache Hive™ 数据仓库软件有助于读取、写入和管理驻留在分布式存储中并使用 SQL 语法查询的大型数据集。
 
 - [Hive FAQ](https://github.com/SophiaData/bigdata-FAQ/blob/main/Hive/Hive%20FAQ.md)
 
@@ -148,7 +148,7 @@ Oracle 数据库产品为客户提供经过成本优化的高性能 Oracle 数�
 
 - [Pulsar Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Pulsar/Pulsar%20Study.md)
 
-Apache Pulsar是一个分布式、开源发布订阅消息和流媒体平台，用于实时工作负载，每天管理数千亿个事件。
+Apache Pulsar 是一个分布式、开源发布订阅消息和流媒体平台，用于实时工作负载，每天管理数千亿个事件。
 
 ## [SeaTunnel](https://seatunnel.apache.org/docs/intro/about)
 
@@ -172,6 +172,6 @@ StarRocks 是一款高性能分析型数据仓库，使用向量化、MPP 架构
 
 ## [TIS](http://tis.pub/docs/)
 
-基于DataX和Flink-CDC的DataOps数据同步中台TIS。
+基于 DataX 和 Flink-CDC 的 DataOps 数据同步中台 TIS。
 
 - [TIS Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/TIS/TIS%20Study.md)
