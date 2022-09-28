@@ -68,7 +68,7 @@ Apache Flink 是一个在有界数据流和无界数据流上进行有状态计�
 
 ## [Flink CDC](https://ververica.github.io/flink-cdc-connectors/master/content/about.html)
 
-Apache Flink CDC连接器是 Apache Flink 的一组源连接器，使用更改数据捕获（CDC）从不同的数据库接收更改。
+Apache Flink CDC 连接器是 Apache Flink 的一组源连接器，使用更改数据捕获（CDC）从不同的数据库接收更改。
 
 - [MongoDB CDC FAQ](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink%20CDC/MongoDB%20CDC%20FAQ/MongoDB%20CDC%20FAQ.md)
 
