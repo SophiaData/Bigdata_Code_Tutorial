@@ -118,9 +118,7 @@
                     <ratchetFrom>HEAD</ratchetFrom>
                     <java>
                         <eclipse>
-                            <file>
-                                https://github.com/rookiegao/bigdata-FAQ/blob/7b58d3f8a1a35baef3ab6a0f1a4fff58865f419b/Bigdata-flink-example/style/spotless_flinkExample_formatter.xml
-                            </file>
+                            <file>style/spotless_flinkExample_formatter.xml</file>
                         </eclipse>
                     </java>
                     <pom>
