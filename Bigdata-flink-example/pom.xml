@@ -118,7 +118,7 @@
                     <ratchetFrom>HEAD</ratchetFrom>
                     <java>
                         <eclipse>
-                            <file>tool/spotless_flinkExample_formatter.xml</file>
+                            <file>spotless_flinkExample_formatter.xml</file>
                         </eclipse>
                     </java>
                     <pom>
