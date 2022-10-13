@@ -10,7 +10,7 @@ Airflow 是一个以编程方式编写、调度和监视工作流的平台。
 
 - [Airflow Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Airflow/Airflow%20Study.md)
 
-## [Book]()
+## [Book](https://github.com/SophiaData/Bigdata_Note/tree/main/Book)
 
 - [深度学习入门开源书，基于TensorFlow 2.0案例实战](https://github.com/dragen1860/Deep-Learning-with-TensorFlow-book)
 
