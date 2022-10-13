@@ -64,7 +64,7 @@ Apache Flink 是一个在有界数据流和无界数据流上进行有状态计�
 
 - [Flink Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/Flink%20Study.md)
 
-- [阿里巴巴 2021_flink必知必会](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/%E9%98%BF%E9%87%8C%E5%B7%B4%E5%B7%B42021_flink%E5%BF%85%E7%9F%A5%E5%BF%85%E4%BC%9A.pdf)
+- [阿里巴巴 2021_flink必知必会](https://www.aliyundrive.com/s/igTHWoyEqcq)
 
 ## [Flink CDC](https://ververica.github.io/flink-cdc-connectors/master/content/about.html)
 
