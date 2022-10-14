@@ -36,12 +36,12 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Check Style
         run: |
-          ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check
+          ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check --file Bigdata-flink-example/pom.xml
       - name: Build and Package
         run: |
           ./mvnw -B clean install \
                  -Dmaven.test.skip=true \
                  -Dcheckstyle.skip=true \
-                 --no-snapshot-updates
+                 --no-snapshot-updates --file Bigdata-flink-example/pom.xml
       - shell: bash
         run: ./mvnw spotless:check
