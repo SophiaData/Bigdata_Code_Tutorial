@@ -44,4 +44,4 @@ jobs:
                  -Dcheckstyle.skip=true \
                  --no-snapshot-updates --file Bigdata-flink-example/pom.xml
       - shell: bash
-        run: ./mvnw spotless:check
+        run: ./mvn spotless:check
