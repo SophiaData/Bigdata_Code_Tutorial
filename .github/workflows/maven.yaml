@@ -43,6 +43,3 @@ jobs:
                  -Dmaven.test.skip=true \
                  -Dcheckstyle.skip=true \
                  --no-snapshot-updates --file Bigdata-flink-example/pom.xml
-      - name: spotless check
-      - shell: bash
-        run: mvn spotless:check --file Bigdata-flink-example
