@@ -77,7 +77,7 @@ Apache Calcite 是一个动态数据管理框架。
 
 ## DataWareHouse
 
-### [DataWareHouse_Project]()
+### [DataWareHouse_Project](https://github.com/SophiaData/bigdata-FAQ/blob/main/DataWarehouse/DataWareHouse_Project)
 
 - [深圳地铁大数据客流分析系统](https://gitee.com/geekyouth/SZT-bigdata#https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fgeekyouth%2FSZT-bigdata)
 
@@ -85,7 +85,7 @@ Apache Calcite 是一个动态数据管理框架。
 
 - [【尚硅谷】大数据项目之Flink实时数仓3.0（抢先版）-下](https://www.bilibili.com/video/BV1oY4y1t7GB?spm_id_from=333.999.0.0)
 
-### [DataWareHouse_Blog]()
+### [DataWareHouse_Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/DataWarehouse/DataWareHouse_Blog)
 
 ## [Debezium](https://debezium.io/documentation/reference/nightly/index.html)
 
@@ -217,7 +217,7 @@ Apache Flink CDC 连接器是 Apache Flink 的一组源连接器，使用更改�
 
 ### [Flink_CDC_Blog]()
 
-- [ FlinkCDC 聚合 mysql 及 pg 异构数据源并宽表压入 es 实验报告](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink%20CDC/FlinkCDC%E8%81%9A%E5%90%88mysql%E5%8F%8Apg%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%E5%B9%B6%E5%AE%BD%E8%A1%A8%E5%8E%8B%E5%85%A5es%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A.docx)
+- [ FlinkCDC 聚合 mysql 及 pg 异构数据源并宽表压入 es 实验报告](https://github.com/SophiaData/bigdata-FAQ/blob/main/Flink_CDC/FlinkCDC%E8%81%9A%E5%90%88mysql%E5%8F%8Apg%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%E5%B9%B6%E5%AE%BD%E8%A1%A8%E5%8E%8B%E5%85%A5es%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A.docx)
 
 ## [Flume](https://flume.apache.org/releases/content/1.10.0/FlumeUserGuide.html)
 
