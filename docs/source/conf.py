@@ -70,12 +70,12 @@ html_theme = 'sphinx_rtd_theme'
 # pixels large.
 html_favicon = '_static/fig/favicon.png'
 
-import myst_parser
+from recommonmark.parser import CommonMarkParser
 
 source_parsers = {
-    '.md': myst_parser
+    '.md': CommonMarkParser,
 }
-source_suffix = ['.md']
+source_suffix = ['.rst', '.md']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
