@@ -30,34 +30,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-apt - get
-update
-apt - get - y
-install
-git
-rsync
-python3 - pip
-python3 - git
-python3 - stemmer
-python3 - virtualenv
-python3 - setuptools
-python3 - m
-pip
-install - U
-sphinx == 4.1
-.1
-myst - parser == 0.15
-.2
-pygments == 2.10
-.0
-sphinx - rtd - theme == 0.5
-.2
+apt-get update
+apt-get -y install git rsync python3-pip python3-git python3-stemmer python3-virtualenv python3-setuptools
+python3 -m pip install -U sphinx==4.1.1 myst-parser==0.15.2 pygments==2.10.0 sphinx-rtd-theme==0.5.2
 
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('.'))
-
 # -- Project information -----------------------------------------------------
 project = 'BigData_Note'
 copyright = '2022, rookiegao'
