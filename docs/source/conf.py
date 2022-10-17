@@ -1,4 +1,4 @@
-# Copyright 2022 Ververica Inc.
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-python3 -m pip install -U sphinx==4.1.1 myst-parser==0.15.2 pygments==2.10.0 sphinx-rtd-theme==0.5.2
 
 import os
 import sys
