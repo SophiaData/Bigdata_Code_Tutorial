@@ -31,10 +31,10 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath('.'))
+# import os
+# import sys
+#
+# sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 project = 'BigData_Note'
 copyright = '2022, rookiegao'
