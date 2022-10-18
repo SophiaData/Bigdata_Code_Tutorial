@@ -103,7 +103,7 @@ Debezium 是一组分布式服务，用于捕获数据库中的更改，以便�
 
 Dinky 基于 Apache Flink 实现 Dlink ，增强 Flink 的应用与体验，探索流式数仓。即站在巨人肩膀上创新与实践，Dinky 在未来批流一体的发展趋势下潜力无限。
 
-### [Dinky Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Dinky/Dinky_Blog.md)
+### [Dinky_Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/Dinky/Dinky_Blog.md)
 
 - [Dinky 扩展 Phoenix 连接器使用分享](https://mp.weixin.qq.com/s/aXom6DbWz-hlo9CSNZ7N3A)
 
@@ -127,7 +127,7 @@ Dinky 基于 Apache Flink 实现 Dlink ，增强 Flink 的应用与体验，探�
 
 - [Dinky 扩展 Flink Redis 的实践分享](https://mp.weixin.qq.com/s/MDw1beO6cSoAQIZBIqP-Pg)
 
-### [Dinky Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Dinky/Dinky_Study.md)
+### [Dinky_Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/Dinky/Dinky_Study.md)
 
 - [Dinky 官网](http://www.dlink.top/docs/intro)
 
@@ -486,11 +486,11 @@ StarRocks 是一款高性能分析型数据仓库，使用向量化、MPP 架构
 
 - [StarRocks 官网](https://docs.starrocks.com/zh-cn/main/introduction/StarRocks_intro)
 
-## [StreamX](http://www.streamxhub.com/docs/intro/)
+## [StreamPark](https://streampark.apache.org/)
 
 一个神奇的框架,让流处理更简单。其最终目的是打造一个一站式大数据平台,流批一体,湖仓一体的解决方案。
 
-### [StreamX Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/StreamX/StreamX_Blog.md)
+### [StreamPark_Blog](https://github.com/SophiaData/bigdata-FAQ/blob/main/StreamPark/StreamPark_Blog.md)
 
 - [StreamX 1.2.3 正式发布，诸多更新重磅来袭](https://mp.weixin.qq.com/s/K3X4ItucvUoUFCpeJNa9_g)
 
