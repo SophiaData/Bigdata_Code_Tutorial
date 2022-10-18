@@ -163,7 +163,7 @@ html_context['github_version'] = current_version
 html_context['versions'] = list()
 branches = [branch.name for branch in remote_refs]
 for branch in branches:
-    if 'origin/' in branch and ('main' in branch or 'release-' in branch) \
+    if 'origin/' in branch and ('main' in branch) \
             and 'gh-pages' not in branch:
         version = branch[7:]
         html_context['versions'].append((version, '/' + REPO_NAME + '/' + version + '/'))
