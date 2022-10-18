@@ -151,15 +151,6 @@ from git import Repo
 repo = Repo(search_parent_directories=True)
 remote_refs = repo.remote().refs
 
-if 'current_version' in os.environ:
-    current_version = os.environ['current_version']
-else:
-    current_version = repo.active_branch.name
-
-html_context['current_version'] = current_version
-html_context['version'] = current_version
-html_context['github_version'] = current_version
-
 html_context['versions'] = list()
 branches = [branch.name for branch in remote_refs]
 for branch in branches:
