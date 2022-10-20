@@ -25,7 +25,7 @@ hs_err_pid*
 .DS_Store
 *.ipr
 *.iws
-docs/_build
+docs/build
 target
 tmp
 .classpath
@@ -33,3 +33,4 @@ tmp
 .metadata
 .settings
 .cache
+.iml
