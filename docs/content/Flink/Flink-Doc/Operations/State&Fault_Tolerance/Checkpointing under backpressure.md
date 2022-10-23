@@ -56,6 +56,7 @@ I/O，因此当状态存储的 I/O 是 整个 Checkpointing 过程当中真 正�
 
 {{< tabs "4b9c6a74-8a45-4ad2-9e80-52fe44a85991" >}} {{< tab "Java" >}}
 
+
 ```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -65,6 +66,7 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
@@ -73,6 +75,7 @@ env.getCheckpointConfig.enableUnalignedCheckpoints()
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 env = StreamExecutionEnvironment.get_execution_environment()
@@ -92,6 +95,7 @@ execution.checkpointing.unaligned: true
 ### 对齐 Checkpoint 的超时
 
 在启用非对齐 Checkpoint 后，你依然可以通过编程的方式指定对齐 Checkpoint 的超时：
+
 
 ```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();

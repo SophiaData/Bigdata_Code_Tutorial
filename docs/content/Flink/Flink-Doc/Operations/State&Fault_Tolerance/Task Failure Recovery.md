@@ -51,6 +51,7 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
@@ -96,6 +97,7 @@ restart-strategy.fixed-delay.delay: 10 s
 
 {{< tabs "0877201b-96aa-4985-aebd-0780cf1d8e9e" >}} {{< tab "Java" >}}
 
+
 ```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
@@ -106,6 +108,7 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
@@ -115,6 +118,7 @@ env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 env = StreamExecutionEnvironment.get_execution_environment()
@@ -150,6 +154,7 @@ restart-strategy.failure-rate.delay: 10 s
 
 {{< tabs "f4fba671-e1a8-408d-9f3d-d679aa6473ea" >}} {{< tab "Java" >}}
 
+
 ```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.failureRateRestart(
@@ -161,6 +166,7 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.failureRateRestart(
@@ -171,6 +177,7 @@ env.setRestartStrategy(RestartStrategies.failureRateRestart(
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 env = StreamExecutionEnvironment.get_execution_environment()
@@ -195,6 +202,7 @@ restart-strategy: none
 
 {{< tabs "46f873e1-9582-4303-9a5f-1cdaa31e7ac7" >}} {{< tab "Java" >}}
 
+
 ```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.noRestart());
@@ -202,12 +210,14 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.noRestart())
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 env = StreamExecutionEnvironment.get_execution_environment()

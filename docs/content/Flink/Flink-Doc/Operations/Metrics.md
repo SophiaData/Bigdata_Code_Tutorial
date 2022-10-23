@@ -61,6 +61,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 
 class MyMapper extends RichMapFunction[String, String] {
@@ -81,6 +82,7 @@ class MyMapper extends RichMapFunction[String, String] {
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 
@@ -105,8 +107,8 @@ Alternatively you can also use your own `Counter` implementation:
 
 {{< tabs "e2de1ea4-fad3-4619-b4ba-fe41af1bd25f" >}} {{< tab "Java" >}}
 
-```
 
+```
 public class MyMapper extends RichMapFunction<String, String> {
     private transient Counter counter;
 
@@ -129,6 +131,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 
 class MyMapper extends RichMapFunction[String, String] {
@@ -150,7 +153,9 @@ class MyMapper extends RichMapFunction[String, String] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
+
 ```
+
 Still
 not supported in Python
 API.
@@ -165,6 +170,7 @@ implements the `org.apache.flink.metrics.Gauge` interface. There is no restricti
 You can register a gauge by calling `gauge(String name, Gauge gauge)` on a `MetricGroup`.
 
 {{< tabs "1457e63d-28c4-4dbd-b742-582fe88706bf" >}} {{< tab "Java" >}}
+
 
 ```
 
@@ -194,6 +200,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 
 new
@@ -216,6 +223,7 @@ class MyMapper extends RichMapFunction[String, String] {
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 
@@ -247,7 +255,9 @@ calling `histogram(String name, Histogram histogram)` on a `MetricGroup`.
 
 {{< tabs "f00bd80e-ce30-497c-aa1f-89f3b5f653a0" >}} {{< tab "Java" >}}
 
+
 ```
+
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Histogram histogram;
 
@@ -267,6 +277,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
+
 
 ```
 
@@ -289,7 +300,9 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
+
 ```
+
 Still
 not supported in Python
 API.
@@ -301,6 +314,7 @@ Flink does not provide a default implementation for `Histogram`, but offers a {{
 flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard/metrics/DropwizardHistogramWrapper.java"
 name="Wrapper" >}} that allows usage of Codahale/DropWizard histograms. To use this wrapper add the following dependency
 in your `pom.xml`:
+
 
 ```
 
@@ -316,7 +330,9 @@ You can then register a Codahale/DropWizard histogram like this:
 
 {{< tabs "bb87937e-afd3-40c3-9ef2-95bce0cbaeb7" >}} {{< tab "Java" >}}
 
+
 ```
+
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Histogram histogram;
 
@@ -339,6 +355,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
+
 
 ```
 
@@ -364,6 +381,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
+
 ```
 Still
 not supported in Python
@@ -380,7 +398,9 @@ meter by calling `meter(String name, Meter meter)` on a `MetricGroup`.
 
 {{< tabs "39036212-06d1-4efe-bab3-d821aa11f6fe" >}} {{< tab "Java" >}}
 
+
 ```
+
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Meter meter;
 
@@ -400,6 +420,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
+
 
 ```
 
@@ -421,6 +442,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 
@@ -448,6 +470,7 @@ flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard
 name="Wrapper" >}} that allows usage of Codahale/DropWizard meters. To use this wrapper add the following dependency in
 your `pom.xml`:
 
+
 ```
 
 <dependency>
@@ -462,7 +485,9 @@ You can then register a Codahale/DropWizard meter like this:
 
 {{< tabs "9cc57972-cf86-401e-a394-ee97efd816f2" >}} {{< tab "Java" >}}
 
+
 ```
+
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Meter meter;
 
@@ -484,6 +509,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
+
 
 ```
 
@@ -508,7 +534,9 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
+
 ```
+
 Still
 not supported in Python
 API.
@@ -535,6 +563,7 @@ and `MetricGroup#getScopeComponents` return.
 
 {{< tabs "8ba6943e-ab5d-45ce-8a73-091a01370eaf" >}} {{< tab "Java" >}}
 
+
 ```
 
 counter=getRuntimeContext()
@@ -551,6 +580,7 @@ counter=getRuntimeContext()
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 
 counter = getRuntimeContext()
@@ -566,6 +596,7 @@ counter = getRuntimeContext()
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 
@@ -646,6 +677,7 @@ what `MetricGroup#getMetricIdentifier`, `MetricGroup#getScopeComponents` and `Me
 
 {{< tabs "66c0ba7f-adc3-4a8b-831f-b0126ea2de81" >}} {{< tab "Java" >}}
 
+
 ```
 
 counter=getRuntimeContext()
@@ -657,6 +689,7 @@ counter=getRuntimeContext()
 
 {{< /tab >}} {{< tab "Scala" >}}
 
+
 ```
 
 counter = getRuntimeContext()
@@ -667,6 +700,7 @@ counter = getRuntimeContext()
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
+
 
 ```
 counter = runtime_context
@@ -1672,6 +1706,7 @@ Note that the metrics are only available via reporters.
     <tr>
       <th rowspan="1"><strong>Job (only available on TaskManager)</strong></th>
       <td>[&lt;source_id&gt;.[&lt;source_subtask_index&gt;.]]&lt;operator_id&gt;.&lt;operator_subtask_index&gt;.latency</td>
+
       <td>The latency distributions from a given source (subtask) to an operator subtask (in milliseconds), depending on the <a href="#metrics-latency-granularity">latency granularity</a>.</td>
       <td>Histogram</td>
     </tr>
@@ -1683,36 +1718,43 @@ Note that the metrics are only available via reporters.
     </tr>
     <tr>
       <td>numBytesInLocalPerSecond</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBytesInRemote</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBytesInRemotePerSecond</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersInLocal</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBuffersInLocalPerSecond</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersInRemote</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBuffersInRemotePerSecond</td>
+
       <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
