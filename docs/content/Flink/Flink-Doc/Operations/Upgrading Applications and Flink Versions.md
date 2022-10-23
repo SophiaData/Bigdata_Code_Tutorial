@@ -105,7 +105,7 @@ That same code would have to be recompiled when upgrading to 1.16.0 though. {{< 
 ID，该 ID 源自算子在应用程序算子拓扑中的位置。因此，未修改的应用程序始终可以从其自己的 Savepoint 之一重新启动。但是，如果应用程序被修改，运营商的默认 ID 可能会发生变化。因此，只有明确指定了算子 ID，才能从
 Savepoint 启动修改后的应用程序。为算子分配 ID 非常简单，使用 uid(String) 方法完成，如下所示：
 
-```scala
+```
 val mappedEvents: DataStream[(Int, Long)] = events
   .map(new MyStatefulMapFunc()).uid("mapper-1")
 ```

@@ -38,7 +38,7 @@ or `dec()/dec(long n)`. You can create and register a `Counter` by calling `coun
 
 {{< tabs "9612d275-bdda-4322-a01f-ae6da805e917" >}} {{< tab "Java" >}}
 
-```java
+```
 
 public class MyMapper extends RichMapFunction<String, String> {
     private transient Counter counter;
@@ -61,7 +61,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[String, String] {
   @transient private var counter: Counter = _
@@ -82,7 +82,7 @@ class MyMapper extends RichMapFunction[String, String] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 
 class MyMapper(MapFunction):
     def __init__(self):
@@ -105,7 +105,7 @@ Alternatively you can also use your own `Counter` implementation:
 
 {{< tabs "e2de1ea4-fad3-4619-b4ba-fe41af1bd25f" >}} {{< tab "Java" >}}
 
-```java
+```
 
 public class MyMapper extends RichMapFunction<String, String> {
     private transient Counter counter;
@@ -129,7 +129,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[String, String] {
   @transient private var counter: Counter = _
@@ -150,7 +150,7 @@ class MyMapper extends RichMapFunction[String, String] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 Still
 not supported in Python
 API.
@@ -166,7 +166,7 @@ You can register a gauge by calling `gauge(String name, Gauge gauge)` on a `Metr
 
 {{< tabs "1457e63d-28c4-4dbd-b742-582fe88706bf" >}} {{< tab "Java" >}}
 
-```java
+```
 
 public class MyMapper extends RichMapFunction<String, String> {
     private transient int valueToExpose = 0;
@@ -194,7 +194,7 @@ public class MyMapper extends RichMapFunction<String, String> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 new
 
@@ -217,7 +217,7 @@ class MyMapper extends RichMapFunction[String, String] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 
 class MyMapper(MapFunction):
     def __init__(self):
@@ -247,7 +247,7 @@ calling `histogram(String name, Histogram histogram)` on a `MetricGroup`.
 
 {{< tabs "f00bd80e-ce30-497c-aa1f-89f3b5f653a0" >}} {{< tab "Java" >}}
 
-```java
+```
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Histogram histogram;
 
@@ -268,7 +268,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[Long, Long] {
   @transient private var histogram: Histogram = _
@@ -289,7 +289,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 Still
 not supported in Python
 API.
@@ -302,7 +302,7 @@ flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard
 name="Wrapper" >}} that allows usage of Codahale/DropWizard histograms. To use this wrapper add the following dependency
 in your `pom.xml`:
 
-```xml
+```
 
 <dependency>
     <groupId>org.apache.flink</groupId>
@@ -316,7 +316,7 @@ You can then register a Codahale/DropWizard histogram like this:
 
 {{< tabs "bb87937e-afd3-40c3-9ef2-95bce0cbaeb7" >}} {{< tab "Java" >}}
 
-```java
+```
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Histogram histogram;
 
@@ -340,7 +340,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[Long, Long] {
   @transient private var histogram: Histogram = _
@@ -364,7 +364,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 Still
 not supported in Python
 API.
@@ -380,7 +380,7 @@ meter by calling `meter(String name, Meter meter)` on a `MetricGroup`.
 
 {{< tabs "39036212-06d1-4efe-bab3-d821aa11f6fe" >}} {{< tab "Java" >}}
 
-```java
+```
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Meter meter;
 
@@ -401,7 +401,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[Long, Long] {
   @transient private var meter: Meter = _
@@ -422,7 +422,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 
 class MyMapperMeter(MapFunction):
     def __init__(self):
@@ -448,7 +448,7 @@ flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard
 name="Wrapper" >}} that allows usage of Codahale/DropWizard meters. To use this wrapper add the following dependency in
 your `pom.xml`:
 
-```xml
+```
 
 <dependency>
     <groupId>org.apache.flink</groupId>
@@ -462,7 +462,7 @@ You can then register a Codahale/DropWizard meter like this:
 
 {{< tabs "9cc57972-cf86-401e-a394-ee97efd816f2" >}} {{< tab "Java" >}}
 
-```java
+```
 public class MyMapper extends RichMapFunction<Long, Long> {
     private transient Meter meter;
 
@@ -485,7 +485,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 class MyMapper extends RichMapFunction[Long, Long] {
   @transient private var meter: Meter = _
@@ -508,7 +508,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 Still
 not supported in Python
 API.
@@ -535,7 +535,7 @@ and `MetricGroup#getScopeComponents` return.
 
 {{< tabs "8ba6943e-ab5d-45ce-8a73-091a01370eaf" >}} {{< tab "Java" >}}
 
-```java
+```
 
 counter=getRuntimeContext()
         .getMetricGroup()
@@ -551,7 +551,7 @@ counter=getRuntimeContext()
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 counter = getRuntimeContext()
   .getMetricGroup()
@@ -567,7 +567,7 @@ counter = getRuntimeContext()
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 
 counter = runtime_context
 .get_metric_group()
@@ -646,7 +646,7 @@ what `MetricGroup#getMetricIdentifier`, `MetricGroup#getScopeComponents` and `Me
 
 {{< tabs "66c0ba7f-adc3-4a8b-831f-b0126ea2de81" >}} {{< tab "Java" >}}
 
-```java
+```
 
 counter=getRuntimeContext()
         .getMetricGroup()
@@ -657,7 +657,7 @@ counter=getRuntimeContext()
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+```
 
 counter = getRuntimeContext()
   .getMetricGroup()
@@ -668,7 +668,7 @@ counter = getRuntimeContext()
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 counter = runtime_context
 .get_metric_group()
 .add_group("my_metrics_key", "my_metrics_value")
@@ -1672,48 +1672,48 @@ Note that the metrics are only available via reporters.
     <tr>
       <th rowspan="1"><strong>Job (only available on TaskManager)</strong></th>
       <td>[&lt;source_id&gt;.[&lt;source_subtask_index&gt;.]]&lt;operator_id&gt;.&lt;operator_subtask_index&gt;.latency</td>
-      <td>The latency distributions from a given source (subtask) to an operator subtask (in milliseconds), depending on the <a href="{{< ref "docs/deployment/config" >}}#metrics-latency-granularity">latency granularity</a>.</td>
+      <td>The latency distributions from a given source (subtask) to an operator subtask (in milliseconds), depending on the <a href="#metrics-latency-granularity">latency granularity</a>.</td>
       <td>Histogram</td>
     </tr>
     <tr>
       <th rowspan="23"><strong>Task</strong></th>
       <td>numBytesInLocal</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBytesInLocalPerSecond</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBytesInRemote</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBytesInRemotePerSecond</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersInLocal</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBuffersInLocalPerSecond</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersInRemote</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Counter</td>
     </tr>
     <tr>
       <td>numBuffersInRemotePerSecond</td>
-      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="{{< ref "docs/ops/metrics" >}}#default-shuffle-service">Default shuffle service metrics</a>.</td>
+      <td><span class="label label-danger">Attention:</span> deprecated, use <a href="#default-shuffle-service">Default shuffle service metrics</a>.</td>
       <td>Meter</td>
     </tr>
     <tr>
