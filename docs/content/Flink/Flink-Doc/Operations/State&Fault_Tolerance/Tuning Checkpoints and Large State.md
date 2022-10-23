@@ -168,7 +168,7 @@ key-groups 的粒度，即每个 key-groups 可以单独解压缩，这对于重
 
 可以通过 `ExecutionConfig` 开启压缩：
 
-```java
+```
 ExecutionConfig executionConfig=new ExecutionConfig();
         executionConfig.setUseSnapshotCompression(true);
 ```

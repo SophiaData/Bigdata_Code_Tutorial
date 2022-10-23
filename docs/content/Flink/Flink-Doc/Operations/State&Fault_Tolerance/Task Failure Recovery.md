@@ -41,7 +41,7 @@ checkpoint 且没有配置重启策略，那么就采用固定延时重启策略
 
 {{< tabs "2b011473-9a34-4e7b-943b-be4a9071fe3c" >}} {{< tab "Java" >}}
 
-```java
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
         3, // 尝试重启的次数
@@ -51,7 +51,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // 尝试重启的次数
@@ -61,7 +62,7 @@ env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_restart_strategy(RestartStrategies.fixed_delay_restart(
     3,  # 尝试重启的次数
@@ -96,7 +97,8 @@ restart-strategy.fixed-delay.delay: 10 s
 
 {{< tabs "0877201b-96aa-4985-aebd-0780cf1d8e9e" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
         3, // 尝试重启的次数
@@ -106,7 +108,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // 尝试重启的次数
@@ -116,7 +119,8 @@ env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_restart_strategy(RestartStrategies.fixed_delay_restart(
     3,  # 尝试重启的次数
@@ -150,7 +154,8 @@ restart-strategy.failure-rate.delay: 10 s
 
 {{< tabs "f4fba671-e1a8-408d-9f3d-d679aa6473ea" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.failureRateRestart(
         3, // 每个时间间隔的最大故障次数
@@ -161,7 +166,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.failureRateRestart(
   3, // 每个时间间隔的最大故障次数
@@ -172,7 +178,8 @@ env.setRestartStrategy(RestartStrategies.failureRateRestart(
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_restart_strategy(RestartStrategies.failure_rate_restart(
     3,  # 每个时间间隔的最大故障次数
@@ -195,21 +202,24 @@ restart-strategy: none
 
 {{< tabs "46f873e1-9582-4303-9a5f-1cdaa31e7ac7" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRestartStrategy(RestartStrategies.noRestart());
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.noRestart())
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_restart_strategy(RestartStrategies.no_restart())
 ```

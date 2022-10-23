@@ -40,7 +40,8 @@ docs/ops/state/checkpoints_vs_savepoints" >}})。
 Checkpoint 在默认的情况下仅用于恢复失败的作业，并不保留，当程序取消时 checkpoint 就会被删除。当然，你可以通过配置来保留 checkpoint，这些被保留的 checkpoint
 在作业失败或取消时不会被清除。这样，你就可以使用该 checkpoint 来恢复失败的作业。
 
-```java
+
+```
 CheckpointConfig config=env.getCheckpointConfig();
         config.setExternalizedCheckpointCleanup(ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 ```
@@ -83,7 +84,8 @@ state.checkpoints.dir: hdfs:///checkpoints/
 
 #### 创建 state backend 对单个作业进行配置
 
-```java
+
+```
 env.setStateBackend(new RocksDBStateBackend("hdfs:///checkpoints-data/"));
 ```
 

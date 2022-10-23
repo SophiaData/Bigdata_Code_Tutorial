@@ -119,21 +119,24 @@ backend 配置会覆盖默认的 state backend 配置，如下所示：
 
 {{< tabs "c8226811-7dea-4c75-8f56-44ee2f40a682" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStateBackend(new HashMapStateBackend());
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setStateBackend(new HashMapStateBackend())
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_state_backend(HashMapStateBackend())
 ```
@@ -142,7 +145,8 @@ env.set_state_backend(HashMapStateBackend())
 
 如果你想在 IDE 中使用 `EmbeddedRocksDBStateBackend`，或者需要在作业中通过编程方式动态配置它，必须添加以下依赖到 Flink 项目中。
 
-```xml
+
+```
 
 <dependency>
     <groupId>org.apache.flink</groupId>
@@ -351,7 +355,8 @@ public class MyOptionsFactory implements ConfigurableRocksDBOptionsFactory {
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 Python
 API
 中尚不支持该特性。
@@ -420,7 +425,8 @@ Changelog 是一项旨在减少 checkpointing 时间的功能，因此也可以�
 
 这是 YAML 中的示例配置：
 
-```yaml
+
+```
 state.backend.changelog.enabled: true
 state.backend.changelog.storage: filesystem # 当前只支持 filesystem 和 memory（仅供测试用）
 dstl.dfs.base-path: s3://<bucket-name> # 类似于 state.checkpoints.dir
@@ -428,7 +434,8 @@ dstl.dfs.base-path: s3://<bucket-name> # 类似于 state.checkpoints.dir
 
 请将如下配置保持默认值 （参见[限制](#limitations)）:
 
-```yaml
+
+```
 execution.checkpointing.max-concurrent-checkpoints: 1
 ```
 
@@ -436,21 +443,24 @@ execution.checkpointing.max-concurrent-checkpoints: 1
 
 也可以通过编程方式为每个作业开启或关闭 Changelog： {{< tabs  >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableChangelogStateBackend(true);
 ```
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.enableChangelogStateBackend(true)
 ```
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.enable_changelog_statebackend(true)
 ```
@@ -525,7 +535,8 @@ state.checkpoint-storage: jobmanager
 
 {{< tabs "memorystatebackendmigration" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStateBackend(new HashMapStateBackend());
         env.getCheckpointConfig().setCheckpointStorage(new JobManagerCheckpointStorage());
@@ -533,7 +544,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 env.setStateBackend(new HashMapStateBackend)
 env.getCheckpointConfig().setCheckpointStorage(new JobManagerCheckpointStorage)
@@ -541,7 +553,8 @@ env.getCheckpointConfig().setCheckpointStorage(new JobManagerCheckpointStorage)
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_state_backend(HashMapStateBackend())
 env.get_checkpoint_config().set_checkpoint_storage(JobManagerCheckpointStorage())
@@ -556,7 +569,8 @@ docs/ops/state/checkpoints#the-filesystemcheckpointstorage" >}})。
 
 #### `flink-conf.yaml` 配置
 
-```yaml
+
+```
 state.backend: hashmap
 state.checkpoints.dir: file:///checkpoint-dir/
 
@@ -569,7 +583,8 @@ state.checkpoint-storage: filesystem
 
 {{< tabs "fsstatebackendmigration" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStateBackend(new HashMapStateBackend());
         env.getCheckpointConfig().setCheckpointStorage("file:///checkpoint-dir");
@@ -582,7 +597,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 env.setStateBackend(new HashMapStateBackend)
 env.getCheckpointConfig().setCheckpointStorage("file:///checkpoint-dir")
@@ -595,7 +611,8 @@ env.getCheckpointConfig().setCheckpointStorage(new FileSystemCheckpointStorage("
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_state_backend(HashMapStateBackend())
 env.get_checkpoint_config().set_checkpoint_storage_dir("file:///checkpoint-dir")
@@ -614,7 +631,8 @@ env.get_checkpoint_config().set_checkpoint_storage(FileSystemCheckpointStorage("
 
 #### `flink-conf.yaml` 配置
 
-```yaml
+
+```
 state.backend: rocksdb
 state.checkpoints.dir: file:///checkpoint-dir/
 
@@ -627,7 +645,8 @@ state.checkpoint-storage: filesystem
 
 {{< tabs "rocksdbstatebackendmigration" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStateBackend(new EmbeddedRocksDBStateBackend());
         env.getCheckpointConfig().setCheckpointStorage("file:///checkpoint-dir");
@@ -641,7 +660,7 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```java
+```
 val env=StreamExecutionEnvironment.getExecutionEnvironment
         env.setStateBackend(new EmbeddedRocksDBStateBackend)
         env.getCheckpointConfig().setCheckpointStorage("file:///checkpoint-dir")
@@ -655,7 +674,8 @@ val env=StreamExecutionEnvironment.getExecutionEnvironment
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 env.set_state_backend(EmbeddedRocksDBStateBackend())
 env.get_checkpoint_config().set_checkpoint_storage_dir("file:///checkpoint-dir")

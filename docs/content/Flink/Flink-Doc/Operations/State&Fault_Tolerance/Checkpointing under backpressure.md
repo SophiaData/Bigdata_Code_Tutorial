@@ -56,7 +56,8 @@ I/O，因此当状态存储的 I/O 是 整个 Checkpointing 过程当中真 正�
 
 {{< tabs "4b9c6a74-8a45-4ad2-9e80-52fe44a85991" >}} {{< tab "Java" >}}
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
 
 // 启用非对齐 Checkpoint
@@ -65,7 +66,8 @@ StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironmen
 
 {{< /tab >}} {{< tab "Scala" >}}
 
-```scala
+
+```
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
 // 启用非对齐 Checkpoint
@@ -74,7 +76,8 @@ env.getCheckpointConfig.enableUnalignedCheckpoints()
 
 {{< /tab >}} {{< tab "Python" >}}
 
-```python
+
+```
 env = StreamExecutionEnvironment.get_execution_environment()
 
 # 启用非对齐 Checkpoint
@@ -93,7 +96,8 @@ execution.checkpointing.unaligned: true
 
 在启用非对齐 Checkpoint 后，你依然可以通过编程的方式指定对齐 Checkpoint 的超时：
 
-```java
+
+```
 StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
         env.getCheckpointConfig().setAlignedCheckpointTimeout(Duration.ofSeconds(30));
 ```
