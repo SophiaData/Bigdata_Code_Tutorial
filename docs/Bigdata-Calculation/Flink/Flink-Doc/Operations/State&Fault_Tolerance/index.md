@@ -2,7 +2,6 @@
 
 ```{toctree}
 :maxdepth: 2
-
 Checkpointing under backpressure
 Checkpoints
 Checkpoints vs Savepoints

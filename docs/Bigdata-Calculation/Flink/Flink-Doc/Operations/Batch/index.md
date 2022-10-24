@@ -1,7 +1,6 @@
-# Book
+# Batch
 
 ```{toctree}
 :maxdepth: 2
-
-Open_Source_Book
+batch_shuffle
 ```

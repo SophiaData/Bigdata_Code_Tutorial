@@ -190,7 +190,7 @@ ID。此建议适用于所有算子，即有和没有明确声明算子状态的
 3. 如果一切正常，停止并关闭旧的 Flink 集群。
 
 在下文中，我们将首先介绍成功进行作业迁移的先决条件， 然后详细介绍我们之前概述的步骤。
-
+###
 #### 前提条件
 
 在开始迁移之前，请检查您尝试迁移的作业是否遵循 [savepoints]({{< ref "docs/ops/state/savepoints" >}})
@@ -209,6 +209,7 @@ ID。此建议适用于所有算子，即有和没有明确声明算子状态的
 2. 另一个**重要**的先决条件是所有 Savepoint 数据必须可以从新安装的相同（绝对）路径下访问。 这还包括访问从 Savepoint 文件内部引用的任何其他文件 （状态后端快照的输出）， 包括但不限于使用
    [State Processor API]({{< ref "docs/libs/state_processor_api" >}})。
 
+###
 #### 第 1 步：使用 Savepoint 停止现有作业
 
 版本迁移的第一个主要步骤是获取 Savepoint 并停止 在旧 Flink 版本上运行的作业。
@@ -221,6 +222,7 @@ $ bin/flink stop [--savepointPath :savepointPath] :jobId
 
 更多详情，请阅读 [savepoint documentation]({{< ref "docs/ops/state/savepoints" >}}).
 
+###
 #### 第 2 步：将您的集群更新到新的 Flink 版本。
 
 在这一步中，我们更新集群的框架版本。 基本上意味着用新版本替换 Flink 安装的内容。 此步骤可能取决于您在集群中运行 Flink 的方式（例如独立运行，...）。
@@ -228,6 +230,7 @@ $ bin/flink stop [--savepointPath :savepointPath] :jobId
 如果您对在集群中安装 Flink 不熟悉，请阅读 [deployment and cluster setup documentation]({{< ref "
 docs/deployment/resource-providers/standalone/overview" >}}).
 
+###
 #### 第 3 步：从 Savepoint 恢复新 Flink 版本下的作业。
 
 作为作业迁移的最后一步，您从上面在更新的集群上采取的 Savepoint 恢复。 您可以使用以下命令执行此操作：

@@ -1,14 +1,5 @@
 # Back_Pressure
 
----
-title: "监控反压"
-weight: 3 type: docs aliases:
-
-- /zh/ops/monitoring/back_pressure.html
-- /zh/internals/back_pressure_monitoring.html
-- /zh/ops/monitoring/back_pressure
-
----
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
