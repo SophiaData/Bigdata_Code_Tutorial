@@ -1,12 +1,5 @@
 # Checkpoints
 
----
-title: "Checkpoints"
-weight: 8 type: docs aliases:
-
-- /zh/ops/state/checkpoints.html
-
----
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file

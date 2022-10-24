@@ -2,7 +2,6 @@
 
 ```{toctree}
 :maxdepth: 2
-
 Batch/index
 Debugging/index
 Monitoring/index
