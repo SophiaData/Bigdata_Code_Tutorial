@@ -18,10 +18,9 @@ import java.util.Properties;
 
 import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * (@xxx) (@date 2022/5/7 14:17).
- */
+/** (@xxx) (@date 2022/5/7 14:17). */
 public class FlinkCDCTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(FlinkCDCTest.class);
     private static String hostname;
     private static int port;
@@ -42,22 +41,16 @@ public class FlinkCDCTest {
             tableList = checkNotNull(params.get("tableList"));
         } catch (Exception e) {
             throw new RuntimeException(
-                    String.format("传参失败，当前已接受传参: \n" +
-                                    "--hostname %s \n" +
-                                    "--port %s \n" +
-                                    "--username %s \n" +
-                                    "--password %s \n" +
-                                    "--databaseList %s \n" +
-                                    "--tableList %s \n" +
-                                    "异常原因: %s",
-                            hostname,
-                            port,
-                            username,
-                            password,
-                            databaseList,
-                            tableList,
-                            e)
-            );
+                    String.format(
+                            "传参失败，当前已接受传参: \n"
+                                    + "--hostname %s \n"
+                                    + "--port %s \n"
+                                    + "--username %s \n"
+                                    + "--password %s \n"
+                                    + "--databaseList %s \n"
+                                    + "--tableList %s \n"
+                                    + "异常原因: %s",
+                            hostname, port, username, password, databaseList, tableList, e));
         }
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -68,7 +61,9 @@ public class FlinkCDCTest {
         env.getCheckpointConfig().setCheckpointTimeout(60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
-        env.getCheckpointConfig().setExternalizedCheckpointCleanup(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.getCheckpointConfig()
+                .setExternalizedCheckpointCleanup(
+                        CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         LOG.info(" checkpoint config take effect. ");
         Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常
@@ -88,7 +83,8 @@ public class FlinkCDCTest {
                         .build();
 
         DataStreamSource<String> mysql =
-                env.fromSource(sourceFunction, WatermarkStrategy.noWatermarks(), "mysql").setParallelism(1);
+                env.fromSource(sourceFunction, WatermarkStrategy.noWatermarks(), "mysql")
+                        .setParallelism(1);
 
         mysql.print().setParallelism(1);
 
