@@ -18,7 +18,7 @@ import java.util.Properties;
 
 import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
 
-/** (@xxx) (@date 2022/5/7 14:17). */
+/** (@SophiaData) (@date 2022/5/7 14:17). */
 public class FlinkCDCTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkCDCTest.class);
