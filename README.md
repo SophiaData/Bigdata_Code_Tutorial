@@ -181,7 +181,7 @@ Dinky 基于 Apache Flink 实现 Dlink ，增强 Flink 的应用与体验，探�
 
 Apache Flink 是一个在有界数据流和无界数据流上进行有状态计算分布式处理引擎和框架。
 
-### [flink 1.16 中文文档(翻译进行中)](https://bigdata-note.readthedocs.io/en/flink-doc-translate-1.16/content/Flink/Flink-Doc/index.html)
+### [flink 1.16 中文文档(翻译进行中)](https://bigdata-note.readthedocs.io/en/flink-doc-translate-1.16/Bigdata-Calculation/Flink/Flink-Doc/Operations/index.html)
 
 ### [FLINK FAQ](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/FLINK_FAQ.md)
 
