@@ -28,9 +28,9 @@ hs_err_pid*
 docs/build
 target
 tmp
-.classpath
-.idea
-.metadata
-.settings
-.cache
-.iml
+*.classpath
+*.idea
+*.metadata
+*.settings
+*.cache
+*.iml
