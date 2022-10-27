@@ -38,6 +38,8 @@ public class FlinkCDCTest extends BaseCode {
         String tableList = checkNotNull(params.get("tableList"));
 
         Properties properties = new Properties();
+        // decimal 设置为 string 避免转换异常
+        properties.put("decimal.handling.mode", "string");
 
         MySqlSource<String> sourceFunction =
                 MySqlSource.<String>builder()
