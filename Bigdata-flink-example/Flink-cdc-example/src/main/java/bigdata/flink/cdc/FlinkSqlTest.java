@@ -5,21 +5,31 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import bigdata.flink.base.BaseSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
 
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkSqlTest extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlTest.class);
 
     public static void main(String[] args) {
-        new FlinkSqlTest().init("flink_sql_test_job", args, "hashMap");
-        LOG.info(" 方法初始化完成 ");
+        new FlinkSqlTest().init(args, "flink_sql_job_test", true, false);
+        LOG.info(" init 方法正常 ");
     }
 
     @Override
-    protected void handle(
+    public void handle(
             StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
+        String hostname = checkNotNull(params.get("hostname"));
+        int port = checkNotNull(params.getInt("port"));
+        String username = checkNotNull(params.get("username"));
+        String password = checkNotNull(params.get("password"));
+        String databaseName = checkNotNull(params.get("databaseName"));
+        String tableName = checkNotNull(params.get("tableName"));
+
         tEnv.executeSql(
                 "CREATE TABLE mysql_binlog (\n"
                         + " id INT NOT NULL,\n"
@@ -29,24 +39,24 @@ public class FlinkSqlTest extends BaseSql {
                         + ") WITH (\n"
                         + " 'connector' = 'mysql-cdc',\n"
                         + " 'hostname' = '"
-                        + params.get("hostname")
-                        + "' ,\n"
+                        + hostname
+                        + "',\n"
                         + " 'port' = '"
-                        + params.getInt("port")
+                        + port
                         + "',\n"
                         + " 'username' = '"
-                        + params.get("username")
+                        + username
                         + "',\n"
                         + " 'password' = '"
-                        + params.get("password")
+                        + password
                         + "',\n"
                         + " 'database-name' = '"
-                        + params.get("databaseName")
+                        + databaseName
                         + "',\n"
                         + " 'table-name' = '"
-                        + params.get("tableName")
-                        + "' \n"
-                        + ")");
+                        + tableName
+                        + "', \n"
+                        + " 'debezium.decimal.handling.mode' = 'string')");
 
         Table sqlQuery = tEnv.sqlQuery("select id, student, sex from mysql_binlog");
         tEnv.toChangelogStream(sqlQuery).print();
