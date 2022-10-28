@@ -193,7 +193,7 @@ Apache Flink 是一个在有界数据流和无界数据流上进行有状态计�
 
 - [官宣｜Apache Flink 1.15 发布公告](https://mp.weixin.qq.com/s/Wza0etwPtXVm5SZ1a9kJlA)
 
--[flink 1.16 正式发布公告(英文)](https://flink.apache.org/news/2022/10/28/1.16-announcement.html)
+- [Flink 1.16 正式发布公告(英文)](https://flink.apache.org/news/2022/10/28/1.16-announcement.html)
 
 ### [Flink Study](https://github.com/SophiaData/bigdata-FAQ/blob/main/FLINK/Flink_Study.md)
 
