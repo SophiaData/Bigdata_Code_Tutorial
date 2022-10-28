@@ -1,11 +1,11 @@
-package bigdata.flink.cdc;
+package io.sophiadata.flink.cdc;
 
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-import bigdata.flink.base.BaseSql;
+import io.sophiadata.flink.base.BaseSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

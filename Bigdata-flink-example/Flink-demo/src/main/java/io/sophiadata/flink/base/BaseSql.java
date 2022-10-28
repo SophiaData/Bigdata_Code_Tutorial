@@ -1,4 +1,4 @@
-package bigdata.flink.base;
+package io.sophiadata.flink.base;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
@@ -8,30 +8,31 @@ import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-/** (@SophiaData) (@date 2022/10/27 13:26). */
-public abstract class BaseCode implements BaseInit {
+/** (@SophiaData) (@date 2022/10/25 10:58). */
+public abstract class BaseSql implements BaseInit {
     @Override
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean local) {
         final ParameterTool params = ParameterTool.fromArgs(args);
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        // set sql job name
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
         if (local) {
             return;
         } else {
             checkpoint(env, ckPathAndJobId, hashMap);
         }
+
         restartTask(env);
 
-        handle(env, params);
-
-        try {
-            env.execute(ckPathAndJobId); // 传入一个job的名字
-        } catch (Exception e) {
-            throw new RuntimeException(String.format("任务运行异常，异常原因: %s", e));
-        }
+        handle(env, tEnv, params);
     }
 
-    public abstract void handle(StreamExecutionEnvironment env, ParameterTool params);
+    public abstract void handle(
+            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params);
 
     @Override
     public void checkpoint(StreamExecutionEnvironment env, String ckPathAndJobId, Boolean hashMap) {

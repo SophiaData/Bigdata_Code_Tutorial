@@ -1,14 +1,14 @@
-package bigdata.flink.cdc;
+package io.sophiadata.flink.cdc;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import bigdata.flink.base.BaseCode;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
+import io.sophiadata.flink.base.BaseCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
