@@ -1,4 +1,4 @@
-package bigdata.flink.base;
+package io.sophiadata.flink.base;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 

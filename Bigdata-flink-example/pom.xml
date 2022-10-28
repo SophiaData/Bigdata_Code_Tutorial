@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>Flink-example</module>
+        <module>Flink-demo</module>
     </modules>
     
     <properties>
