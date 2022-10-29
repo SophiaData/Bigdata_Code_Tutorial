@@ -21,14 +21,14 @@ public abstract class BaseSql implements BaseInit {
         // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
         if (local) {
-            return;
+            handle(env, tEnv, params);
         } else {
             checkpoint(env, ckPathAndJobId, hashMap);
+
+            restartTask(env);
+
+            handle(env, tEnv, params);
         }
-
-        restartTask(env);
-
-        handle(env, tEnv, params);
     }
 
     public abstract void handle(
