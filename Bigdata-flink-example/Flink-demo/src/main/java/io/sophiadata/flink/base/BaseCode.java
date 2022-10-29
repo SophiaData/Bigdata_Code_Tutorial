@@ -16,14 +16,14 @@ public abstract class BaseCode implements BaseInit {
         final ParameterTool params = ParameterTool.fromArgs(args);
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         if (local) {
-            return;
+            handle(env, params);
         } else {
             checkpoint(env, ckPathAndJobId, hashMap);
+
+            restartTask(env);
+
+            handle(env, params);
         }
-        restartTask(env);
-
-        handle(env, params);
-
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
