@@ -46,10 +46,13 @@ public class Sideout extends BaseCode {
                                             out.collect(value);
                                         }
                                     }
-                                });
+                                })
+                        .name("sideout");
 
-        sideout.print("stream >>>  ");
-        sideout.getSideOutput(new OutputTag<String>("hello") {}).print(" hello stream >>> ");
+        sideout.print("stream >>>  ").name("stream");
+        sideout.getSideOutput(new OutputTag<String>("hello") {})
+                .print(" hello stream >>> ")
+                .name("hello");
     }
 
     private static final String[] STREAM =
