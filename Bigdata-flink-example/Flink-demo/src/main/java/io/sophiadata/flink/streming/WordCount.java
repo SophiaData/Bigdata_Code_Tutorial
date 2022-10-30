@@ -13,7 +13,7 @@ public class WordCount extends BaseCode {
 
     public static void main(String[] args) {
         //
-        new WordCount().init(args, "WordCount", true, true);
+        new WordCount().init(args, "WordCount");
     }
 
     @Override

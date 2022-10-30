@@ -11,37 +11,56 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /** (@SophiaData) (@date 2022/10/25 10:58). */
-public abstract class BaseSql implements BaseInit {
-    @Override
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean local) {
+public abstract class BaseSql {
+    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
+
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setGlobalJobParameters(params);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
-        if (local) {
-            handle(env, tEnv, params);
-        } else {
-            checkpoint(env, ckPathAndJobId, hashMap);
 
-            restartTask(env);
+        checkpoint(env, ckPathAndJobId, hashMap, localpath);
 
-            handle(env, tEnv, params);
-        }
+        restartTask(env);
+
+        handle(env, tEnv, params);
+    }
+
+    public void init(String[] args, String ckPathAndJobId) {
+        final ParameterTool params = ParameterTool.fromArgs(args);
+
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setGlobalJobParameters(params);
+
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        // set sql job name
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+
+        handle(env, tEnv, params);
     }
 
     public abstract void handle(
             StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params);
 
-    @Override
-    public void checkpoint(StreamExecutionEnvironment env, String ckPathAndJobId, Boolean hashMap) {
+    public void checkpoint(
+            StreamExecutionEnvironment env,
+            String ckPathAndJobId,
+            Boolean hashMap,
+            Boolean localpath) {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
-        env.getCheckpointConfig().setCheckpointStorage("file:///Users/flink/" + ckPathAndJobId);
+        if (localpath) {
+            env.getCheckpointConfig().setCheckpointStorage("file:///Users/flink/" + ckPathAndJobId);
+        } else {
+            env.getCheckpointConfig()
+                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+        }
         env.enableCheckpointing(60 * 1000);
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
@@ -52,7 +71,6 @@ public abstract class BaseSql implements BaseInit {
                         CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
     }
 
-    @Override
     public void restartTask(StreamExecutionEnvironment env) {
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Time.seconds(10)));
         env.setRestartStrategy(
