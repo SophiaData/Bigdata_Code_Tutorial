@@ -30,11 +30,13 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_${scala.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime-web_${scala.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -45,6 +47,7 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- fastjson -->
         <dependency>
@@ -76,17 +79,22 @@
             <version>${flink.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-flink</artifactId>
+            <version>0.12.1</version>
+        </dependency>
         <!-- flink-rocksdb -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-statebackend-rocksdb_${scala.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.12</artifactId>
-            <version>4.0.0-RC2</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>com.github.scopt</groupId>-->
+        <!--            <artifactId>scopt_2.12</artifactId>-->
+        <!--            <version>4.0.0-RC2</version>-->
+        <!--        </dependency>-->
         <!--如果保存检查点到hdfs上，需要引入此依赖-->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
