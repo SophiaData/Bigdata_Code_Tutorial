@@ -15,7 +15,7 @@ public class Sideout extends BaseCode {
 
     public static void main(String[] args) {
         //
-        new Sideout().init(args, "sideout", true, false);
+        new Sideout().init(args, "sideout");
     }
 
     @Override

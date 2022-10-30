@@ -11,7 +11,7 @@ public class HudiFlinkDemo extends BaseSql {
 
     public static void main(String[] args) {
         //
-        new HudiFlinkDemo().init(args, "HudiFlinkDemo", false, false);
+        new HudiFlinkDemo().init(args, "HudiFlinkDemo", false, true);
     }
 
     @Override

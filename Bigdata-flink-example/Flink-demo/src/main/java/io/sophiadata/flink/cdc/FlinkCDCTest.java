@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
 
 /** (@SophiaData) (@date 2022/5/7 14:17). */
 public class FlinkCDCTest extends BaseCode {
@@ -23,7 +23,7 @@ public class FlinkCDCTest extends BaseCode {
 
     public static void main(String[] args) {
         // 参数信息通过 args 传递
-        new FlinkCDCTest().init(args, "flink_cdc_job_test", true, false);
+        new FlinkCDCTest().init(args, "flink_cdc_job_test", true, true);
         LOG.info(" init 方法正常 ");
     }
 

@@ -9,14 +9,14 @@ import io.sophiadata.flink.base.BaseSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.curator.shaded.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
 
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkSqlTest extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlTest.class);
 
     public static void main(String[] args) {
-        new FlinkSqlTest().init(args, "flink_sql_job_test", true, false);
+        new FlinkSqlTest().init(args, "flink_sql_job_test", true, true);
         LOG.info(" init 方法正常 ");
     }
 
