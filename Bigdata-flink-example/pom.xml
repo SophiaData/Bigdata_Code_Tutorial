@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>Flink-cdc-example</module>
+        <module>Flink-demo</module>
     </modules>
     
     <properties>
@@ -117,9 +117,19 @@
                     <!-- optional: limit format enforcement to just the files changed by this feature branch -->
                     <ratchetFrom>HEAD</ratchetFrom>
                     <java>
-                        <eclipse>
-                            <file>style/spotless_flinkExample_formatter.xml</file>
-                        </eclipse>
+                        <googleJavaFormat>
+                            <version>1.7</version>
+                            <style>AOSP</style>
+                        </googleJavaFormat>
+                        <removeUnusedImports />
+                        <importOrder>
+                            <order>org.apache.flink,org.apache.flink.shaded,,javax,java,scala,\#</order>
+                        </importOrder>
+                        <replaceRegex>
+                            <name>Remove wildcard imports</name>
+                            <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
+                            <replacement>$1</replacement>
+                        </replaceRegex>
                     </java>
                     <pom>
                         <sortPom>
