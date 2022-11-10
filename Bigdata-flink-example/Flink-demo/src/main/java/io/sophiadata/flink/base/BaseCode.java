@@ -9,14 +9,21 @@ import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
+
 /** (@SophiaData) (@date 2022/10/27 13:26). */
 public abstract class BaseCode {
+    private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
+
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-
+        String user = checkNotNull(params.get("user"));
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
-        checkpoint(env, ckPathAndJobId, hashMap, localpath);
+        checkpoint(env, ckPathAndJobId, hashMap, localpath, user);
 
         restartTask(env);
 
@@ -24,7 +31,7 @@ public abstract class BaseCode {
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
-            throw new RuntimeException(String.format("任务运行异常，异常原因: %s", e));
+            LOG.error("异常信息输出：", e);
         }
     }
 
@@ -48,19 +55,23 @@ public abstract class BaseCode {
             StreamExecutionEnvironment env,
             String ckPathAndJobId,
             Boolean hashMap,
-            Boolean localpath) {
+            Boolean localpath,
+            String user) {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
-            env.getCheckpointConfig().setCheckpointStorage("file:///Users/flink/" + ckPathAndJobId);
+            env.getCheckpointConfig()
+                    .setCheckpointStorage("file:////Users/" + user + "/flink/" + ckPathAndJobId);
         } else {
             env.getCheckpointConfig()
                     .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
         }
         env.enableCheckpointing(60 * 1000);
+        // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
+        env.enableChangelogStateBackend(false); // 启用Changelog可能会对应用程序的性能产生负面影响。
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);

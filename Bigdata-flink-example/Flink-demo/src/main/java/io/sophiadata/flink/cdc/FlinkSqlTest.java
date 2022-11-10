@@ -63,7 +63,7 @@ public class FlinkSqlTest extends BaseSql {
         try {
             env.execute();
         } catch (Exception e) {
-            throw new RuntimeException(String.format(" 运行异常 %s", e));
+            LOG.error("异常信息输出：", e);
         }
     }
 }
