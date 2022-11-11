@@ -1,3 +1,0 @@
-Application configuration management
-
-应用配置管理
