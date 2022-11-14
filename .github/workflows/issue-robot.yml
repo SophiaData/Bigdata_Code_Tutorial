@@ -38,7 +38,7 @@ jobs:
           translate-body: true
 
       - name: "Comment in issue"
-        uses: ./.github/actions/action-js-template
+        uses: ./.github/actions/actions-comment-on-issue
         with:
           message: |
             Thank you for your feedback, we have received your issue, Please wait patiently for a reply.
