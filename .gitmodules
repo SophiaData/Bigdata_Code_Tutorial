@@ -7,3 +7,9 @@
 [submodule ".github/actions/--force"]
 	path = .github/actions/--force
 	url = https://github.com/rookiegao/translation-helper.git
+[submodule ".github/actions/--translate"]
+	path = .github/actions/--translate
+	url = https://github.com/rookiegao/translation-helper.git
+[submodule ".github/actions/translate"]
+	path = .github/actions/translate
+	url = https://github.com/rookiegao/translation-helper.git
