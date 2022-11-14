@@ -19,7 +19,7 @@ name: issue-robot
 
 on:
   issues:
-    types: [ opened ]
+    types: [opened]
 
 jobs:
   issueRobot:
@@ -44,3 +44,4 @@ jobs:
             Thank you for your feedback, we have received your issue, Please wait patiently for a reply.
             * In order for us to understand your request as soon as possible, please provide detailed information、version or pictures.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
