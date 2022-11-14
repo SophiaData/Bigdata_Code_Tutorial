@@ -32,13 +32,13 @@ jobs:
           submodules: true
 
       - name: "Translation into English in issue"
-        uses: ./.github/actions/translate-on-issue
+        uses: ./.github/actions/translation-helper
         with:
           translate-title: true
           translate-body: true
 
       - name: "Comment in issue"
-        uses: ./.github/actions/comment-on-issue
+        uses: ./.github/actions/action-js-template
         with:
           message: |
             Thank you for your feedback, we have received your issue, Please wait patiently for a reply.
