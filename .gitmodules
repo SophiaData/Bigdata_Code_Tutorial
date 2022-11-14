@@ -1,6 +1,6 @@
 [submodule ".github/actions/translate-on-issue"]
 	path = .github/actions/translate-on-issue
-	url = https://github.com/rookiegao/actions-comment-pull-request
+	url = https://github.com/rookiegao/translation-helper
 [submodule ".github/actions/comment-on-issue"]
 	path = .github/actions/comment-on-issue
-	url = https://github.com/rookiegao/translation-helper
+	url = https://github.com/rookiegao/actions-comment-pull-request
