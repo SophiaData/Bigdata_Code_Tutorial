@@ -32,7 +32,7 @@ jobs:
           submodules: true
 
       - name: "Translation into English in issue"
-        uses: ./.github/actions/translation-helper
+        uses: ./.github/actions/translate
         with:
           translate-title: true
           translate-body: true
