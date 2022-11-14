@@ -1,0 +1,3 @@
+[submodule ".github/actions/actions-comment-on-issue"]
+	path = .github/actions/actions-comment-on-issue
+	url = https://github.com/rookiegao/actions-comment-on-issue.git
