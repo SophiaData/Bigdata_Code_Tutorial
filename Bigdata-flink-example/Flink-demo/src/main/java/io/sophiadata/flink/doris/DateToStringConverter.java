@@ -27,15 +27,15 @@ public class DateToStringConverter implements CustomConverter<SchemaBuilder, Rel
     private DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
     private ZoneId timestampZoneId = ZoneId.systemDefault();
 
-    public static Properties DEFAULT_PROPS = new Properties();
+    public static Properties defaultProp = new Properties();
 
     static {
-        DEFAULT_PROPS.setProperty("converters", "date");
-        DEFAULT_PROPS.setProperty("date.type", "io.sophiadata.flink.doris.DateToStringConverter");
-        DEFAULT_PROPS.setProperty("date.format.date", "yyyy-MM-dd");
-        DEFAULT_PROPS.setProperty("date.format.datetime", "yyyy-MM-dd HH:mm:ss");
-        DEFAULT_PROPS.setProperty("date.format.timestamp", "yyyy-MM-dd HH:mm:ss");
-        DEFAULT_PROPS.setProperty("date.format.timestamp.zone", "UTC");
+        defaultProp.setProperty("converters", "date");
+        defaultProp.setProperty("date.type", "io.sophiadata.flink.doris.DateToStringConverter");
+        defaultProp.setProperty("date.format.date", "yyyy-MM-dd");
+        defaultProp.setProperty("date.format.datetime", "yyyy-MM-dd HH:mm:ss");
+        defaultProp.setProperty("date.format.timestamp", "yyyy-MM-dd HH:mm:ss");
+        defaultProp.setProperty("date.format.timestamp.zone", "UTC");
     }
 
     @Override

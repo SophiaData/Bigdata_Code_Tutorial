@@ -124,7 +124,7 @@ public class JsonDebeziumSchemaSerializer implements DorisRecordSerializer<Strin
         return success;
     }
 
-    /** Build param { "isDropColumn": true, "columnName" : "column" } */
+    /** Build param { "isDropColumn": true, "columnName" : "column" }. */
     private Map<String, Object> buildRequestParam(JsonNode record) throws IOException {
         Map<String, Object> params = new HashMap<>();
         String ddl = extractDDL(record);

@@ -58,7 +58,7 @@ public class FlinkToDoris extends BaseCode {
                         .includeSchemaChanges(true) // 接收 ddl
                         .startupOptions(StartupOptions.initial())
                         .serverTimeZone("Asia/Shanghai")
-                        .debeziumProperties(DateToStringConverter.DEFAULT_PROPS)
+                        .debeziumProperties(DateToStringConverter.defaultProp)
                         .build();
 
         Properties props = new Properties();
