@@ -1,0 +1,1 @@
+Obsolete blog storage directory, and new blog posts are placed in the docs directory

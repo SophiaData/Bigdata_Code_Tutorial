@@ -30,12 +30,12 @@ public class FlinkCDCTest extends BaseCode {
     @Override
     public void handle(StreamExecutionEnvironment env, ParameterTool params) {
 
-        String hostname = checkNotNull(params.get("hostname"));
-        int port = checkNotNull(params.getInt("port"));
-        String username = checkNotNull(params.get("username"));
-        String password = checkNotNull(params.get("password"));
-        String databaseList = checkNotNull(params.get("databaseList"));
-        String tableList = checkNotNull(params.get("tableList"));
+        String hostname = params.get("hostname", "localhost");
+        int port = params.getInt("port", 3306);
+        String username = params.get("username", "root");
+        String password = params.get("password","123456");
+        String databaseList = params.get("databaseList","test");
+        String tableList = params.get("tableList","test.test2");
 
         Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常

@@ -8,48 +8,43 @@ import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
 
-/** (@SophiaData) (@date 2022/10/27 13:26). */
-public abstract class BaseCode {
-    private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
-
+/** (@SophiaData) (@date 2022/10/25 10:58). */
+public abstract class BaseSql {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = checkNotNull(params.get("user"));
+        String user = params.get("user", "xxx");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
+
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        // set sql job name
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+
         checkpoint(env, ckPathAndJobId, hashMap, localpath, user);
 
         restartTask(env);
 
-        handle(env, params);
-        try {
-            env.execute(ckPathAndJobId); // 传入一个job的名字
-        } catch (Exception e) {
-            LOG.error("异常信息输出：", e);
-        }
+        handle(env, tEnv, params);
     }
 
     public void init(String[] args, String ckPathAndJobId) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
-        handle(env, params);
 
-        try {
-            env.execute(ckPathAndJobId); // 传入一个job的名字
-        } catch (Exception e) {
-            throw new RuntimeException(String.format("任务运行异常，异常原因: %s", e));
-        }
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        // set sql job name
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+
+        handle(env, tEnv, params);
     }
 
-    public abstract void handle(StreamExecutionEnvironment env, ParameterTool params);
+    public abstract void handle(
+            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params);
 
     public void checkpoint(
             StreamExecutionEnvironment env,
@@ -71,7 +66,7 @@ public abstract class BaseCode {
         }
         env.enableCheckpointing(60 * 1000);
         // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
-        env.enableChangelogStateBackend(false); // 启用Changelog可能会对应用程序的性能产生负面影响。
+        env.enableChangelogStateBackend(false); // 启用 Changelog 可能会对应用程序的性能产生负面影响。
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
