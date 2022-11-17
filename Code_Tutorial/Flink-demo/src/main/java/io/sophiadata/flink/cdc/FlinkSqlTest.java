@@ -9,8 +9,6 @@ import io.sophiadata.flink.base.BaseSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkSqlTest extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlTest.class);
@@ -26,7 +24,7 @@ public class FlinkSqlTest extends BaseSql {
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
         String username = params.get("username", "root");
-        String password = params.get("password","123456");
+        String password = params.get("password", "123456");
         String databaseName = params.get("databaseName", "test");
         String tableName = params.get("tableName", "test2");
 

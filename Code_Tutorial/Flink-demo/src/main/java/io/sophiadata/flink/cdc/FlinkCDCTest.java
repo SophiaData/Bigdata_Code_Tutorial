@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/5/7 14:17). */
 public class FlinkCDCTest extends BaseCode {
 
@@ -33,9 +31,9 @@ public class FlinkCDCTest extends BaseCode {
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
         String username = params.get("username", "root");
-        String password = params.get("password","123456");
-        String databaseList = params.get("databaseList","test");
-        String tableList = params.get("tableList","test.test2");
+        String password = params.get("password", "123456");
+        String databaseList = params.get("databaseList", "test");
+        String tableList = params.get("tableList", "test.test2");
 
         Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常

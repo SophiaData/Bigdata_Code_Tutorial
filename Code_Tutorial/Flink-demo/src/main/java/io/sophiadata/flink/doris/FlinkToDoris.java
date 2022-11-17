@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkToDoris extends BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkToDoris.class);

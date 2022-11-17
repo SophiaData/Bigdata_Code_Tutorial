@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/11/13 10:20). */
 public class FlinkCDCDDL extends BaseCode {
 
