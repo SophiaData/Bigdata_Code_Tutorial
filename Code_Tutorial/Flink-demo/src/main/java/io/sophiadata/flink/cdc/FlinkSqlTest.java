@@ -9,8 +9,6 @@ import io.sophiadata.flink.base.BaseSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkSqlTest extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlTest.class);
@@ -23,12 +21,12 @@ public class FlinkSqlTest extends BaseSql {
     @Override
     public void handle(
             StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
-        String hostname = checkNotNull(params.get("hostname"));
-        int port = checkNotNull(params.getInt("port"));
-        String username = checkNotNull(params.get("username"));
-        String password = checkNotNull(params.get("password"));
-        String databaseName = checkNotNull(params.get("databaseName"));
-        String tableName = checkNotNull(params.get("tableName"));
+        String hostname = params.get("hostname", "localhost");
+        int port = params.getInt("port", 3306);
+        String username = params.get("username", "root");
+        String password = params.get("password", "123456");
+        String databaseName = params.get("databaseName", "test");
+        String tableName = params.get("tableName", "test2");
 
         tEnv.executeSql(
                 "CREATE TABLE mysql_binlog (\n"
@@ -56,9 +54,42 @@ public class FlinkSqlTest extends BaseSql {
                         + " 'table-name' = '"
                         + tableName
                         + "', \n"
-                        + " 'debezium.decimal.handling.mode' = 'string')");
+                        + " 'debezium.decimal.handling.mode' = 'string'," +
+                        " 'scan.startup.specific-offset.file' = 'mysql-bin.000009'," +
+                        "'scan.startup.specific-offset.pos' = '5767')" +
+                        "");
 
-        Table sqlQuery = tEnv.sqlQuery("select id, student, sex from mysql_binlog");
+        tEnv.executeSql(
+                "CREATE TABLE mysql_binlog2 (\n"
+                        + " id INT NOT NULL,\n"
+                        + " student STRING,\n"
+                        + " sex STRING,\n"
+                        + " PRIMARY KEY(id) NOT ENFORCED\n"
+                        + ") WITH (\n"
+                        + " 'connector' = 'mysql-cdc',\n"
+                        + " 'hostname' = '"
+                        + hostname
+                        + "',\n"
+                        + " 'port' = '"
+                        + port
+                        + "',\n"
+                        + " 'username' = '"
+                        + username
+                        + "',\n"
+                        + " 'password' = '"
+                        + password
+                        + "',\n"
+                        + " 'database-name' = '"
+                        + databaseName
+                        + "',\n"
+                        + " 'table-name' = '"
+                        + tableName
+                        + "', \n"
+                        + " 'debezium.decimal.handling.mode' = 'string'" +
+                        " )" +
+                        "");
+
+        Table sqlQuery = tEnv.sqlQuery("select id, student, sex from mysql_binlog2");
         tEnv.toChangelogStream(sqlQuery).print();
         try {
             env.execute();

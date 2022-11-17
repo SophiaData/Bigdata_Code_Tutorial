@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkToDoris extends BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkToDoris.class);
@@ -35,11 +33,12 @@ public class FlinkToDoris extends BaseCode {
 
     @Override
     public void handle(StreamExecutionEnvironment env, ParameterTool params) {
-        String hostname = checkNotNull(params.get("hostname"));
-        int port = checkNotNull(params.getInt("port"));
-        String username = checkNotNull(params.get("username"));
-        String password = checkNotNull(params.get("password"));
-        String databaseList = checkNotNull(params.get("databaseName"));
+        String hostname = params.get("hostname", "localhost");
+        int port = params.getInt("port", 3306);
+        String username = params.get("username", "root");
+        String password = params.get("password", "123456");
+        String databaseList = params.get("databaseList", "test");
+        String tableList = params.get("tableList", "test.test2");
 
         Map<String, Object> customConverterConfigs = new HashMap<>();
         customConverterConfigs.put(JsonConverterConfig.DECIMAL_FORMAT_CONFIG, "numeric");
@@ -53,7 +52,7 @@ public class FlinkToDoris extends BaseCode {
                         .username(username)
                         .password(password)
                         .databaseList(databaseList)
-                        .tableList("test2")
+                        .tableList(tableList)
                         .deserializer(schema)
                         .includeSchemaChanges(true) // 接收 ddl
                         .startupOptions(StartupOptions.initial())

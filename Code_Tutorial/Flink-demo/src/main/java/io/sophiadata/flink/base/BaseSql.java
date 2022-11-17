@@ -10,13 +10,11 @@ import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/25 10:58). */
 public abstract class BaseSql {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = checkNotNull(params.get("user"));
+        String user = params.get("user", "xxx");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
 

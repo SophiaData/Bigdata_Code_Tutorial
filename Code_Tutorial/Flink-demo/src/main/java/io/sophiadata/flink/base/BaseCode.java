@@ -12,15 +12,13 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.flink.shaded.guava30.com.google.common.base.Preconditions.checkNotNull;
-
 /** (@SophiaData) (@date 2022/10/27 13:26). */
 public abstract class BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = checkNotNull(params.get("user"));
+        String user = params.get("user", "xxx");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
         checkpoint(env, ckPathAndJobId, hashMap, localpath, user);
