@@ -1,1 +1,1 @@
-Blog: https://bigdata-note.readthedocs.io/en/master/
+Blog: https://rookiegao.github.io/Bigdata_Blog_Website/docs/overview
