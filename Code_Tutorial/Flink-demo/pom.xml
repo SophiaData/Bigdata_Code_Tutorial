@@ -19,7 +19,7 @@
             <groupId>com.ververica</groupId>
             <artifactId>flink-sql-connector-mysql-cdc</artifactId>
             <version>${flink_cdc.version}</version>
-<!--            <version>2.4-SNAPSHOT</version>-->
+            <!--            <version>2.4-SNAPSHOT</version>-->
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -193,6 +193,39 @@
             <groupId>org.apache.doris</groupId>
             <artifactId>flink-doris-connector-1.15</artifactId>
             <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>
+            <!-- 指定纯净版SDK -->
+            <classifier>pure</classifier>
+        </dependency>
+        <!-- 使用纯净版时必须要引入同版本nacos-api和nacos-common，否则可能出现运行时找不到类的问题 -->
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-common</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-api</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.12.6</version>
         </dependency>
     </dependencies>
     
