@@ -23,23 +23,20 @@
         <slf4j.version>1.7.15</slf4j.version>
         <gson.version>2.8.9</gson.version>
         <fastjson.version>1.2.83</fastjson.version>
-        <ojdbc8.version>21.3.0.0</ojdbc8.version>
         <jedis.version>3.3.0</jedis.version>
         <guava.version>29.0-jre</guava.version>
         <json-path.version>2.4.0</json-path.version>
         <ikanalyzer.version>2012_u6</ikanalyzer.version>
         <commons-beanutils.version>1.9.3</commons-beanutils.version>
         <spotless.version>2.23.0</spotless.version>
-        <phoenix-spark.version>5.0.0-HBase-2.0</phoenix-spark.version>
         <lombok.version>1.18.20</lombok.version>
-        <mongodb-driver-sync.version>4.3.1</mongodb-driver-sync.version>
-        <mongo-kafka-connect.version>1.6.1</mongo-kafka-connect.version>
-        <annotations.version>22.0.0</annotations.version>
-        <mongo-java-driver.vrsion>3.12.10</mongo-java-driver.vrsion>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <nacos.version>2.1.2</nacos.version>
+        <httpcore.version>4.4.6</httpcore.version>
+        <httpclient.version>4.5.2</httpclient.version>
+        <jackson-annotations.version>2.12.6</jackson-annotations.version>
     </properties>
     
     <build>
