@@ -54,10 +54,10 @@ public class FlinkSqlTest extends BaseSql {
                         + " 'table-name' = '"
                         + tableName
                         + "', \n"
-                        + " 'debezium.decimal.handling.mode' = 'string'," +
-                        " 'scan.startup.specific-offset.file' = 'mysql-bin.000009'," +
-                        "'scan.startup.specific-offset.pos' = '5767')" +
-                        "");
+                        + " 'debezium.decimal.handling.mode' = 'string',"
+                        + " 'scan.startup.specific-offset.file' = 'mysql-bin.000009',"
+                        + "'scan.startup.specific-offset.pos' = '5767')"
+                        + "");
 
         tEnv.executeSql(
                 "CREATE TABLE mysql_binlog2 (\n"
@@ -85,16 +85,16 @@ public class FlinkSqlTest extends BaseSql {
                         + " 'table-name' = '"
                         + tableName
                         + "', \n"
-                        + " 'debezium.decimal.handling.mode' = 'string'" +
-                        " )" +
-                        "");
+                        + " 'debezium.decimal.handling.mode' = 'string'"
+                        + " )"
+                        + "");
 
         Table sqlQuery = tEnv.sqlQuery("select id, student, sex from mysql_binlog2");
         tEnv.toChangelogStream(sqlQuery).print();
         try {
             env.execute();
         } catch (Exception e) {
-            LOG.error("异常信息输出：", e);
+            LOG.error(FlinkSqlTest.class.getSimpleName() + " 异常信息输出：", e);
         }
     }
 }

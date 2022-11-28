@@ -14,7 +14,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 public abstract class BaseSql {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = params.get("user", "xxx");
+        String user = params.get("user");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
 

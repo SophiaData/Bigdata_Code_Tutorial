@@ -18,7 +18,7 @@ public abstract class BaseCode {
 
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = params.get("user", "xxx");
+        String user = params.get("user");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
         checkpoint(env, ckPathAndJobId, hashMap, localpath, user);
@@ -29,7 +29,7 @@ public abstract class BaseCode {
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
-            LOG.error("异常信息输出：", e);
+            LOG.error(ckPathAndJobId + " 程序异常信息输出：", e);
         }
     }
 
@@ -43,7 +43,7 @@ public abstract class BaseCode {
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
-            throw new RuntimeException(String.format("任务运行异常，异常原因: %s", e));
+            LOG.error(ckPathAndJobId + " 异常信息输出：", e);
         }
     }
 
