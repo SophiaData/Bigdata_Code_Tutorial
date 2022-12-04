@@ -22,9 +22,9 @@ import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.types.Row;
 
+import com.google.common.collect.Maps;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
-import com.ververica.cdc.connectors.shaded.com.google.common.collect.Maps;
 import io.sophiadata.flink.base.BaseSql;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

@@ -1,10 +1,12 @@
 package io.sophiadata.flink.cdc;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import com.alibaba.fastjson.JSONObject;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
@@ -33,7 +35,7 @@ public class FlinkCDCTest extends BaseCode {
         String username = params.get("username", "root");
         String password = params.get("password", "123456");
         String databaseList = params.get("databaseList", "test");
-        String tableList = params.get("tableList", "test.test2");
+        String tableList = params.get("tableList", "test.test3");
 
         Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常
@@ -57,6 +59,24 @@ public class FlinkCDCTest extends BaseCode {
                 env.fromSource(sourceFunction, WatermarkStrategy.noWatermarks(), "mysql")
                         .setParallelism(1);
 
-        mysql.print().setParallelism(1);
+        mysql.map(
+                        new MapFunction<String, String>() {
+                            @Override
+                            public String map(String s) throws Exception {
+                                JSONObject jsonObject2 = JSONObject.parseObject(s);
+                                if (jsonObject2.getString("historyRecord") != null) {
+                                    String historyRecord = jsonObject2.getString("historyRecord");
+                                    JSONObject jsonObject1 = JSONObject.parseObject(historyRecord);
+
+                                    return jsonObject1.getString("ddl");
+                                } else {
+                                    return s;
+                                }
+                            }
+                        })
+                .print()
+                .setParallelism(1);
+
+        //        mysql.print().setParallelism(1);
     }
 }
