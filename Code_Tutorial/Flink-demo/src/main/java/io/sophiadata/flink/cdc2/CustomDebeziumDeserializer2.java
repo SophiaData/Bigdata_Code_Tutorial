@@ -42,16 +42,17 @@ import java.time.ZoneId;
 import java.util.Map;
 
 /** (@SophiaData) (@date 2022/12/1 16:02). */
-public class CustomDebeziumDeserializer
+public class CustomDebeziumDeserializer2
         implements DebeziumDeserializationSchema<Tuple2<String, Row>> {
-    private static final Logger LOG = LoggerFactory.getLogger(CustomDebeziumDeserializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CustomDebeziumDeserializer2.class);
 
     private final Map<String, DeserializationRuntimeConverter> physicalConverterMap =
             Maps.newConcurrentMap();
 
-    CustomDebeziumDeserializer(Map<String, RowType> tableRowTypeMap) {
+    CustomDebeziumDeserializer2(Map<String, RowType> tableRowTypeMap) {
         for (String tableName : tableRowTypeMap.keySet()) {
             RowType rowType = tableRowTypeMap.get(tableName);
+            System.out.println(rowType);
             DeserializationRuntimeConverter physicalConverter = createNotNullConverter(rowType);
             this.physicalConverterMap.put(tableName, physicalConverter);
         }
@@ -66,6 +67,7 @@ public class CustomDebeziumDeserializer
         Struct source = value.getStruct("source");
         String tableName = source.get("table").toString();
         DeserializationRuntimeConverter physicalConverter = physicalConverterMap.get(tableName);
+        // 增加循环判断来应对 includeSchemaChanges(true) 的情况，避免程序出现异常
         if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
             Row insert = extractAfterRow(value, valueSchema, physicalConverter);
             insert.setKind(RowKind.INSERT);
@@ -432,7 +434,7 @@ public class CustomDebeziumDeserializer
         final DeserializationRuntimeConverter[] fieldConverters =
                 rowType.getFields().stream()
                         .map(RowType.RowField::getType)
-                        .map(CustomDebeziumDeserializer::createNotNullConverter)
+                        .map(CustomDebeziumDeserializer2::createNotNullConverter)
                         .toArray(DeserializationRuntimeConverter[]::new);
         final String[] fieldNames = rowType.getFieldNames().toArray(new String[0]);
 
