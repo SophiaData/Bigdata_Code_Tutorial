@@ -31,6 +31,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,9 @@ import java.util.Map;
 /** (@SophiaData) (@date 2022/10/25 10:56). */
 public class FlinkSqlWDS extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlWDS.class);
+
+    private Connection connection;
+    private PreparedStatement preparedStatement;
 
     public static void main(String[] args) {
         new FlinkSqlWDS().init(args, "flink_sql_job_FlinkSqlWDS", true, true);
@@ -56,7 +63,7 @@ public class FlinkSqlWDS extends BaseSql {
         String username = params.get("username", "root");
         String password = params.get("password", "123456");
         String databaseName = params.get("databaseName", "test");
-        String tableList = ".*";
+        String tableList = params.get("tableList", "test.test3");
 
         String sinkUrl =
                 "jdbc:mysql://localhost:3306/test2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
@@ -92,16 +99,15 @@ public class FlinkSqlWDS extends BaseSql {
         List<String> tables = new ArrayList<>();
 
         // 如果整库同步，则从catalog里取所有表，否则从指定表中取表名
-        //        if (".*".equals(tableList)) {
-        //            tables = mysqlCatalog.listTables(db);
-        //        } else {
-        //            String[] tableArray = tableList.split(",");
-        //            for (String table : tableArray) {
-        //                tables.add(table.split("\\.")[1]);
-        //            }
-        //        }
         try {
-            tables = mysqlCatalog.listTables(databaseName);
+            if (".*".equals(tableList)) {
+                tables = mysqlCatalog.listTables(databaseName);
+            } else {
+                String[] tableArray = tableList.split(",");
+                for (String table : tableArray) {
+                    tables.add(table.split("\\.")[1]);
+                }
+            }
         } catch (DatabaseNotExistException e) {
             LOG.error("{} 库不存在", databaseName, e);
         }
@@ -132,9 +138,9 @@ public class FlinkSqlWDS extends BaseSql {
             // 获取表的主键
             List<String> primaryKeys = null;
             try {
-                primaryKeys = schema.getPrimaryKey().get().getColumnNames();
+                primaryKeys = schema.getPrimaryKey().get().getColumnNames(); // 此处不用 orElse
             } catch (NullPointerException e) {
-                LOG.error("捕捉表异常: {} 没有主键", table, e);
+                LOG.error("捕捉表异常: {} 表没有主键！！！ 当前 mysql cdc 尚不支持捕捉没有主键的表！！！", table, e);
             }
 
             for (int i = 0; i < schema.getColumns().size(); i++) {
@@ -151,18 +157,25 @@ public class FlinkSqlWDS extends BaseSql {
 
             // 组装 Flink Sink 表 DDL sql
             StringBuilder stmt = new StringBuilder();
+            StringBuilder stmt2 = new StringBuilder();
             String jdbcSinkTableName = String.format("jdbc_sink_%s", table); // Sink 表前缀
-            stmt.append("create table ").append(jdbcSinkTableName).append("(\n");
+            stmt.append("create table if not exists ").append(jdbcSinkTableName).append("(\n");
+            stmt2.append("create table if not exists ").append(jdbcSinkTableName).append("(\n");
 
             for (int i = 0; i < fieldNames.length; i++) {
                 String column = fieldNames[i];
                 String fieldDataType = fieldDataTypes[i].toString();
                 stmt.append("\t").append(column).append(" ").append(fieldDataType).append(",\n");
+                stmt2.append("\t").append(column).append(" ").append(fieldDataType).append(",\n");
             }
+
+            stmt2.append(String.format("PRIMARY KEY (%s)\n)", StringUtils.join(primaryKeys, ",")));
+
             stmt.append(
                     String.format(
                             "PRIMARY KEY (%s) NOT ENFORCED\n)",
                             StringUtils.join(primaryKeys, ",")));
+            System.out.println(stmt2);
             String formatJdbcSinkWithBody =
                     connectorWithBody.replace("${tableName}", jdbcSinkTableName);
             String createSinkTableDdl = stmt + formatJdbcSinkWithBody;
@@ -171,6 +184,32 @@ public class FlinkSqlWDS extends BaseSql {
             tEnv.executeSql(createSinkTableDdl);
             tableDataTypesMap.put(table, fieldDataTypes);
             tableTypeInformationMap.put(table, new RowTypeInfo(fieldTypes, fieldNames));
+
+            // 下游 mysql 建表逻辑
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                connection = DriverManager.getConnection(sinkUrl, sinkUsername, sinkPassword);
+            } catch (ClassNotFoundException e) {
+                LOG.error("驱动未加载，请检查: ", e);
+            } catch (SQLException e) {
+                LOG.error("sql 异常: ", e);
+            }
+            String createSql = stmt2.toString();
+
+            try {
+                preparedStatement = connection.prepareStatement(createSql);
+                preparedStatement.execute();
+            } catch (SQLException e) {
+                LOG.error("建表异常: ", e);
+            } finally {
+                if (preparedStatement != null) {
+                    try {
+                        preparedStatement.close();
+                    } catch (SQLException e) {
+                        LOG.error("sql 资源关闭异常: ", e);
+                    }
+                }
+            }
         }
 
         //  MySQL CDC

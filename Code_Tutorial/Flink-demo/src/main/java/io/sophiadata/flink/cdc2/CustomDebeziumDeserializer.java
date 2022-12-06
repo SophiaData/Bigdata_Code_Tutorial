@@ -81,10 +81,8 @@ public class CustomDebeziumDeserializer
             Row after = extractAfterRow(value, valueSchema, physicalConverter);
             after.setKind(RowKind.UPDATE_AFTER);
             out.collect(Tuple2.of(tableName, after));
-        } else if (op == Envelope.Operation.TRUNCATE) {
-            LOG.warn("捕捉到 TRUNCATE 操作 ！！！ "); // 此处不捕获具体语句了
         } else {
-            LOG.warn("catch schema change ！！！ "); // 捕捉到数据库 c r u d t 的之外其他操作如 alter table
+            LOG.warn(" Unexpected statement: {}", value);
         }
     }
 
