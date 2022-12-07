@@ -39,7 +39,7 @@ jobs:
           ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check --file Code_Tutorial
       - name: Build and Package
         run: |
-          ./mvnw -B clean install \
+          ./mvnw -Pgoogle-mirror -B clean install \
                  -Dmaven.test.skip=true \
                  -Dcheckstyle.skip=true \
                  --no-snapshot-updates --file Code_Tutorial
