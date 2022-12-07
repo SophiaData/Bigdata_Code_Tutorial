@@ -171,16 +171,16 @@
             <name>GCS Maven Central mirror Asia Pacific</name>
             <url>https://maven-central-asia.storage-download.googleapis.com/maven2/</url>
         </repository>
-<!--        <repository>-->
-<!--            <id>alimaven</id>-->
-<!--            <name>aliyun maven</name>-->
-<!--            <url>https://maven.aliyun.com/repository/public</url>-->
-<!--        </repository>-->
-<!--        <repository>-->
-<!--            <id>alismaven</id>-->
-<!--            <name>aliyuns maven</name>-->
-<!--            <url>https://maven.aliyun.com/repository/spring</url>-->
-<!--        </repository>-->
+        <repository>
+            <id>alimaven</id>
+            <name>aliyun maven</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
+        <repository>
+            <id>alismaven</id>
+            <name>aliyuns maven</name>
+            <url>https://maven.aliyun.com/repository/spring</url>
+        </repository>
         <repository>
             <id>apache.snapshots</id>
             <name>Apache Development Snapshot Repository</name>
