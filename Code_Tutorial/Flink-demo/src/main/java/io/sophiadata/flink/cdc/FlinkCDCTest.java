@@ -33,7 +33,7 @@ public class FlinkCDCTest extends BaseCode {
         String username = params.get("username", "root");
         String password = params.get("password", "123456");
         String databaseList = params.get("databaseList", "test");
-        String tableList = params.get("tableList", "test.test2");
+        String tableList = params.get("tableList", "test.test3");
 
         Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常
