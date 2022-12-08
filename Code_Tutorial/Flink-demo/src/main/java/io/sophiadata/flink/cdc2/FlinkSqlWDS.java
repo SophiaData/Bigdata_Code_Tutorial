@@ -51,9 +51,14 @@ public class FlinkSqlWDS extends BaseSql {
         LOG.info(" init 方法正常 ");
     }
 
-    // 本程序测试 Whole database synchronization 捕捉表需包含主键 后续待实现自动建表，自动同步表结构等功能
-    // refer: https://blog.csdn.net/qq_36062467/article/details/128117647  环境：Flink 1.15 CDC 2.3
-    // 环境：Flink 1.16 CDC 2.3
+    // 本程序测试 Whole database synchronization 之 MySQL to MySQL 捕捉表需包含主键并实现自动建表，DDL 同步暂不支持 ！！！
+    // 可根据此案例拓展其他 sink 组件
+    // 需要注意的点：不同表数据量不一样，同步时可以适当放大同步资源，但会造成资源浪费，不加大可能反压
+    // 测试同步五张表百万数据，一分钟左右
+    // refer: https://blog.csdn.net/qq_36062467/article/details/128117647
+    // refer 环境: Flink 1.15 Flink CDC 2.3.0
+    // 本程序环境：Flink 1.16 Flink CDC 2.3.0  MySQL 8.0
+    // 技术点：Flink MySQL CDC Connector，MySQL Catalog，Flink Operator，Flink JDBC
 
     @Override
     public void handle(
@@ -63,12 +68,14 @@ public class FlinkSqlWDS extends BaseSql {
         String username = params.get("username", "root");
         String password = params.get("password", "123456");
         String databaseName = params.get("databaseName", "test");
-        String tableList = params.get("tableList", "test.test3");
+        String tableList = params.get("tableList", ".*");
 
         String sinkUrl =
-                "jdbc:mysql://localhost:3306/test2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
-        String sinkUsername = "root";
-        String sinkPassword = "123456";
+                params.get(
+                        "sinkUrl",
+                        "jdbc:mysql://localhost:3306/test2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
+        String sinkUsername = params.get("sinkUsername", "root");
+        String sinkPassword = params.get("sinkPassword", "123456");
 
         String connectorWithBody =
                 " with (\n"
@@ -165,27 +172,25 @@ public class FlinkSqlWDS extends BaseSql {
             for (int i = 0; i < fieldNames.length; i++) {
                 String column = fieldNames[i];
                 String fieldDataType = fieldDataTypes[i].toString();
-                stmt.append("\t").append(column).append(" ").append(fieldDataType).append(",\n");
-                stmt2.append("\t").append(column).append(" ").append(fieldDataType).append(",\n");
+                stmt.append("\t`").append(column).append("` ").append(fieldDataType).append(",\n");
+                stmt2.append("\t`").append(column).append("` ").append(fieldDataType).append(",\n");
             }
 
             stmt2.append(String.format("PRIMARY KEY (%s)\n)", StringUtils.join(primaryKeys, ",")));
-
             stmt.append(
                     String.format(
                             "PRIMARY KEY (%s) NOT ENFORCED\n)",
                             StringUtils.join(primaryKeys, ",")));
-            System.out.println(stmt2);
             String formatJdbcSinkWithBody =
                     connectorWithBody.replace("${tableName}", jdbcSinkTableName);
             String createSinkTableDdl = stmt + formatJdbcSinkWithBody;
-            // 创建 Flink sink 表
+            // 创建 Flink Sink 表
             LOG.info("createSinkTableDdl: \r {}", createSinkTableDdl);
             tEnv.executeSql(createSinkTableDdl);
             tableDataTypesMap.put(table, fieldDataTypes);
             tableTypeInformationMap.put(table, new RowTypeInfo(fieldTypes, fieldNames));
 
-            // 下游 mysql 建表逻辑
+            // 下游 MySQL 建表逻辑
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(sinkUrl, sinkUsername, sinkPassword);
@@ -194,7 +199,21 @@ public class FlinkSqlWDS extends BaseSql {
             } catch (SQLException e) {
                 LOG.error("sql 异常: ", e);
             }
-            String createSql = stmt2.toString();
+
+            String[] split = stmt2.toString().split(","); // mysql timestamp 类型需要默认值设置为 1970
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String value : split) {
+                int index = value.indexOf("TIMESTAMP");
+                if (index != -1) {
+                    stringBuilder.append(value).append(" default '1970-01-01 09:00:00',");
+                } else {
+                    stringBuilder.append(value).append(",");
+                }
+            }
+            int lastIndexOf = stringBuilder.lastIndexOf(",");
+            stringBuilder.replace(lastIndexOf, lastIndexOf + 1, " ");
+
+            String createSql = stringBuilder.toString();
 
             try {
                 preparedStatement = connection.prepareStatement(createSql);
@@ -226,7 +245,8 @@ public class FlinkSqlWDS extends BaseSql {
                         .build();
         SingleOutputStreamOperator<Tuple2<String, Row>> dataStreamSource =
                 env.fromSource(mySqlSource, WatermarkStrategy.noWatermarks(), "mysql cdc")
-                        .disableChaining(); // 切断任务链
+                        .disableChaining()
+                        .setParallelism(params.getInt("parallelism", 2)); // 切断任务链
         StatementSet statementSet = tEnv.createStatementSet();
         // DataStream 转 Table，创建临时视图，插入 sink 表
         for (Map.Entry<String, RowTypeInfo> entry : tableTypeInformationMap.entrySet()) {
@@ -235,7 +255,9 @@ public class FlinkSqlWDS extends BaseSql {
             SingleOutputStreamOperator<Row> mapStream =
                     dataStreamSource
                             .filter(data -> data.f0.equals(tableName))
-                            .map(data -> data.f1, rowTypeInfo);
+                            .setParallelism(params.getInt("parallelism", 2))
+                            .map(data -> data.f1, rowTypeInfo)
+                            .setParallelism(params.getInt("parallelism", 2));
             Table table = tEnv.fromChangelogStream(mapStream);
             String temporaryViewName = String.format("t_%s", tableName);
             tEnv.createTemporaryView(temporaryViewName, table);
@@ -243,7 +265,7 @@ public class FlinkSqlWDS extends BaseSql {
             String insertSql =
                     String.format(
                             "insert into %s select * from %s", sinkTableName, temporaryViewName);
-            LOG.info("add insertSql for {},sql: {}", tableName, insertSql);
+            LOG.info("add insertSql for {}, sql: {}", tableName, insertSql);
             statementSet.addInsertSql(insertSql);
         }
         statementSet.execute();
