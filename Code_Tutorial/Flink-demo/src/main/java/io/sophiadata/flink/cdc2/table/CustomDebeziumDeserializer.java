@@ -1,4 +1,4 @@
-package io.sophiadata.flink.cdc2;
+package io.sophiadata.flink.cdc2.table;
 
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -49,7 +49,7 @@ public class CustomDebeziumDeserializer
     private final Map<String, DeserializationRuntimeConverter> physicalConverterMap =
             Maps.newConcurrentMap();
 
-    CustomDebeziumDeserializer(Map<String, RowType> tableRowTypeMap) {
+    public CustomDebeziumDeserializer(Map<String, RowType> tableRowTypeMap) {
         for (String tableName : tableRowTypeMap.keySet()) {
             RowType rowType = tableRowTypeMap.get(tableName);
             DeserializationRuntimeConverter physicalConverter = createNotNullConverter(rowType);
