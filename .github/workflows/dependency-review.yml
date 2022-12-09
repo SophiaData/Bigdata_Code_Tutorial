@@ -1,6 +1,5 @@
 name: Dependency Review
-on: [pull_request]
-    [push]
+on: [pull_request, push]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
