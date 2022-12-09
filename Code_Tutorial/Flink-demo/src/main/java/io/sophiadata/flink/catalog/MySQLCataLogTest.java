@@ -1,4 +1,4 @@
-package io.sophiadata.flink.cdc2;
+package io.sophiadata.flink.catalog;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -31,7 +31,7 @@ public class MySQLCataLogTest extends BaseSql {
     @Override
     public void handle(
             StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
-
+        // jdbc catalog test code
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
         String username = params.get("username", "root");
