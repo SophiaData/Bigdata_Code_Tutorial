@@ -44,4 +44,4 @@ jobs:
                  -Dcheckstyle.skip=true \
                  --no-snapshot-updates --file Code_Tutorial
       - name: spotless check
-        run: mvn spotless:apply --file Code_Tutorial
+        run: mvn spotless:check --file Code_Tutorial
