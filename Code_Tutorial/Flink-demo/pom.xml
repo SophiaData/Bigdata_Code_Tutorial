@@ -320,17 +320,4 @@
         </plugins>
     </build>
     
-    <repositories>
-        <repository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
-        <repository>
-            <id>alismaven</id>
-            <name>aliyuns maven</name>
-            <url>https://maven.aliyun.com/repository/spring</url>
-        </repository>
-    </repositories>
-    
 </project>
