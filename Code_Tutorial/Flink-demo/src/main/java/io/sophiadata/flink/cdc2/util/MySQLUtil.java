@@ -20,27 +20,30 @@ public class MySQLUtil {
     private static final Logger LOG = LoggerFactory.getLogger(MySQLUtil.class);
     private static final String DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
 
-    public static Connection getConnection(
-            String sinkUrl, String sinkUsername, String sinkPassword) {
-        Connection connection = null;
+    public static Connection getConnection(String sinkUrl, String sinkUsername, String sinkPassword)
+            throws ClassNotFoundException, SQLException {
+        Connection connection;
         try {
             Class.forName(DRIVER_NAME);
             connection = DriverManager.getConnection(sinkUrl, sinkUsername, sinkPassword);
         } catch (ClassNotFoundException e) {
             LOG.error("驱动未加载，请检查: ", e);
+            throw e;
         } catch (SQLException e) {
             LOG.error("sql 异常: ", e);
+            throw e;
         }
         return connection;
     }
 
-    public static void executeSql(Connection connection, String createTable) {
+    public static void executeSql(Connection connection, String createTable) throws SQLException {
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(createTable);
             preparedStatement.execute();
         } catch (SQLException e) {
             LOG.error("建表异常: ", e);
+            throw e;
         } finally {
             if (preparedStatement != null) {
                 try {

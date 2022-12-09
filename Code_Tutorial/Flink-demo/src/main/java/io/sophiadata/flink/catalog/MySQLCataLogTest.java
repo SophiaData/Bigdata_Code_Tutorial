@@ -23,7 +23,7 @@ import java.util.Map;
 /** (@SophiaData) (@date 2022/12/6 15:27). */
 public class MySQLCataLogTest extends BaseSql {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         new MySQLCataLogTest().init(args, "MySQLCataLogTest");
     }
@@ -57,7 +57,7 @@ public class MySQLCataLogTest extends BaseSql {
             for (String table : tables) {
                 // 获取 MySQL Catalog 中注册的表
                 ObjectPath objectPath = new ObjectPath(databaseName, table);
-                DefaultCatalogTable catalogBaseTable = null;
+                DefaultCatalogTable catalogBaseTable;
                 catalogBaseTable = (DefaultCatalogTable) mysqlCatalog.getTable(objectPath);
                 // 获取表的 Schema
                 assert catalogBaseTable != null;

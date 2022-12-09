@@ -41,4 +41,12 @@ public class ParameterUtil {
     public static String tableList(ParameterTool params) {
         return params.get("tableList", ".*");
     }
+
+    public static Integer setParallelism(ParameterTool params) {
+        return params.getInt("setParallelism", 2);
+    }
+
+    public static String cdcSourceName(ParameterTool params) {
+        return params.get("cdcSourceName", "mysql-cdc-1");
+    }
 }

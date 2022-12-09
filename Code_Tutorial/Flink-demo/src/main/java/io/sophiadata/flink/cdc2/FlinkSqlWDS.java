@@ -32,7 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
 public class FlinkSqlWDS extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlWDS.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         new FlinkSqlWDS().init(args, "flink_sql_job_FlinkSqlWDS", true, true);
         LOG.info(" init 方法正常 ");
     }
@@ -58,7 +57,8 @@ public class FlinkSqlWDS extends BaseSql {
 
     @Override
     public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
+            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params)
+            throws Exception {
         String databaseName = ParameterUtil.databaseName(params);
         String tableList = ParameterUtil.tableList(params);
 
@@ -68,7 +68,7 @@ public class FlinkSqlWDS extends BaseSql {
 
         MySqlCatalog mySqlCatalog = MySQLUtil.useMysqlCatalog(params);
 
-        List<String> tables = new ArrayList<>();
+        List<String> tables;
 
         // 如果整库同步，则从 Catalog 里取所有表，否则从指定表中取表名
         try {
@@ -83,6 +83,7 @@ public class FlinkSqlWDS extends BaseSql {
             }
         } catch (DatabaseNotExistException e) {
             LOG.error("{} 库不存在", databaseName, e);
+            throw e;
         }
         // 创建表名和对应 RowTypeInfo 映射的 Map
         Map<String, RowTypeInfo> tableTypeInformationMap = Maps.newConcurrentMap();
@@ -91,11 +92,12 @@ public class FlinkSqlWDS extends BaseSql {
         for (String table : tables) {
             // 获取  Catalog 中注册的表
             ObjectPath objectPath = new ObjectPath(databaseName, table);
-            DefaultCatalogTable catalogBaseTable = null;
+            DefaultCatalogTable catalogBaseTable;
             try {
                 catalogBaseTable = (DefaultCatalogTable) mySqlCatalog.getTable(objectPath);
             } catch (TableNotExistException e) {
                 LOG.error("{} 表不存在", table, e);
+                throw e;
             }
             // 获取表的 Schema
             assert catalogBaseTable != null;
@@ -109,11 +111,12 @@ public class FlinkSqlWDS extends BaseSql {
             // 获取表字段类型
             TypeInformation<?>[] fieldTypes = new TypeInformation[schema.getColumns().size()];
             // 获取表的主键
-            List<String> primaryKeys = null;
+            List<String> primaryKeys;
             try {
                 primaryKeys = schema.getPrimaryKey().get().getColumnNames(); // 此处不用 orElse
             } catch (NullPointerException e) {
                 LOG.error("捕捉表异常: {} 表没有主键！！！ 当前 mysql cdc 尚不支持捕捉没有主键的表！！！", table, e);
+                throw e;
             }
 
             for (int i = 0; i < schema.getColumns().size(); i++) {
@@ -171,9 +174,9 @@ public class FlinkSqlWDS extends BaseSql {
             SingleOutputStreamOperator<Row> mapStream =
                     dataStreamSource
                             .filter(data -> data.f0.equals(tableName))
-                            .setParallelism(params.getInt("parallelism", 2))
+                            .setParallelism(ParameterUtil.setParallelism(params))
                             .map(data -> data.f1, rowTypeInfo)
-                            .setParallelism(params.getInt("parallelism", 2));
+                            .setParallelism(ParameterUtil.setParallelism(params));
             Table table = tEnv.fromChangelogStream(mapStream);
             String temporaryViewName = String.format("t_%s", tableName);
             tEnv.createTemporaryView(temporaryViewName, table);

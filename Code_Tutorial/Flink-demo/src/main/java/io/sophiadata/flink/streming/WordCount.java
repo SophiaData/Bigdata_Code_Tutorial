@@ -11,7 +11,7 @@ import io.sophiadata.flink.base.BaseCode;
 /** (@SophiaData) (@date 2022/10/29 13:50). */
 public class WordCount extends BaseCode {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         //
         new WordCount().init(args, "WordCount");
     }

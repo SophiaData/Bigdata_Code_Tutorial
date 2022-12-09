@@ -7,6 +7,7 @@ import io.sophiadata.flink.cdc2.util.MySQLUtil;
 import io.sophiadata.flink.cdc2.util.ParameterUtil;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 /** (@SophiaData) (@date 2022/12/9 12:21). */
@@ -17,7 +18,8 @@ public class CreateMySQLSinkTable {
             String sinkTableName,
             String[] fieldNames,
             DataType[] fieldDataTypes,
-            List<String> primaryKeys) {
+            List<String> primaryKeys)
+            throws SQLException, ClassNotFoundException {
         String createSql =
                 MySQLUtil.createTable(sinkTableName, fieldNames, fieldDataTypes, primaryKeys);
         Connection connection =
