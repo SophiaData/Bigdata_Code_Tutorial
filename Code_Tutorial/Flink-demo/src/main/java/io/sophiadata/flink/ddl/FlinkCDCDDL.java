@@ -19,7 +19,7 @@ public class FlinkCDCDDL extends BaseCode {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkCDCDDL.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // 测试解析 mysql schema change
         // true 为 更新，插入语句 false 为删除语句
         new FlinkCDCDDL().init(args, "flink_cdc_ddl_job_test", true, true);

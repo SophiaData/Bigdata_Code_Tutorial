@@ -38,8 +38,8 @@ public class MySQLCDCSource {
         return env.fromSource(
                         mySqlSource,
                         WatermarkStrategy.noWatermarks(),
-                        params.get("sourceName", "mysql cdc"))
+                        ParameterUtil.cdcSourceName(params))
                 .disableChaining()
-                .setParallelism(params.getInt("parallelism", 2));
+                .setParallelism(ParameterUtil.setParallelism(params));
     }
 }

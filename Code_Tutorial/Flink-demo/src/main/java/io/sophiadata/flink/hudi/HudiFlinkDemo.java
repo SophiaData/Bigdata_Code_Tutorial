@@ -9,7 +9,7 @@ import io.sophiadata.flink.base.BaseSql;
 /** (@SophiaData) (@date 2022/10/30 16:28). */
 public class HudiFlinkDemo extends BaseSql {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         //
         new HudiFlinkDemo().init(args, "HudiFlinkDemo", false, true);
     }

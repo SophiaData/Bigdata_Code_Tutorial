@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class FlinkSqlTest extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlTest.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         new FlinkSqlTest().init(args, "flink_sql_job_test", true, true);
         LOG.info(" init 方法正常 ");
     }
