@@ -40,6 +40,7 @@
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.2</httpclient.version>
         <jackson-annotations.version>2.12.6</jackson-annotations.version>
+        <maven-shade-plugin>3.1.0</maven-shade-plugin>
     </properties>
     
     <build>
