@@ -34,8 +34,8 @@ jobs:
       - name: "Translation into English in issue"
         uses: ./.github/actions/translate
         with:
-          translate-title: true
-          translate-body: true
+          translate-title: false
+          translate-body: false
 
       - name: "Comment in issue"
         uses: ./.github/actions/actions-comment-on-issue
