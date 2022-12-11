@@ -55,6 +55,6 @@ repos:
       # Spotless Hooks
       - id: spotless
         name: spotless lint
-        entry: mvn spotless:check --file Code_Tutorial
+        entry: mvn spotless:check
         language: script
         pass_filenames: false
