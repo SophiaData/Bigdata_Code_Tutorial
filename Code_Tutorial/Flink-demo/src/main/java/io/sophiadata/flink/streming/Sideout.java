@@ -13,7 +13,7 @@ import io.sophiadata.flink.base.BaseCode;
 /** (@SophiaData) (@date 2022/10/29 19:12). */
 public class Sideout extends BaseCode {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         //
         new Sideout().init(args, "sideout");
     }

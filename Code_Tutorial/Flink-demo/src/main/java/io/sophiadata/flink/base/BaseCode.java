@@ -16,7 +16,8 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath) {
+    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
+            throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
         String user = params.get("user");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -33,7 +34,7 @@ public abstract class BaseCode {
         }
     }
 
-    public void init(String[] args, String ckPathAndJobId) {
+    public void init(String[] args, String ckPathAndJobId) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -47,7 +48,8 @@ public abstract class BaseCode {
         }
     }
 
-    public abstract void handle(StreamExecutionEnvironment env, ParameterTool params);
+    public abstract void handle(StreamExecutionEnvironment env, ParameterTool params)
+            throws Exception;
 
     public void checkpoint(
             StreamExecutionEnvironment env,

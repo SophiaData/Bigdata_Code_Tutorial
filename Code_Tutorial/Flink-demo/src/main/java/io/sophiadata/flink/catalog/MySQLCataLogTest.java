@@ -1,4 +1,4 @@
-package io.sophiadata.flink.cdc2;
+package io.sophiadata.flink.catalog;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -23,7 +23,7 @@ import java.util.Map;
 /** (@SophiaData) (@date 2022/12/6 15:27). */
 public class MySQLCataLogTest extends BaseSql {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         new MySQLCataLogTest().init(args, "MySQLCataLogTest");
     }
@@ -31,7 +31,7 @@ public class MySQLCataLogTest extends BaseSql {
     @Override
     public void handle(
             StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
-
+        // jdbc catalog test code
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
         String username = params.get("username", "root");
@@ -57,7 +57,7 @@ public class MySQLCataLogTest extends BaseSql {
             for (String table : tables) {
                 // 获取 MySQL Catalog 中注册的表
                 ObjectPath objectPath = new ObjectPath(databaseName, table);
-                DefaultCatalogTable catalogBaseTable = null;
+                DefaultCatalogTable catalogBaseTable;
                 catalogBaseTable = (DefaultCatalogTable) mysqlCatalog.getTable(objectPath);
                 // 获取表的 Schema
                 assert catalogBaseTable != null;
