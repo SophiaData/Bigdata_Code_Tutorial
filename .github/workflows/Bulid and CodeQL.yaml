@@ -1,7 +1,7 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Bulid and CodeQL
 
 on:
   push:
@@ -18,6 +18,14 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'java' ]
     env:
       MAVEN_OPTS: -Xmx2G -Xms2G
     steps:
@@ -34,6 +42,10 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
       - name: Check Style
         run: |
           ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check
@@ -45,3 +57,7 @@ jobs:
                  --no-snapshot-updates
       - name: spotless check
         run: mvn spotless:check
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{matrix.language}}"
