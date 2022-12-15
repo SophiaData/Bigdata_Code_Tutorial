@@ -1,4 +1,4 @@
-package io.sophiadata.code_tutorial;
+package io.sophiadata.codeTutorial;
 /**
  * (@sophiadata) (@date 2022/12/15 14:53).
  */

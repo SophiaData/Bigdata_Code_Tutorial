@@ -1,4 +1,4 @@
-package io.sophiadata.code_tutorial;
+package io.sophiadata.codeTutorial;
 
 import java.util.HashMap;
 import java.util.Map;
