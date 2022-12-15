@@ -1,4 +1,4 @@
-package io.sophiadata.codeTutorial;
+package io.sophiadata.code;
 
 /** (@sophiadata) (@date 2022/12/15 14:53). */
 public class LeetCode2 {
@@ -59,6 +59,3 @@ class ListNode {
         val = x;
     }
 }
-
-
-

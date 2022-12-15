@@ -1,7 +1,8 @@
-package io.sophiadata.codeTutorial;
+package io.sophiadata.code;
 
 import java.util.HashMap;
 import java.util.Map;
+
 /**
  * (@sophiadata) (@date 2022/12/15 14:53).
  */
