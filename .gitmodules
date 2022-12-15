@@ -1,6 +1,6 @@
 [submodule ".github/actions/actions-comment-on-issue"]
 	path = .github/actions/actions-comment-on-issue
 	url = https://github.com/rookiegao/actions-comment-on-issue.git
-[submodule ".github/actions/translate"]
-	path = .github/actions/translate
+[submodule ".github/actions/translation-helper"]
+	path = .github/actions/translation-helper
 	url = https://github.com/rookiegao/translation-helper.git
