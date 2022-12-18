@@ -12,6 +12,7 @@
     
     <modules>
         <module>Code_Tutorial</module>
+        <module>Practice</module>
     </modules>
     
     <properties>
