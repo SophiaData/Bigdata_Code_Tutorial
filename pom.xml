@@ -12,12 +12,14 @@
     
     <modules>
         <module>Code_Tutorial</module>
+        <module>Practice</module>
     </modules>
     
     <properties>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <testcontainers.version>1.15.3</testcontainers.version>
         <flink.version>1.16.0</flink.version>
         <flink_cdc.version>2.3.0</flink_cdc.version>
         <scala.version>2.12</scala.version>
@@ -42,6 +44,27 @@
         <jackson-annotations.version>2.12.6</jackson-annotations.version>
         <maven-shade-plugin>3.1.0</maven-shade-plugin>
     </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.17.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     
     <build>
         <pluginManagement>

@@ -18,10 +18,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
     strategy:
       fail-fast: false
       matrix:
@@ -49,14 +45,16 @@ jobs:
       - name: Check Style
         run: |
           ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check
+      - name: spotless check
+        run: mvn spotless:check
+      - name: Build and Run Tests
+        run: mvn test --batch-mode --fail-at-end
       - name: Build and Package
         run: |
           ./mvnw -Pgoogle-mirror -B clean install \
                  -Dmaven.test.skip=true \
                  -Dcheckstyle.skip=true \
                  --no-snapshot-updates
-      - name: spotless check
-        run: mvn spotless:check
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
         with:
