@@ -13,6 +13,9 @@ concurrency:
   group: backend-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  checks: write
+
 jobs:
   build:
     name: Build
