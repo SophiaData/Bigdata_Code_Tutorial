@@ -13,17 +13,14 @@ concurrency:
   group: backend-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  checks: write
-
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      actions: read
-      contents: read
+      actions: write
+      contents: write
       security-events: write
     strategy:
       fail-fast: false
