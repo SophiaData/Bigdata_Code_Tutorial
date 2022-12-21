@@ -19,10 +19,9 @@ public abstract class BaseCode {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
             throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
-        String user = params.get("user");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setGlobalJobParameters(params);
-        checkpoint(env, ckPathAndJobId, hashMap, localpath, user);
+        checkpoint(env, ckPathAndJobId, hashMap, localpath);
 
         restartTask(env);
 
@@ -55,21 +54,19 @@ public abstract class BaseCode {
             StreamExecutionEnvironment env,
             String ckPathAndJobId,
             Boolean hashMap,
-            Boolean localpath,
-            String user) {
+            Boolean localpath) {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
-            env.getCheckpointConfig()
-                    .setCheckpointStorage("file:////Users/" + user + "/flink/" + ckPathAndJobId);
+            env.enableCheckpointing(3000);
         } else {
             env.getCheckpointConfig()
                     .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+            env.enableCheckpointing(60 * 1000);
         }
-        env.enableCheckpointing(60 * 1000);
         // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
         env.enableChangelogStateBackend(false); // 启用Changelog可能会对应用程序的性能产生负面影响。
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
