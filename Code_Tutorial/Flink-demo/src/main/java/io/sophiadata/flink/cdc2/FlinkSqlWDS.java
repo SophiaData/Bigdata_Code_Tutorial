@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,11 +76,15 @@ public class FlinkSqlWDS extends BaseSql {
             if (".*".equals(tableList)) {
                 tables = mySqlCatalog.listTables(databaseName);
             } else {
-                String[] tableArray = tableList.split(",");
-                tables =
-                        Arrays.stream(tableArray)
-                                .map(table -> table.split("\\.")[1])
-                                .collect(Collectors.toList());
+                if (tableList.contains(",")) {
+                    String[] tableArray = tableList.split(",");
+                    tables =
+                            Arrays.stream(tableArray)
+                                    .map(table -> table.split("\\.")[1])
+                                    .collect(Collectors.toList());
+                } else {
+                    tables = Collections.singletonList(tableList);
+                }
             }
         } catch (DatabaseNotExistException e) {
             LOG.error("{} 库不存在", databaseName, e);
