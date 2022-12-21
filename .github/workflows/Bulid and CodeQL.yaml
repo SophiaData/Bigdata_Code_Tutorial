@@ -51,6 +51,11 @@ jobs:
           ./mvnw -T 2C -B --no-snapshot-updates clean checkstyle:check
       - name: spotless check
         run: mvn spotless:check
+      - name: Build and Run Tests
+        run: mvn test --batch-mode --fail-at-end
+      - name: Publish Test Report
+        if: ${{ always() }}
+        uses: scacap/action-surefire-report@v1
       - name: Build and Package
         run: |
           ./mvnw -Pgoogle-mirror -B clean install \
