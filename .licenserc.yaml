@@ -1,0 +1,17 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Apache Software Foundation
+
+  paths-ignore:
+    - '.github/ISSUE_TEMPLATE/**'
+    - '**/.gitignore'
+    - '**/.gitmodules'
+    - '.mvn'
+    - 'docs/**'
+    - '**/*.md'
+    - '**/*.json'
+    - '**/*.iml'
+    - '**/*.ini'
+
+  comment: on-failure

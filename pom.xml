@@ -67,7 +67,6 @@
     </dependencies>
     
     <build>
-        <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -118,25 +117,13 @@
                         </execution>
                     </executions>
                 </plugin>
-            </plugins>
-        </pluginManagement>
-        
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven-checkstyle-plugin.version}</version>
-            </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <doclint>none</doclint>
+                    </configuration>
+                </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -158,8 +145,14 @@
                             <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
                             <replacement>$1</replacement>
                         </replaceRegex>
+                        <licenseHeader>
+                            <file>license-header</file>
+                        </licenseHeader>
                     </java>
                     <pom>
+                        <includes>
+                            <include>pom.xml</include>
+                        </includes>
                         <sortPom>
                             <encoding>UTF-8</encoding>
                             <nrOfIndentSpace>4</nrOfIndentSpace>
@@ -179,6 +172,26 @@
                             <replacement>project</replacement>
                         </replace>
                     </pom>
+                    <markdown>
+                        <includes>
+                            <!-- You have to set the target manually -->
+                            <include>**/*.md</include>
+                        </includes>
+                        <flexmark />
+                        <!-- has its own section below -->
+                    </markdown>
+                    <sql>
+                        <!-- You have to set the target manually -->
+                        <includes>
+                            <include>src/main/resources/**/*.sql</include>
+                            <include>src/test/resources/**/*.sql</include>
+                        </includes>
+                        
+                        <dbeaver />
+                        <!-- has its own section below -->
+                        <prettier />
+                        <!-- has its own section below -->
+                    </sql>
                 </configuration>
                 <executions>
                     <execution>
@@ -191,30 +204,7 @@
             </plugin>
         </plugins>
     </build>
-    
-    <repositories>
-        <repository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
-        <repository>
-            <id>alismaven</id>
-            <name>aliyuns maven</name>
-            <url>https://maven.aliyun.com/repository/spring</url>
-        </repository>
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>apache.snapshots</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/snapshots/</url>
-        </repository>
-    </repositories>
+
     <profiles>
         <profile>
             <id>google-mirror</id>
