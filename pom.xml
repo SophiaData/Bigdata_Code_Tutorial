@@ -158,8 +158,14 @@
                             <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
                             <replacement>$1</replacement>
                         </replaceRegex>
+                        <licenseHeader>
+                            <file>license-header</file>
+                        </licenseHeader>
                     </java>
                     <pom>
+                        <includes>
+                            <include>pom.xml</include>
+                        </includes>
                         <sortPom>
                             <encoding>UTF-8</encoding>
                             <nrOfIndentSpace>4</nrOfIndentSpace>
@@ -179,6 +185,26 @@
                             <replacement>project</replacement>
                         </replace>
                     </pom>
+                    <markdown>
+                        <includes>
+                            <!-- You have to set the target manually -->
+                            <include>**/*.md</include>
+                        </includes>
+                        <flexmark />
+                        <!-- has its own section below -->
+                    </markdown>
+                    <sql>
+                        <!-- You have to set the target manually -->
+                        <includes>
+                            <include>src/main/resources/**/*.sql</include>
+                            <include>src/test/resources/**/*.sql</include>
+                        </includes>
+                        
+                        <dbeaver />
+                        <!-- has its own section below -->
+                        <prettier />
+                        <!-- has its own section below -->
+                    </sql>
                 </configuration>
                 <executions>
                     <execution>

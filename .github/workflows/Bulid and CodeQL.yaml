@@ -53,7 +53,8 @@ jobs:
         run: |
           ./mvnw -Pgoogle-mirror -B clean install \
                  -Dmaven.test.skip=true \
-                 -Dcheckstyle.skip=true \
+                 -Dcheckstyle.check.skip=true \
+                 -Dspotless.check.skip=true \
                  --no-snapshot-updates
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
