@@ -90,7 +90,7 @@ public abstract class BaseCode {
         env.enableChangelogStateBackend(false); // 启用Changelog可能会对应用程序的性能产生负面影响。
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
-        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
         env.getCheckpointConfig()
                 .setExternalizedCheckpointCleanup(
