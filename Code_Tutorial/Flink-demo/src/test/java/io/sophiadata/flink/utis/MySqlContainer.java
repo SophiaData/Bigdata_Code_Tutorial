@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.testutis;
+package io.sophiadata.flink.utis;
 
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.JdbcDatabaseContainer;

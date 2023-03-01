@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.testutis;
+package io.sophiadata.flink.utis;
 
 /** (@sophiadata) (@date 2022/12/20 15:45). */
 public enum MySqlVersion {

@@ -22,8 +22,8 @@ import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.util.TestLogger;
 
-import io.sophiadata.flink.testutis.MySqlContainer;
-import io.sophiadata.flink.testutis.MySqlVersion;
+import io.sophiadata.flink.utis.MySqlContainer;
+import io.sophiadata.flink.utis.MySqlVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
