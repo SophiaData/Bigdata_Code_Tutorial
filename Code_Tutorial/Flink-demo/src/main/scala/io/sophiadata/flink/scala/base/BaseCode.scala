@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,24 +15,12 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.testutis;
+package io.sophiadata.flink.scala.base
 
-/** (@sophiadata) (@date 2022/12/20 15:45). */
-public enum MySqlVersion {
-    V8_0("8.0");
-
-    private String version;
-
-    MySqlVersion(String version) {
-        this.version = version;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    @Override
-    public String toString() {
-        return "MySqlVersion{" + "version='" + version + '\'' + '}';
-    }
+/**
+ * @author SophiaData
+ * @date 2023/3/1 15:09
+ */
+class BaseCode {
+// 代码待补充
 }

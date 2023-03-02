@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.testutis;
+package io.sophiadata.flink.utis;
 
 import java.net.URL;
 import java.nio.file.Files;

@@ -33,7 +33,7 @@ import org.apache.flink.shaded.guava30.com.google.common.collect.Maps;
 
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import io.sophiadata.flink.cdc2.table.CustomDebeziumDeserializer;
-import io.sophiadata.flink.testutis.UniqueDatabase;
+import io.sophiadata.flink.utis.UniqueDatabase;
 import org.junit.Ignore;
 import org.junit.Test;
 
