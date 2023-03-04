@@ -75,7 +75,7 @@ public abstract class BaseCode {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
-            // 该类型 State Backend 支持 changelog 增量检查点
+            // 该类型 State Backend 支持 Changelog 增量检查点
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
@@ -87,7 +87,7 @@ public abstract class BaseCode {
         }
         // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
         // 在 EmbeddedRocksDBStateBackend 中受到支持
-        env.enableChangelogStateBackend(false); // 启用Changelog可能会对应用程序的性能产生负面影响。
+        env.enableChangelogStateBackend(false); // 启用 Changelog 可能会对应用程序的性能产生负面影响。
         env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);

@@ -70,7 +70,7 @@ public abstract class BaseSql {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
-            // 该类型 State Backend 支持 changelog 增量检查点
+            // 该类型 State Backend 支持 Changelog 增量检查点
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
