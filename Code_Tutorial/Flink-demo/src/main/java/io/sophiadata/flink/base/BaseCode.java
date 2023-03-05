@@ -82,7 +82,7 @@ public abstract class BaseCode {
             env.enableCheckpointing(3000);
         } else {
             env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId); // Hadoop HA 写法： hdfs://nameservice_id/path/file
             env.enableCheckpointing(60 * 1000);
         }
         // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
