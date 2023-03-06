@@ -79,10 +79,15 @@ public abstract class BaseCode {
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
-            env.enableCheckpointing(3000);
+            env.enableCheckpointing(
+                    3000); // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败 测试任务如数据量较大请指定文件存储
+            //             env.getCheckpointConfig()
+            //                    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
         } else {
             env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId); // Hadoop HA 写法： hdfs://nameservice_id/path/file
+                    .setCheckpointStorage(
+                            "hdfs://hadoop1:8020/flink/" + ckPathAndJobId); // Hadoop HA 写法：
+            // hdfs://nameservice_id/path/file
             env.enableCheckpointing(60 * 1000);
         }
         // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
@@ -92,6 +97,7 @@ public abstract class BaseCode {
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
+        env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);
         env.getCheckpointConfig()
                 .setExternalizedCheckpointCleanup(
                         CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
