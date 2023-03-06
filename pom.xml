@@ -85,7 +85,7 @@
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.2.2</version>
                 <configuration>
-                    <scalaVersion>2.12.0</scalaVersion>
+                    <scalaVersion>2.12.12</scalaVersion>
                 </configuration>
                 
                 <executions>
@@ -146,32 +146,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.scalastyle</groupId>
-                <artifactId>scalastyle-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <configuration>
-                    <verbose>false</verbose>
-                    <failOnViolation>true</failOnViolation>
-                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                    <failOnWarning>false</failOnWarning>
-                    <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
-                    <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
-                    <configLocation>scalastyle-config.xml</configLocation>
-                    <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
-                    <!--suppress UnresolvedMavenProperty -->
-                    <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
-                    <!--suppress UnresolvedMavenProperty -->
-                    <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless.version}</version>
@@ -204,7 +178,10 @@
                             <include>src/main/scala/**/*.sc</include>
                             <include>src/test/scala/**/*.sc</include>
                         </includes>
-                        <scalafmt />
+                        <scalafmt>
+                            <version>3.1.1</version>
+                            <file>.scalafmt.conf</file>
+                        </scalafmt>
                         <!-- has its own section below -->
                     </scala>
                     <pom>
