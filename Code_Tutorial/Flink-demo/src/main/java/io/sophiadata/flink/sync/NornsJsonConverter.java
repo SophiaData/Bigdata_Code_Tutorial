@@ -69,10 +69,10 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 Decimal.LOGICAL_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof BigDecimal))
+                    if (!(value instanceof BigDecimal)){
                         throw new DataException(
                                 "Invalid type for Decimal, expected BigDecimal but was "
-                                        + value.getClass());
+                                        + value.getClass());}
 
                     final BigDecimal decimal = (BigDecimal) value;
                     switch (config.decimalFormat()) {
@@ -93,9 +93,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 org.apache.kafka.connect.data.Date.LOGICAL_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof java.util.Date))
+                    if (!(value instanceof java.util.Date)){
                         throw new DataException(
-                                "Invalid type for Date, expected Date but was " + value.getClass());
+                                "Invalid type for Date, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.numberNode(
                             org.apache.kafka.connect.data.Date.fromLogical(
                                     schema, (java.util.Date) value));
@@ -104,9 +104,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 Time.LOGICAL_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof java.util.Date))
+                    if (!(value instanceof java.util.Date)){
                         throw new DataException(
-                                "Invalid type for Time, expected Date but was " + value.getClass());
+                                "Invalid type for Time, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.numberNode(
                             Time.fromLogical(schema, (java.util.Date) value));
                 });
@@ -114,10 +114,10 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof java.util.Date))
+                    if (!(value instanceof java.util.Date)){
                         throw new DataException(
                                 "Invalid type for Timestamp, expected Date but was "
-                                        + value.getClass());
+                                        + value.getClass());}
                     return JSON_NODE_FACTORY.numberNode(
                             org.apache.kafka.connect.data.Timestamp.fromLogical(
                                     schema, (java.util.Date) value));
@@ -130,10 +130,10 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 Date.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Integer))
+                    if (!(value instanceof Integer)){
                         throw new DataException(
                                 "Invalid type for Integer, expected Date but was "
-                                        + value.getClass());
+                                        + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             LocalDate.ofEpochDay((Integer) value).toString());
                 });
@@ -141,9 +141,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 Timestamp.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Long))
+                    if (!(value instanceof Long)){
                         throw new DataException(
-                                "Invalid type for Long, expected Date but was " + value.getClass());
+                                "Invalid type for Long, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             TimestampData.fromEpochMillis((Long) value)
                                     .toLocalDateTime()
@@ -152,9 +152,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 MicroTime.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Long))
+                    if (!(value instanceof Long)){
                         throw new DataException(
-                                "Invalid type for Long, expected Date but was " + value.getClass());
+                                "Invalid type for Long, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             TimestampData.fromEpochMillis(
                                             TimeUnit.MICROSECONDS.toMillis((long) value))
@@ -164,9 +164,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 NanoTime.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Long))
+                    if (!(value instanceof Long)){
                         throw new DataException(
-                                "Invalid type for Long, expected Date but was " + value.getClass());
+                                "Invalid type for Long, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             TimestampData.fromEpochMillis(
                                             TimeUnit.NANOSECONDS.toMillis((long) value))
@@ -176,9 +176,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 MicroTimestamp.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Long))
+                    if (!(value instanceof Long)){
                         throw new DataException(
-                                "Invalid type for Long, expected Date but was " + value.getClass());
+                                "Invalid type for Long, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             TimestampData.fromEpochMillis(
                                             TimeUnit.MICROSECONDS.toMillis((long) value))
@@ -188,9 +188,9 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(
                 NanoTimestamp.SCHEMA_NAME,
                 (schema, value, config) -> {
-                    if (!(value instanceof Long))
+                    if (!(value instanceof Long)){
                         throw new DataException(
-                                "Invalid type for Long, expected Date but was " + value.getClass());
+                                "Invalid type for Long, expected Date but was " + value.getClass());}
                     return JSON_NODE_FACTORY.textNode(
                             TimestampData.fromEpochMillis(
                                             TimeUnit.NANOSECONDS.toMillis((long) value))
@@ -221,29 +221,29 @@ public class NornsJsonConverter extends JsonConverter {
     private JsonNode convertToJsonNode(Schema schema, Object value) {
         if (value == null) {
             if (schema
-                    == null) // Any schema is valid, and we don't have a default, so treat this as
+                    == null){ // Any schema is valid, and we don't have a default, so treat this as
                 // an optional schema
-                return null;
-            if (schema.defaultValue() != null)
-                return convertToJsonNode(schema, schema.defaultValue());
-            if (schema.isOptional()) return JSON_NODE_FACTORY.nullNode();
+                return null;}
+            if (schema.defaultValue() != null){
+                return convertToJsonNode(schema, schema.defaultValue());}
+            if (schema.isOptional()) {return JSON_NODE_FACTORY.nullNode();}
             throw new DataException(
                     "Conversion error: null value for field that is required and has no default value");
         }
 
         if (schema != null && schema.name() != null) {
             LogicalTypeConverter logicalConverter = LOGICAL_CONVERTERS.get(schema.name());
-            if (logicalConverter != null) return logicalConverter.toJson(schema, value, config);
+            if (logicalConverter != null){ return logicalConverter.toJson(schema, value, config);}
         }
 
         final Schema.Type schemaType;
         if (schema == null) {
             schemaType = ConnectSchema.schemaType(value.getClass());
-            if (schemaType == null)
+            if (schemaType == null){
                 throw new DataException(
                         "Java class "
                                 + value.getClass()
-                                + " does not have corresponding schema type.");
+                                + " does not have corresponding schema type.");}
         } else {
             schemaType = schema.type();
         }
@@ -267,9 +267,9 @@ public class NornsJsonConverter extends JsonConverter {
                 CharSequence charSeq = (CharSequence) value;
                 return JSON_NODE_FACTORY.textNode(charSeq.toString());
             case BYTES:
-                if (value instanceof byte[]) return JSON_NODE_FACTORY.binaryNode((byte[]) value);
-                else if (value instanceof ByteBuffer)
-                    return JSON_NODE_FACTORY.binaryNode(((ByteBuffer) value).array());
+                if (value instanceof byte[]) {return JSON_NODE_FACTORY.binaryNode((byte[]) value);}
+                else if (value instanceof ByteBuffer){
+                    return JSON_NODE_FACTORY.binaryNode(((ByteBuffer) value).array());}
                 else throw new DataException("Invalid type for bytes type: " + value.getClass());
             case ARRAY:
                 {
@@ -301,7 +301,7 @@ public class NornsJsonConverter extends JsonConverter {
                     }
                     ObjectNode obj = null;
                     ArrayNode list = null;
-                    if (objectMode) obj = JSON_NODE_FACTORY.objectNode();
+                    if (objectMode) {obj = JSON_NODE_FACTORY.objectNode();}
                     else list = JSON_NODE_FACTORY.arrayNode();
                     for (Map.Entry<?, ?> entry : map.entrySet()) {
                         Schema keySchema = schema == null ? null : schema.keySchema();
@@ -309,7 +309,7 @@ public class NornsJsonConverter extends JsonConverter {
                         JsonNode mapKey = convertToJsonNode(keySchema, entry.getKey());
                         JsonNode mapValue = convertToJsonNode(valueSchema, entry.getValue());
 
-                        if (objectMode) obj.set(mapKey.asText(), mapValue);
+                        if (objectMode){ obj.set(mapKey.asText(), mapValue);}
                         else list.add(JSON_NODE_FACTORY.arrayNode().add(mapKey).add(mapValue));
                     }
                     return objectMode ? obj : list;
@@ -317,8 +317,8 @@ public class NornsJsonConverter extends JsonConverter {
             case STRUCT:
                 {
                     Struct struct = (Struct) value;
-                    if (!struct.schema().equals(schema))
-                        throw new DataException("Mismatching schema.");
+                    if (!struct.schema().equals(schema)){
+                        throw new DataException("Mismatching schema.");}
                     ObjectNode obj = JSON_NODE_FACTORY.objectNode();
                     for (Field field : schema.fields()) {
                         obj.set(field.name(), convertToJsonNode(field.schema(), struct.get(field)));

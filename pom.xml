@@ -32,7 +32,7 @@
         <guava.version>29.0-jre</guava.version>
         <json-path.version>2.4.0</json-path.version>
         <ikanalyzer.version>2012_u6</ikanalyzer.version>
-        <commons-beanutils.version>1.9.3</commons-beanutils.version>
+        <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <spotless.version>2.23.0</spotless.version>
         <lombok.version>1.18.20</lombok.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
@@ -40,11 +40,11 @@
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <nacos.version>2.1.2</nacos.version>
         <httpcore.version>4.4.6</httpcore.version>
-        <httpclient.version>4.5.2</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <jackson-annotations.version>2.12.6</jackson-annotations.version>
         <maven-shade-plugin>3.1.0</maven-shade-plugin>
         <confluent.version>7.2.0</confluent.version>
-        <jackson-databind.version>2.12.6</jackson-databind.version>
+        <jackson-databind.version>2.13.5</jackson-databind.version>
         <jackson-core.version>2.13.2</jackson-core.version>
         <druid.version>1.1.16</druid.version>
         <joda-time.version>2.10.2</joda-time.version>

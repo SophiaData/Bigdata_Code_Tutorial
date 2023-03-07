@@ -44,7 +44,11 @@ import static io.sophiadata.flink.sync.DebeziumJsonConstant.AFTER;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.BEFORE;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.SOURCE;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.TABLE;
-import static org.apache.flink.types.RowKind.*;
+
+import static org.apache.flink.types.RowKind.DELETE;
+import static org.apache.flink.types.RowKind.INSERT;
+import static org.apache.flink.types.RowKind.UPDATE_AFTER;
+import static org.apache.flink.types.RowKind.UPDATE_BEFORE;
 import static org.apache.kafka.connect.json.JsonConverterConfig.DECIMAL_FORMAT_CONFIG;
 import static org.apache.kafka.connect.json.JsonConverterConfig.SCHEMAS_ENABLE_CONFIG;
 
