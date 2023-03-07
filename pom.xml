@@ -11,8 +11,7 @@
     <packaging>pom</packaging>
     
     <modules>
-        <module>Code_Tutorial</module>
-        <module>Practice</module>
+        <module>Flink-demo</module>
     </modules>
     
     <properties>
@@ -578,26 +577,6 @@
                             <replacement>project</replacement>
                         </replace>
                     </pom>
-                    <markdown>
-                        <includes>
-                            <!-- You have to set the target manually -->
-                            <include>**/*.md</include>
-                        </includes>
-                        <flexmark />
-                        <!-- has its own section below -->
-                    </markdown>
-                    <sql>
-                        <!-- You have to set the target manually -->
-                        <includes>
-                            <include>src/main/resources/**/*.sql</include>
-                            <include>src/test/resources/**/*.sql</include>
-                        </includes>
-                        
-                        <dbeaver />
-                        <!-- has its own section below -->
-                        <prettier />
-                        <!-- has its own section below -->
-                    </sql>
                 </configuration>
                 <executions>
                     <execution>
