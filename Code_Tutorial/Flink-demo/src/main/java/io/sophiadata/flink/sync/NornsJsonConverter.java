@@ -62,7 +62,7 @@ public class NornsJsonConverter extends JsonConverter {
 
     private static final JsonNodeFactory JSON_NODE_FACTORY =
             JsonNodeFactory.withExactBigDecimals(true);
-    // 自定义特殊数据类型转换器 key=schema.name
+    // 自定义特殊数据类型转换器 key=schema.name.
     private static final HashMap<String, LogicalTypeConverter> LOGICAL_CONVERTERS = new HashMap<>();
 
     static {
@@ -127,10 +127,10 @@ public class NornsJsonConverter extends JsonConverter {
                                     schema, (java.util.Date) value));
                 });
         // --------------------------------------------
-        // 自定义时间特殊处理
+        // 自定义时间特殊处理.
         // --------------------------------------------
 
-        // io.debezium.time.Date 日期类型
+        // io.debezium.time.Date 日期类型.
         LOGICAL_CONVERTERS.put(
                 Date.SCHEMA_NAME,
                 (schema, value, config) -> {
@@ -232,7 +232,7 @@ public class NornsJsonConverter extends JsonConverter {
         if (value == null) {
             if (schema
                     == null) { // Any schema is valid, and we don't have a default, so treat this as
-                // an optional schema
+                // an optional schema.
                 return null;
             }
             if (schema.defaultValue() != null) {
@@ -288,7 +288,9 @@ public class NornsJsonConverter extends JsonConverter {
                     return JSON_NODE_FACTORY.binaryNode((byte[]) value);
                 } else if (value instanceof ByteBuffer) {
                     return JSON_NODE_FACTORY.binaryNode(((ByteBuffer) value).array());
-                } else throw new DataException("Invalid type for bytes type: " + value.getClass());
+                } else {
+                    throw new DataException("Invalid type for bytes type: " + value.getClass());
+                }
             case ARRAY:
                 {
                     final List<?> collection = (List<?>) value;
@@ -304,7 +306,7 @@ public class NornsJsonConverter extends JsonConverter {
                 {
                     Map<?, ?> map = (Map<?, ?>) value;
                     // If true, using string keys and JSON object; if false, using non-string keys
-                    // and Array-encoding
+                    // and Array-encoding.
                     boolean objectMode;
                     if (schema == null) {
                         objectMode = true;
@@ -321,7 +323,9 @@ public class NornsJsonConverter extends JsonConverter {
                     ArrayNode list = null;
                     if (objectMode) {
                         obj = JSON_NODE_FACTORY.objectNode();
-                    } else list = JSON_NODE_FACTORY.arrayNode();
+                    } else {
+                        list = JSON_NODE_FACTORY.arrayNode();
+                    }
                     for (Map.Entry<?, ?> entry : map.entrySet()) {
                         Schema keySchema = schema == null ? null : schema.keySchema();
                         Schema valueSchema = schema == null ? null : schema.valueSchema();
@@ -330,7 +334,9 @@ public class NornsJsonConverter extends JsonConverter {
 
                         if (objectMode) {
                             obj.set(mapKey.asText(), mapValue);
-                        } else list.add(JSON_NODE_FACTORY.arrayNode().add(mapKey).add(mapValue));
+                        } else {
+                            list.add(JSON_NODE_FACTORY.arrayNode().add(mapKey).add(mapValue));
+                        }
                     }
                     return objectMode ? obj : list;
                 }

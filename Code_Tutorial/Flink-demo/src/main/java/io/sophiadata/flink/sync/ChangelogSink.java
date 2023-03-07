@@ -131,14 +131,15 @@ public class ChangelogSink {
         statementSet.attachAsDataStream();
     }
 
+    /** */
     @Data
     @Builder
     public static class TableSettingConfig implements Serializable {
-        /** 写入目标表表名 */
+        /** 写入目标表表名. */
         private String tableIdentifier;
-        /** 写入目标表建表语句 */
+        /** 写入目标表建表语句. */
         private String createTableSql;
-        /** 写入目标表表名订阅的 cdc 中源表名称 未配置默认等于 tableIdentifier 中表名 */
+        /** 写入目标表表名订阅的 cdc 中源表名称 未配置默认等于 tableIdentifier 中表名. */
         private String subscriptionTableName;
     }
 }

@@ -21,7 +21,8 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Collector;
 
-import com.google.common.collect.Maps;
+import org.apache.flink.shaded.guava30.com.google.common.collect.Maps;
+
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import lombok.AllArgsConstructor;
@@ -44,7 +45,6 @@ import static io.sophiadata.flink.sync.DebeziumJsonConstant.AFTER;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.BEFORE;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.SOURCE;
 import static io.sophiadata.flink.sync.DebeziumJsonConstant.TABLE;
-
 import static org.apache.flink.types.RowKind.DELETE;
 import static org.apache.flink.types.RowKind.INSERT;
 import static org.apache.flink.types.RowKind.UPDATE_AFTER;
@@ -142,7 +142,7 @@ public abstract class RowKindJsonDeserializationSchemaBase
         return TypeInformation.of(TableIRowKindJson.class);
     }
 
-    /** 提取出 [table、rowKind、rowKing 对应结果的 json] 序列化结果 */
+    /** 提取出 [table、rowKind、rowKing 对应结果的 json] 序列化结果. */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
