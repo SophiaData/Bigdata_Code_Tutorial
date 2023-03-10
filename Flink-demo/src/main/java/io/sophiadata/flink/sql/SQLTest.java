@@ -17,7 +17,6 @@
 
 package io.sophiadata.flink.sql;
 
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -31,8 +30,7 @@ public class SQLTest extends BaseSql {
     }
 
     @Override
-    public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params)
+    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception {
         tEnv.executeSql(
                 "CREATE TABLE test2 (\n"

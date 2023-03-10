@@ -20,7 +20,6 @@ package io.sophiadata.flink.streming;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import io.sophiadata.flink.base.BaseCode;
@@ -34,7 +33,7 @@ public class WordCount extends BaseCode {
     }
 
     @Override
-    public void handle(StreamExecutionEnvironment env, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env) {
         env.fromElements(WORDS)
                 .flatMap(
                         (FlatMapFunction<String, Tuple2<String, Integer>>)

@@ -19,7 +19,6 @@ package io.sophiadata.flink.base;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -31,9 +30,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 public abstract class BaseSql {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
             throws Exception {
-        final ParameterTool params = ParameterTool.fromArgs(args);
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.getConfig().setGlobalJobParameters(params);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
@@ -43,23 +40,21 @@ public abstract class BaseSql {
 
         restartTask(env);
 
-        handle(env, tEnv, params);
+        handle(args, env, tEnv);
     }
 
     public void init(String[] args, String ckPathAndJobId) throws Exception {
-        final ParameterTool params = ParameterTool.fromArgs(args);
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.getConfig().setGlobalJobParameters(params);
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
 
-        handle(env, tEnv, params);
+        handle(args, env, tEnv);
     }
 
     public abstract void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params)
+            String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception;
 
     public void checkpoint(

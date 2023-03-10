@@ -44,7 +44,10 @@ public class FlinkCDCDDL extends BaseCode {
     }
 
     @Override
-    public void handle(StreamExecutionEnvironment env, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env) {
+
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        env.getConfig().setGlobalJobParameters(params);
 
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);

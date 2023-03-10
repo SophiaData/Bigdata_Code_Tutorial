@@ -18,7 +18,6 @@
 package io.sophiadata.flink.streming;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
@@ -36,7 +35,7 @@ public class Sideout extends BaseCode {
     }
 
     @Override
-    public void handle(StreamExecutionEnvironment env, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env) {
         env.setParallelism(1);
         SingleOutputStreamOperator<String> sideout =
                 env.fromElements(STREAM)
