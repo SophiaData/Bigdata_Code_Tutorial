@@ -17,7 +17,6 @@
 
 package io.sophiadata.flink.hudi;
 
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -32,8 +31,7 @@ public class HudiFlinkDemo extends BaseSql {
     }
 
     @Override
-    public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv) {
         tEnv.executeSql(
                 "CREATE TABLE sourceT (\n"
                         + "  uuid varchar(20),\n"

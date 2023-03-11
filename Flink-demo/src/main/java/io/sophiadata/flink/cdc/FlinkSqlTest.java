@@ -36,8 +36,9 @@ public class FlinkSqlTest extends BaseSql {
     }
 
     @Override
-    public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv) {
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        env.getConfig().setGlobalJobParameters(params);
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
         String username = params.get("username", "root");

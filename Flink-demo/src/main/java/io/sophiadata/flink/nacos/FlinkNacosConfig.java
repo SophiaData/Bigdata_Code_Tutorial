@@ -17,7 +17,6 @@
 
 package io.sophiadata.flink.nacos;
 
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import com.alibaba.nacos.api.NacosFactory;
@@ -38,7 +37,7 @@ public class FlinkNacosConfig extends BaseCode {
     }
 
     @Override
-    public void handle(StreamExecutionEnvironment env, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env) {
         env.setParallelism(1);
         String serverAddr = "localhost";
         String dataId = "data1";

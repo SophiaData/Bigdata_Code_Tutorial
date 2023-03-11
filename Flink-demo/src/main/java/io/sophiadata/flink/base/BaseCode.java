@@ -19,7 +19,6 @@ package io.sophiadata.flink.base;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -35,14 +34,12 @@ public abstract class BaseCode {
 
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
             throws Exception {
-        final ParameterTool params = ParameterTool.fromArgs(args);
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.getConfig().setGlobalJobParameters(params);
         checkpoint(env, ckPathAndJobId, hashMap, localpath);
 
         restartTask(env);
 
-        handle(env, params);
+        handle(args, env);
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
@@ -51,12 +48,9 @@ public abstract class BaseCode {
     }
 
     public void init(String[] args, String ckPathAndJobId) throws Exception {
-        final ParameterTool params = ParameterTool.fromArgs(args);
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.getConfig().setGlobalJobParameters(params);
-        handle(env, params);
-
+        handle(args, env);
         try {
             env.execute(ckPathAndJobId); // 传入一个job的名字
         } catch (Exception e) {
@@ -64,8 +58,7 @@ public abstract class BaseCode {
         }
     }
 
-    public abstract void handle(StreamExecutionEnvironment env, ParameterTool params)
-            throws Exception;
+    public abstract void handle(String[] args, StreamExecutionEnvironment env) throws Exception;
 
     public void checkpoint(
             StreamExecutionEnvironment env,

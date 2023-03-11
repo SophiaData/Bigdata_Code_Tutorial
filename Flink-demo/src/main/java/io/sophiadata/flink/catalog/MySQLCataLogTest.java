@@ -46,8 +46,9 @@ public class MySQLCataLogTest extends BaseSql {
     }
 
     @Override
-    public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params) {
+    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv) {
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        env.getConfig().setGlobalJobParameters(params);
         // jdbc catalog test code
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);

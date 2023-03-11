@@ -32,6 +32,7 @@
         <json-path.version>2.4.0</json-path.version>
         <ikanalyzer.version>2012_u6</ikanalyzer.version>
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
+        <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
         <lombok.version>1.18.20</lombok.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
@@ -47,6 +48,21 @@
         <jackson-core.version>2.13.2</jackson-core.version>
         <druid.version>1.1.16</druid.version>
         <joda-time.version>2.10.2</joda-time.version>
+        <hudi-flink.version>0.12.1</hudi-flink.version>
+        <phoenix-core.version>5.0.0-HBase-2.0</phoenix-core.version>
+        <hbase-server.version>2.1.0-cdh6.3.2</hbase-server.version>
+        <ojdbc8.version>21.1.0.0</ojdbc8.version>
+        <protobuf-java.version>3.21.7</protobuf-java.version>
+        <ikanalyzer.version>2012_u6</ikanalyzer.version>
+        <clickhouse-jdbc.version>0.3.2-patch11</clickhouse-jdbc.version>
+        <flink-doris-connector-1.16.version>1.3.0</flink-doris-connector-1.16.version>
+        <scala-library.version>2.12.7</scala-library.version>
+        <json-path.version>2.4.0</json-path.version>
+        <flink-shaded-jackson.version>2.13.4-16.0</flink-shaded-jackson.version>
+        <mockito-core.version>4.6.1</mockito-core.version>
+        <javax.el-api.version>3.0.0</javax.el-api.version>
+        <org.glassfish.web.javax.el.version>2.2.4</org.glassfish.web.javax.el.version>
+        <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -77,7 +93,7 @@
             <dependency>
                 <groupId>org.apache.hudi</groupId>
                 <artifactId>hudi-flink</artifactId>
-                <version>0.12.1</version>
+                <version>${hudi-flink.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.kafka</groupId>
@@ -88,6 +104,12 @@
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-streaming-scala_${scala.version}</artifactId>
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -224,7 +246,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-dbcp2</artifactId>
-                <version>2.9.0</version>
+                <version>${commons-dbcp2.version}</version>
                 <scope>compile</scope>
             </dependency>
             
@@ -232,7 +254,7 @@
             <dependency>
                 <groupId>org.apache.phoenix</groupId>
                 <artifactId>phoenix-core</artifactId>
-                <version>5.0.0-HBase-2.0</version>
+                <version>${phoenix-core.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.glassfish</groupId>
@@ -251,7 +273,7 @@
             <dependency>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-server</artifactId>
-                <version>2.1.0-cdh6.3.2</version>
+                <version>${hbase-server.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.glassfish</groupId>
@@ -266,12 +288,12 @@
             <dependency>
                 <groupId>com.oracle.database.jdbc</groupId>
                 <artifactId>ojdbc8</artifactId>
-                <version>21.1.0.0</version>
+                <version>${ojdbc8.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
-                <version>3.21.7</version>
+                <version>${protobuf-java.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -281,12 +303,12 @@
             <dependency>
                 <groupId>com.janeluo</groupId>
                 <artifactId>ikanalyzer</artifactId>
-                <version>2012_u6</version>
+                <version>${ikanalyzer.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.clickhouse</groupId>
                 <artifactId>clickhouse-jdbc</artifactId>
-                <version>0.3.2-patch11</version>
+                <version>${clickhouse-jdbc.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.fasterxml.jackson.core</groupId>
@@ -297,7 +319,7 @@
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
-                <version>2.12.7</version>
+                <version>${scala-library.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -320,7 +342,7 @@
             <dependency>
                 <groupId>org.apache.doris</groupId>
                 <artifactId>flink-doris-connector-1.16</artifactId>
-                <version>1.3.0</version>
+                <version>${flink-doris-connector-1.16.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -333,7 +355,7 @@
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
-                <version>2.4.0</version>
+                <version>${json-path.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -389,7 +411,7 @@
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-shaded-jackson</artifactId>
-                <version>2.13.4-16.0</version>
+                <version>${flink-shaded-jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -400,23 +422,23 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>4.6.1</version>
+                <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>javax.el</groupId>
                 <artifactId>javax.el-api</artifactId>
-                <version>3.0.0</version>
+                <version>${javax.el-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.web</groupId>
                 <artifactId>javax.el</artifactId>
-                <version>2.2.4</version>
+                <version>${org.glassfish.web.javax.el.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.el</artifactId>
-                <version>3.0.1-b11</version>
+                <version>${org.glassfish.javax.el.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

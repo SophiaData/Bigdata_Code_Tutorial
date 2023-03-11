@@ -74,9 +74,10 @@ public class FlinkSqlWDS extends BaseSql {
     // 技术点：Flink MySQL CDC Connector，MySQL Catalog，Flink Operator，Flink JDBC
 
     @Override
-    public void handle(
-            StreamExecutionEnvironment env, StreamTableEnvironment tEnv, ParameterTool params)
+    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        env.getConfig().setGlobalJobParameters(params);
         String databaseName = ParameterUtil.databaseName(params);
         String tableList = ParameterUtil.tableList(params);
 
