@@ -98,8 +98,6 @@ public abstract class BaseCode {
     }
 
     public void restartTask(StreamExecutionEnvironment env) {
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, Time.seconds(10)));
-        env.setRestartStrategy(
-                RestartStrategies.failureRateRestart(10, Time.minutes(5), Time.seconds(10)));
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Time.seconds(10)));
     }
 }
