@@ -226,7 +226,6 @@ public class KafkaToOracle4 {
                                             map.values().stream()
                                                     .map(Object::toString)
                                                     .toArray(String[]::new));
-                            ;
 
                             // 解析数据
                             String[] fieldNames = keysString.split(",");

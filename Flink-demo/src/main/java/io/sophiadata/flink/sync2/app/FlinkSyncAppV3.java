@@ -5,7 +5,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import io.sophiadata.flink.base.BaseSql;
-import io.sophiadata.flink.sync2.executor.KafkaToOracle2;
 import io.sophiadata.flink.sync2.executor.KafkaToOracle4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
