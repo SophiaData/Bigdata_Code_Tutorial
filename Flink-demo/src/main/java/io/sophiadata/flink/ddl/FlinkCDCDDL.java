@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -39,7 +40,7 @@ public class FlinkCDCDDL extends BaseCode {
     public static void main(String[] args) throws Exception {
         // 测试解析 mysql schema change
         // true 为 更新，插入语句 false 为删除语句
-        new FlinkCDCDDL().init(args, "flink_cdc_ddl_job_test", true, true,"hdfs://");
+        new FlinkCDCDDL().init(args, "flink_cdc_ddl_job_test", true, true, "hdfs://");
         LOG.info(" init 方法正常 ");
     }
 

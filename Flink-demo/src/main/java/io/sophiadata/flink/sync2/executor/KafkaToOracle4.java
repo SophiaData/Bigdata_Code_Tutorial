@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.sophiadata.flink.sync2.executor;
 
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -245,7 +246,6 @@ public class KafkaToOracle4 {
                                             map.values().stream()
                                                     .map(Object::toString)
                                                     .toArray(String[]::new));
-                            ;
 
                             // 解析数据
                             String[] fieldNames = keysString.split(",");

@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -32,7 +33,8 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
-    public void init(String[] args, String JobName, Boolean hashMap, Boolean localpath,String ckPath)
+    public void init(
+            String[] args, String jobName, Boolean hashMap, Boolean localpath, String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         checkpoint(env, ckPath, hashMap, localpath);
@@ -41,30 +43,27 @@ public abstract class BaseCode {
 
         handle(args, env);
         try {
-            env.execute(JobName); // 传入一个job的名字
+            env.execute(jobName); // 传入一个job的名字
         } catch (Exception e) {
-            LOG.error(JobName + " 程序异常信息输出：", e);
+            LOG.error(jobName + " 程序异常信息输出：", e);
         }
     }
 
-    public void init(String[] args, String JobName) throws Exception {
+    public void init(String[] args, String jobName) throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         handle(args, env);
         try {
-            env.execute(JobName); // 传入一个job的名字
+            env.execute(jobName); // 传入一个job的名字
         } catch (Exception e) {
-            LOG.error(JobName + " 异常信息输出：", e);
+            LOG.error(jobName + " 异常信息输出：", e);
         }
     }
 
     public abstract void handle(String[] args, StreamExecutionEnvironment env) throws Exception;
 
     public void checkpoint(
-            StreamExecutionEnvironment env,
-            String ckPath,
-            Boolean hashMap,
-            Boolean localpath) {
+            StreamExecutionEnvironment env, String ckPath, Boolean hashMap, Boolean localpath) {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
@@ -78,8 +77,7 @@ public abstract class BaseCode {
             // env.getCheckpointConfig()
             //    .setCheckpointStorage(ckPath);
         } else {
-            env.getCheckpointConfig()
-                    .setCheckpointStorage(ckPath);
+            env.getCheckpointConfig().setCheckpointStorage(ckPath);
             // Hadoop HA 写法：
             // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);
