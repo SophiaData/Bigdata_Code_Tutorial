@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.sophiadata.flink.sync2.executor;
 
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -34,9 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * (@SophiaData) (@date 2023/4/11 17:15).
- */
+/** (@SophiaData) (@date 2023/4/11 17:15). */
 public class KafkaToOracle4 {
     // merge 写入
     private static final Logger LOG = LoggerFactory.getLogger(KafkaToOracle4.class);
@@ -87,10 +102,10 @@ public class KafkaToOracle4 {
                             public void processElement(
                                     JSONObject jsonObject,
                                     BroadcastProcessFunction<
-                                            JSONObject,
-                                            Map<String, String>,
-                                            JSONObject>
-                                            .ReadOnlyContext
+                                                            JSONObject,
+                                                            Map<String, String>,
+                                                            JSONObject>
+                                                    .ReadOnlyContext
                                             readOnlyContext,
                                     Collector<JSONObject> collector)
                                     throws Exception {
@@ -139,10 +154,10 @@ public class KafkaToOracle4 {
                             public void processBroadcastElement(
                                     Map<String, String> value,
                                     BroadcastProcessFunction<
-                                            JSONObject,
-                                            Map<String, String>,
-                                            JSONObject>
-                                            .Context
+                                                            JSONObject,
+                                                            Map<String, String>,
+                                                            JSONObject>
+                                                    .Context
                                             context,
                                     Collector<JSONObject> collector)
                                     throws Exception {
@@ -179,12 +194,13 @@ public class KafkaToOracle4 {
                     Connection connection;
                     PreparedStatement stmt;
 
+                    String s1;
+
                     @Override
                     public void open(Configuration parameters) throws Exception {
                         super.open(parameters);
 
                         connection = JdbcUtil.getOracleConnection(params).getConnection();
-                        connection.setAutoCommit(false);
                     }
 
                     @Override
@@ -203,9 +219,9 @@ public class KafkaToOracle4 {
                     public void invoke(JSONObject value, Context context) throws Exception {
                         super.invoke(value, context);
                         try {
-
                             String tableMap = value.getString("tableMap");
-                            System.out.println("tableMap: " + tableMap);
+                            //                            System.out.println("tableMap: " +
+                            // tableMap);
                             String tableInfoMap = value.getString("tableInfoMap");
                             JSONObject tableInfoMapJson = JSONObject.parseObject(tableInfoMap);
                             JSONObject tableMapJson = JSONObject.parseObject(tableMap);
@@ -213,9 +229,12 @@ public class KafkaToOracle4 {
                             Map<String, Object> tableMaps = JSON.parseObject(s2);
 
                             String tableCode = value.getString("TABLE_CODE");
-                            value.remove("TABLE_CODE");
+                            System.out.println("tableCode: " + tableCode);
                             value.remove("tableMap");
                             value.remove("tableInfoMap");
+                            System.out.println("value - " + value);
+                            value.remove("TABLE_CODE");
+
                             String s = value.toJSONString();
                             Map<String, Object> map = JSON.parseObject(s);
 
@@ -226,9 +245,11 @@ public class KafkaToOracle4 {
                                             map.values().stream()
                                                     .map(Object::toString)
                                                     .toArray(String[]::new));
+                            ;
 
                             // 解析数据
                             String[] fieldNames = keysString.split(",");
+
                             String[] fieldValues = valueString.split(",");
                             int numFields = fieldNames.length;
                             String primaryKey = tableInfoMapJson.getString(tableCode);
@@ -266,22 +287,31 @@ public class KafkaToOracle4 {
                             sqlBuilder.append(tableCode.toUpperCase()).append(" t USING (SELECT ");
                             for (int i = 0; i < numFields; i++) {
                                 if (map1.get(fieldNames[i]).equals("\"DATE\"")) {
+                                    System.out.println("111 ");
                                     sqlBuilder
-                                            .append(
-                                                    "TO_DATE(SUBSTR(?,1,19), 'YYYY-MM-DD HH24:MI:SS') AS ")
+                                            .append("TO_DATE(SUBSTR(")
+                                            .append("'")
+                                            .append(fieldValues[i])
+                                            .append("',1,19),'YYYY-MM-DD HH24:MI:SS') AS ")
                                             .append(fieldNames[i]);
                                 } else if (map1.get(fieldNames[i])
                                         .toString()
                                         .startsWith("TIMESTAMP", 1)) {
                                     sqlBuilder
-                                            .append(
-                                                    "TO_TIMESTAMP(SUBSTR(?,1,19),'YYYY-MM-DD HH24:MI:SS') AS ")
+                                            .append("TO_TIMESTAMP(SUBSTR(")
+                                            .append("'")
+                                            .append(fieldValues[i])
+                                            .append("',1,19),'YYYY-MM-DD HH24:MI:SS') AS ")
                                             .append(fieldNames[i]);
                                 } else {
-                                    sqlBuilder.append("? AS ").append(fieldNames[i]);
+                                    sqlBuilder
+                                            .append("'")
+                                            .append(fieldValues[i])
+                                            .append("' AS ")
+                                            .append(fieldNames[i]);
                                 }
                                 if (i != numFields - 1) {
-                                    sqlBuilder.append(",");
+                                    sqlBuilder.append(", ");
                                 }
                             }
                             sqlBuilder.append(" FROM DUAL) s ON ( ");
@@ -310,26 +340,16 @@ public class KafkaToOracle4 {
                                 }
                             }
                             sqlBuilder.append(")");
-                            String s1 = String.format(sqlBuilder.toString(), result);
-                            if (stmt == null) {
-                                stmt = connection.prepareStatement(s1);
-                            }
-                            for (int i = 0; i < numFields; i++) {
-                                stmt.setString(i + 1, fieldValues[i]);
-                            }
-                            System.out.println("sqlBuilder: " + sqlBuilder);
 
+                            s1 = String.format(sqlBuilder.toString(), result);
+
+                            System.out.println(s1);
+                            stmt = connection.prepareStatement(s1);
                             stmt.execute();
+
+                        } catch (Exception e) {
+                            LOG.error("  异常： " + e + " - " + s1);
                         }
-
-                        //  执行 SQL 语句
-
-                        //            stmt.setString(numFields + 1, result);
-                        catch (Exception e) {
-                            LOG.error("  异常： " + e);
-                        }
-
-                        connection.commit();
                     }
                 });
 
@@ -365,4 +385,3 @@ public class KafkaToOracle4 {
                         });
     }
 }
-

@@ -63,7 +63,9 @@
         <javax.el-api.version>3.0.0</javax.el-api.version>
         <org.glassfish.web.javax.el.version>2.2.4</org.glassfish.web.javax.el.version>
         <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
+        <javafaker.version>1.0.2</javafaker.version>
     </properties>
+    
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -455,6 +457,11 @@
                 <artifactId>joda-time</artifactId>
                 <version>${joda-time.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.javafaker</groupId>
+                <artifactId>javafaker</artifactId>
+                <version>${javafaker.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     
@@ -559,7 +566,7 @@
                             <replacement>$1</replacement>
                         </replaceRegex>
                         <licenseHeader>
-                            <file>license-header</file>
+                            <file>tool/license.header</file>
                         </licenseHeader>
                     </java>
                     <scala>

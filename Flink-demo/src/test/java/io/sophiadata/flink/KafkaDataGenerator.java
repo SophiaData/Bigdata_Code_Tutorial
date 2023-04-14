@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.sophiadata.flink;
 
 import com.github.javafaker.Faker;
@@ -7,9 +24,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.Properties;
 
-/**
- * (@sophiadata) (@date 2023/4/13 17:07).
- */
+/** (@sophiadata) (@date 2023/4/13 17:07). */
 public class KafkaDataGenerator {
 
     private static final String TOPIC_NAME = "test-data6";
@@ -22,8 +37,12 @@ public class KafkaDataGenerator {
     public KafkaDataGenerator() {
         props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.153.201:9092");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<>(props);
         batchCount = 0;
     }
@@ -42,16 +61,59 @@ public class KafkaDataGenerator {
         if (batchCount % 2 == 0) {
             taskId = "2023021000000079";
         }
-        String dataDate = faker.date().future(365 * 10, java.util.concurrent.TimeUnit.DAYS).toString(); // 未来 10 年内的随机日期
+        String dataDate =
+                faker.date()
+                        .future(365 * 10, java.util.concurrent.TimeUnit.DAYS)
+                        .toString(); // 未来 10 年内的随机日期
         String calcTime = "2023-03-07 00:00:00.0"; // 近一年内的随机日期
-        String indEnergy = String.format("%.4f", faker.number().randomDouble(4, 0, 1000)); // 随机生成 0~1000 之间的小数
-        String[] columns = {"IND_CLS", "IND_ENERGY6", "IND_ENERGY5", "ENERGY_TYPE", "IND_ENERGY4",
-                "IND_ENERGY3","IND_ENERGY2", "IND_ENERGY1", "INST_NUM", "TABLE_CODE", "DATA_DATE",
-                "DATA_DATE_COLUMN", "CONS_NUM", "TEMPLATE_ID", "DIST_LV", "CALC_TIME", "MGT_ORG_CODE",
-                "YN_FLAG", "PRO_MGT_ORG_CODE", "IND_ENERGY", "TASK_ID"};
-        String[] values = {indCls, "0.0000", "0.0000", "02", "0.0000", "0.0000", "0.0000", "0.0000",
-                null, "SGAMI_STAT.A_BA_IND_ENERGY_DAY2", dataDate, "", "1", templateId, String.format("%02d", distLv),
-                calcTime, "3741602", "1", "37101", indEnergy, taskId};
+        String indEnergy =
+                String.format("%.4f", faker.number().randomDouble(4, 0, 1000)); // 随机生成 0~1000 之间的小数
+        String[] columns = {
+            "IND_CLS",
+            "IND_ENERGY6",
+            "IND_ENERGY5",
+            "ENERGY_TYPE",
+            "IND_ENERGY4",
+            "IND_ENERGY3",
+            "IND_ENERGY2",
+            "IND_ENERGY1",
+            "INST_NUM",
+            "TABLE_CODE",
+            "DATA_DATE",
+            "DATA_DATE_COLUMN",
+            "CONS_NUM",
+            "TEMPLATE_ID",
+            "DIST_LV",
+            "CALC_TIME",
+            "MGT_ORG_CODE",
+            "YN_FLAG",
+            "PRO_MGT_ORG_CODE",
+            "IND_ENERGY",
+            "TASK_ID"
+        };
+        String[] values = {
+            indCls,
+            "0.0000",
+            "0.0000",
+            "02",
+            "0.0000",
+            "0.0000",
+            "0.0000",
+            "0.0000",
+            null,
+            "SGAMI_STAT.A_BA_IND_ENERGY_DAY2",
+            dataDate,
+            "",
+            "1",
+            templateId,
+            String.format("%02d", distLv),
+            calcTime,
+            "3741602",
+            "1",
+            "37101",
+            indEnergy,
+            taskId
+        };
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (int i = 0; i < columns.length; i++) {
@@ -62,7 +124,8 @@ public class KafkaDataGenerator {
         }
         sb.append("}");
 
-        ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_NAME, null, sb.toString());
+        ProducerRecord<String, String> record =
+                new ProducerRecord<>(TOPIC_NAME, null, sb.toString());
         producer.send(record);
 
         batchCount++;
