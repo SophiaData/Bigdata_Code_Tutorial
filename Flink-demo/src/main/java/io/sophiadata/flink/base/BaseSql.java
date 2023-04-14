@@ -28,27 +28,27 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /** (@SophiaData) (@date 2022/10/25 10:58). */
 public abstract class BaseSql {
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
+    public void init(String[] args, String JobName, Boolean hashMap, Boolean localpath,String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
-        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", JobName);
 
-        checkpoint(env, ckPathAndJobId, hashMap, localpath);
+        checkpoint(env, ckPath, hashMap, localpath);
 
         restartTask(env);
 
         handle(args, env, tEnv);
     }
 
-    public void init(String[] args, String ckPathAndJobId) throws Exception {
+    public void init(String[] args, String JobName) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
-        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", JobName);
 
         handle(args, env, tEnv);
     }
@@ -59,7 +59,7 @@ public abstract class BaseSql {
 
     public void checkpoint(
             StreamExecutionEnvironment env,
-            String ckPathAndJobId,
+            String ckPath,
             Boolean hashMap,
             Boolean localpath) {
         if (hashMap) {
@@ -76,7 +76,7 @@ public abstract class BaseSql {
             //    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
         } else {
             env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+                    .setCheckpointStorage(ckPath);
             // Hadoop HA 写法：
             // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);

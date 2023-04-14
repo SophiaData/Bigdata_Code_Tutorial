@@ -60,7 +60,7 @@ public class FlinkSqlWDS extends BaseSql {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlWDS.class);
 
     public static void main(String[] args) throws Exception {
-        new FlinkSqlWDS().init(args, "flink_sql_job_FlinkSqlWDS", true, true);
+        new FlinkSqlWDS().init(args, "flink_sql_job_FlinkSqlWDS", true, true,"hdfs://");
         LOG.info(" init 方法正常 ");
     }
 

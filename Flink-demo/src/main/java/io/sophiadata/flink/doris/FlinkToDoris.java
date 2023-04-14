@@ -44,7 +44,7 @@ public class FlinkToDoris extends BaseCode {
 
     public static void main(String[] args) throws Exception {
         // 通过 light schema change 实现 flink ddl 自动同步 Doris
-        new FlinkToDoris().init(args, "flink_doris_test", true, true);
+        new FlinkToDoris().init(args, "flink_doris_test", true, true,"hdfs://");
         LOG.info(" init 方法正常 ");
     }
 

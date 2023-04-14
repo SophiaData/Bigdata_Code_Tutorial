@@ -32,29 +32,29 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
+    public void init(String[] args, String JobName, Boolean hashMap, Boolean localpath,String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        checkpoint(env, ckPathAndJobId, hashMap, localpath);
+        checkpoint(env, ckPath, hashMap, localpath);
 
         restartTask(env);
 
         handle(args, env);
         try {
-            env.execute(ckPathAndJobId); // 传入一个job的名字
+            env.execute(JobName); // 传入一个job的名字
         } catch (Exception e) {
-            LOG.error(ckPathAndJobId + " 程序异常信息输出：", e);
+            LOG.error(JobName + " 程序异常信息输出：", e);
         }
     }
 
-    public void init(String[] args, String ckPathAndJobId) throws Exception {
+    public void init(String[] args, String JobName) throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         handle(args, env);
         try {
-            env.execute(ckPathAndJobId); // 传入一个job的名字
+            env.execute(JobName); // 传入一个job的名字
         } catch (Exception e) {
-            LOG.error(ckPathAndJobId + " 异常信息输出：", e);
+            LOG.error(JobName + " 异常信息输出：", e);
         }
     }
 
@@ -62,7 +62,7 @@ public abstract class BaseCode {
 
     public void checkpoint(
             StreamExecutionEnvironment env,
-            String ckPathAndJobId,
+            String ckPath,
             Boolean hashMap,
             Boolean localpath) {
         if (hashMap) {
@@ -76,10 +76,10 @@ public abstract class BaseCode {
             // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
             // 测试任务如数据量较大请指定文件存储
             // env.getCheckpointConfig()
-            //    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
+            //    .setCheckpointStorage(ckPath);
         } else {
             env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+                    .setCheckpointStorage(ckPath);
             // Hadoop HA 写法：
             // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);

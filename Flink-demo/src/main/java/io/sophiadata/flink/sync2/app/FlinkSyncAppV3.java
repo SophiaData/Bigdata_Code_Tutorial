@@ -19,9 +19,9 @@ public class FlinkSyncAppV3 extends BaseSql {
     public static void main(String[] args) throws Exception {
         params = ParameterTool.fromArgs(args);
 
-        new FlinkSyncAppV3().init(args, params.get("ckPathAndJobId"));
+        new FlinkSyncAppV3().init(args, params.get("JobName"));
         //        new FlinkSyncAppV2().init(args, params.get("ckPathAndJobId"),false,false);
-        LOG.info(params.get("ckPathAndJobId") + " job 初始化正常 ！！！ ");
+        LOG.info(params.get("JobName") + " job 初始化正常 ！！！ ");
     }
 
     @Override

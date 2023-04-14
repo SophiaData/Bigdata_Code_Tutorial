@@ -38,7 +38,7 @@ public class FlinkCDCTest extends BaseCode {
 
     public static void main(String[] args) throws Exception {
         // 参数信息通过 args 传递
-        new FlinkCDCTest().init(args, "flink_cdc_job_test", true, true);
+        new FlinkCDCTest().init(args, "flink_cdc_job_test", true, true,"hdfs://");
         LOG.info(" init 方法正常 ");
     }
 
