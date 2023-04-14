@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -28,27 +29,28 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /** (@SophiaData) (@date 2022/10/25 10:58). */
 public abstract class BaseSql {
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
+    public void init(
+            String[] args, String jobName, Boolean hashMap, Boolean localpath, String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
-        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", jobName);
 
-        checkpoint(env, ckPathAndJobId, hashMap, localpath);
+        checkpoint(env, ckPath, hashMap, localpath);
 
         restartTask(env);
 
         handle(args, env, tEnv);
     }
 
-    public void init(String[] args, String ckPathAndJobId) throws Exception {
+    public void init(String[] args, String jobName) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
-        tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
+        tEnv.getConfig().getConfiguration().setString("pipeline.name", jobName);
 
         handle(args, env, tEnv);
     }
@@ -58,10 +60,7 @@ public abstract class BaseSql {
             throws Exception;
 
     public void checkpoint(
-            StreamExecutionEnvironment env,
-            String ckPathAndJobId,
-            Boolean hashMap,
-            Boolean localpath) {
+            StreamExecutionEnvironment env, String ckPath, Boolean hashMap, Boolean localpath) {
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
@@ -75,8 +74,7 @@ public abstract class BaseSql {
             // env.getCheckpointConfig()
             //    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
         } else {
-            env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
+            env.getCheckpointConfig().setCheckpointStorage(ckPath);
             // Hadoop HA 写法：
             // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);
