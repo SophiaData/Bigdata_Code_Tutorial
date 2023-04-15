@@ -59,9 +59,10 @@ public class JdbcUtil {
             dataSource.setUrl(oracleConfig.get("sinkOracleUrl").toString());
             dataSource.setUsername(oracleConfig.get("sinkOracleUsername").toString());
             dataSource.setPassword(oracleConfig.get("sinkOraclePassword").toString());
-            dataSource.setInitialSize(1);
-            dataSource.setMaxTotal(50);
-            dataSource.setMaxWaitMillis(10 * 1000);
+            dataSource.setInitialSize(10);
+            dataSource.setMaxTotal(20);
+            dataSource.setMinIdle(3);
+            dataSource.setMaxWaitMillis(60 * 1000);
             dataSource.setMinEvictableIdleTimeMillis(30 * 60 * 1000);
 
         } catch (Exception e) {
