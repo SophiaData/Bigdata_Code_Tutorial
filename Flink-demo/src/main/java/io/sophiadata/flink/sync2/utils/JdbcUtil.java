@@ -60,10 +60,11 @@ public class JdbcUtil {
             dataSource.setUsername(oracleConfig.get("sinkOracleUsername").toString());
             dataSource.setPassword(oracleConfig.get("sinkOraclePassword").toString());
             dataSource.setInitialSize(10);
-            dataSource.setMaxTotal(20);
-            dataSource.setMinIdle(3);
+            dataSource.setMaxTotal(50);
+            dataSource.setMinIdle(10);
             dataSource.setMaxWaitMillis(60 * 1000);
-            dataSource.setMinEvictableIdleTimeMillis(30 * 60 * 1000);
+            dataSource.setMinEvictableIdleTimeMillis(10 * 60 * 1000);
+            dataSource.setValidationQuery("SELECT 1 FROM DUAL");
 
         } catch (Exception e) {
             LOG.error(String.format("建立连接错误, 原因 %s", e));
