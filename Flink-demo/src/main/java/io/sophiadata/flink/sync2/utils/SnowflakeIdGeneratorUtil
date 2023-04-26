@@ -1,0 +1,88 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+public class SnowflakeIdGeneratorUtil {
+    // 雪花算法
+    private static final long START_TIME = 1609459200000L; // 2021-01-01 00:00:00 UTC
+    private static final long WORKER_ID_BITS = 5L;
+    private static final long DATACENTER_ID_BITS = 5L;
+    private static final long SEQUENCE_BITS = 12L;
+    private static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS);
+    private static final long MAX_DATACENTER_ID = ~(-1L << DATACENTER_ID_BITS);
+    private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
+    private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
+    private static final long TIMESTAMP_LEFT_SHIFT =
+            SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    private static final long SEQUENCE_MASK = ~(-1L << SEQUENCE_BITS);
+    private final long workerId;
+    private final long datacenterId;
+    private long lastTimestamp = -1L;
+    private long sequence = 0L;
+
+    public SnowflakeIdGeneratorUtil(long workerId, long datacenterId) {
+        if (workerId > MAX_WORKER_ID || workerId < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Worker ID must be between 0 and %d", MAX_WORKER_ID));
+        }
+        if (datacenterId > MAX_DATACENTER_ID || datacenterId < 0) {
+            throw new IllegalArgumentException(
+                    String.format("Datacenter ID must be between 0 and %d", MAX_DATACENTER_ID));
+        }
+        this.workerId = workerId;
+        this.datacenterId = datacenterId;
+    }
+
+    public synchronized long nextId() {
+        long timestamp = System.currentTimeMillis();
+        if (timestamp < lastTimestamp) {
+            throw new RuntimeException(
+                    String.format(
+                            "Clock moved backwards. Refusing to generate ID for %d milliseconds",
+                            lastTimestamp - timestamp));
+        }
+        if (lastTimestamp == timestamp) {
+            sequence = (sequence + 1) & SEQUENCE_MASK;
+            if (sequence == 0) {
+                timestamp = tilNextMillis(lastTimestamp);
+            }
+        } else {
+            sequence = 0L;
+        }
+        lastTimestamp = timestamp;
+        return ((timestamp - START_TIME) << TIMESTAMP_LEFT_SHIFT)
+                | (datacenterId << DATACENTER_ID_SHIFT)
+                | (workerId << WORKER_ID_SHIFT)
+                | sequence;
+    }
+
+    private long tilNextMillis(long lastTimestamp) {
+        long timestamp = System.currentTimeMillis();
+        while (timestamp <= lastTimestamp) {
+            timestamp = System.currentTimeMillis();
+        }
+        return timestamp;
+    }
+
+    public static void main(String[] args) {
+        SnowflakeIdGeneratorUtil snowflakeIdGeneratorUtil = new SnowflakeIdGeneratorUtil(31, 1);
+        long id = snowflakeIdGeneratorUtil.nextId();
+        long id1 = snowflakeIdGeneratorUtil.nextId();
+        System.out.println(id);
+        System.out.println(id1);
+    }
+}
