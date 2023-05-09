@@ -349,6 +349,14 @@ public class KafkaToOracle4 {
 
                         } catch (Exception e) {
                             LOG.error("  异常： " + e + " - " + s1);
+                        } finally {
+                          if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    LOG.error(" stmt Exception: {}" + e.getMessage());
+                }
+            }
                         }
                     }
                 });
