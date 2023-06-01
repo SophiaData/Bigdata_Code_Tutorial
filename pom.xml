@@ -12,6 +12,7 @@
     
     <modules>
         <module>Flink-demo</module>
+        <module>sync-database</module>
     </modules>
     
     <properties>
