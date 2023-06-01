@@ -1,6 +1,6 @@
 整库同步代码
 
-https://github.com/SophiaData/Bigdata_Code_Tutorial/blob/master/Flink-demo/src/main/java/io/sophiadata/flink/cdc2/FlinkSqlWDS.java
+https://github.com/SophiaData/Bigdata_Code_Tutorial/blob/master/sync-database/src/main/java/io/sophiadata/flink/sync/FlinkSqlWDS.java
 
 Blog: https://sophiadata.github.io/Bigdata_Blog_Website/
 
