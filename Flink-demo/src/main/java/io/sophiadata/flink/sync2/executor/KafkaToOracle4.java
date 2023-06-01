@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -349,6 +350,14 @@ public class KafkaToOracle4 {
 
                         } catch (Exception e) {
                             LOG.error("  异常： " + e + " - " + s1);
+                        } finally {
+                            if (stmt != null) {
+                                try {
+                                    stmt.close();
+                                } catch (SQLException e) {
+                                    LOG.error(" stmt Exception: {}" + e.getMessage());
+                                }
+                            }
                         }
                     }
                 });
