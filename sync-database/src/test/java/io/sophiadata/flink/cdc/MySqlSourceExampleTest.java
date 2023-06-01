@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.cdc2;
+package io.sophiadata.flink.cdc;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -32,19 +33,20 @@ import org.apache.flink.types.Row;
 import org.apache.flink.shaded.guava30.com.google.common.collect.Maps;
 
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import io.sophiadata.flink.cdc2.table.CustomDebeziumDeserializer;
-import io.sophiadata.flink.utis.UniqueDatabase;
+import io.sophiadata.flink.sync.table.CustomDebeziumDeserializer;
+import io.sophiadata.flink.utils.UniqueDatabase;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 
-/** (@sophiadata) (@date 2022/12/20 16:41). */
+/** (@sophiadata) (@date 2023/6/1 14:23). */
 public class MySqlSourceExampleTest extends MySqlSourceTestBase {
 
     private final UniqueDatabase inventoryDatabase =
-            new UniqueDatabase(MYSQL_CONTAINER, "inventory", "mysqluser", "mysqlpw");
+            new UniqueDatabase(
+                    MySqlSourceTestBase.MYSQL_CONTAINER, "inventory", "mysqluser", "mysqlpw");
 
     @Test
     @Ignore("Test ignored because it won't stop and is used for manual test")
@@ -60,7 +62,8 @@ public class MySqlSourceExampleTest extends MySqlSourceTestBase {
                         inventoryDatabase.getPassword(),
                         String.format(
                                 "jdbc:mysql://%s:%d",
-                                MYSQL_CONTAINER.getHost(), MYSQL_CONTAINER.getDatabasePort()));
+                                MySqlSourceTestBase.MYSQL_CONTAINER.getHost(),
+                                MySqlSourceTestBase.MYSQL_CONTAINER.getDatabasePort()));
 
         List<String> tables;
         Map<String, RowType> tableRowTypeMap;
@@ -95,8 +98,8 @@ public class MySqlSourceExampleTest extends MySqlSourceTestBase {
 
         MySqlSource<Tuple2<String, Row>> mySqlSource =
                 MySqlSource.<Tuple2<String, Row>>builder()
-                        .hostname(MYSQL_CONTAINER.getHost())
-                        .port(MYSQL_CONTAINER.getDatabasePort())
+                        .hostname(MySqlSourceTestBase.MYSQL_CONTAINER.getHost())
+                        .port(MySqlSourceTestBase.MYSQL_CONTAINER.getDatabasePort())
                         .databaseList(inventoryDatabase.getDatabaseName())
                         .tableList(inventoryDatabase.getDatabaseName() + ".*")
                         .username(inventoryDatabase.getUsername())

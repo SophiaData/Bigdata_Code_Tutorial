@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,15 +16,15 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.cdc2;
+package io.sophiadata.flink.cdc;
 
 import org.apache.flink.runtime.minicluster.RpcServiceSharing;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.util.TestLogger;
 
-import io.sophiadata.flink.utis.MySqlContainer;
-import io.sophiadata.flink.utis.MySqlVersion;
+import io.sophiadata.flink.utils.MySqlContainer;
+import io.sophiadata.flink.utils.MySqlVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/** (@sophiadata) (@date 2022/12/20 16:43). */
+/** (@gtk) (@date 2023/6/1 14:24). */
 public abstract class MySqlSourceTestBase extends TestLogger {
 
     protected static final Logger LOG = LoggerFactory.getLogger(MySqlSourceTestBase.class);
