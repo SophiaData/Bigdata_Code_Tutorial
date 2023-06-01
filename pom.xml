@@ -6,7 +6,7 @@
     <groupId>io.sophiadata</groupId>
     
     <artifactId>Bigdata_Code_Tutorial</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     
     <packaging>pom</packaging>
     
@@ -65,6 +65,7 @@
         <org.glassfish.web.javax.el.version>2.2.4</org.glassfish.web.javax.el.version>
         <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
         <javafaker.version>1.0.2</javafaker.version>
+        <versions-maven-plugin.version>2.14.2</versions-maven-plugin.version>
     </properties>
     
     <dependencyManagement>
@@ -468,6 +469,11 @@
     
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
