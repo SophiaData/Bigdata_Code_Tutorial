@@ -13,6 +13,7 @@
     <modules>
         <module>Flink-demo</module>
         <module>sync-database</module>
+        <module>sync-database-oracle</module>
     </modules>
     
     <properties>
@@ -486,12 +487,6 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>kafka</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>redis</artifactId>
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
