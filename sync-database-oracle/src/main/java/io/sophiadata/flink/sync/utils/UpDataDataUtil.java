@@ -37,36 +37,8 @@ public class UpDataDataUtil {
             String taskId,
             String proMgtOrgCode,
             String taskStatus) {
+       // Your business logic
 
-        String reportSql2 = null;
-        try {
-            if (kafkaCount != null) {
-                reportSql2 =
-                        "UPDATE SGAMI_HEAD_OPERATION.A_BMCM_EXEC_DET SET EXEC_RS =? WHERE TASK_ID = ? AND AREA_CODE = ?";
-            } else {
-                if (!taskStatus.equals("08") && !taskStatus.equals("09")) {
-                    reportSql2 =
-                            "UPDATE SGAMI_HEAD_OPERATION.A_DG_ORG_TASK_MONITOR SET ORG_STATUS =?  WHERE TASK_ID = ? AND PRO_MGT_ORG_CODE = ?";
-                }
-            }
-            if (reportSql2 != null) {
-                stmt = oracleConnection.prepareStatement(reportSql2);
-                stmt.setString(1, taskStatus);
-                stmt.setString(2, taskId);
-                stmt.setString(3, proMgtOrgCode);
-                stmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            logger.error(" SQLException -> {}", e.getMessage());
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    logger.error("stmt close error {}", e.getMessage());
-                }
-            }
-        }
     }
 
     public static void updateReadKafka(
@@ -76,31 +48,7 @@ public class UpDataDataUtil {
             String proMgtOrgCode,
             Long readKafkaNum) {
 
-        String reportSql2;
-        if (!kafkaCount.equals("null")) {
-            reportSql2 =
-                    "UPDATE SGAMI_HEAD_OPERATION.A_BMCM_EXEC_DET SET READ_KAFKA_NUM =? WHERE TASK_ID = ? AND AREA_CODE = ?";
+        // Your business logic
 
-        } else {
-            reportSql2 =
-                    "UPDATE SGAMI_HEAD_OPERATION.A_DG_ORG_TASK_MONITOR SET READ_KAFKA_NUM =?  WHERE TASK_ID = ? AND PRO_MGT_ORG_CODE = ?";
-        }
-        try {
-            stmt = oracleConnection.prepareStatement(reportSql2);
-            stmt.setLong(1, readKafkaNum);
-            stmt.setString(2, taskId);
-            stmt.setString(3, proMgtOrgCode);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            logger.error(" SQLException -> {}", e.getMessage());
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    logger.error("stmt close error {}", e.getMessage());
-                }
-            }
-        }
     }
 }

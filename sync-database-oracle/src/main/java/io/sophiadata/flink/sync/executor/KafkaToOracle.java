@@ -32,7 +32,6 @@ import io.sophiadata.flink.sync.Constant;
 import io.sophiadata.flink.sync.operator.MyBroadcastProcessFunction;
 import io.sophiadata.flink.sync.operator.MyFilterFunction;
 import io.sophiadata.flink.sync.operator.MyKeyedProcessFunction;
-import io.sophiadata.flink.sync.operator.MyProcessFunction;
 import io.sophiadata.flink.sync.operator.MyRichMapFunction;
 import io.sophiadata.flink.sync.sink.MyOracleSink;
 import io.sophiadata.flink.sync.source.MyKafkaSource;
@@ -65,9 +64,6 @@ public class KafkaToOracle {
                 filterDS.map(new MyRichMapFunction(params))
                         .uid("KafkaToOracle-map")
                         .name("KafkaToOracle-map");
-        OutputTag<JSONObject> hbaseOutputTag = new OutputTag<JSONObject>("hbaseTag") {};
-
-        OutputTag<JSONObject> receType3OutputTag =
                 new OutputTag<JSONObject>("receType3OutputTag") {};
 
         SingleOutputStreamOperator<Map<String, String>> redisSource =
@@ -88,12 +84,6 @@ public class KafkaToOracle {
                         .uid("KafkaToOracle-Broadcast")
                         .name("KafkaToOracle-Broadcast");
 
-        SingleOutputStreamOperator<JSONObject> process =
-                processStream
-                        .process(new MyProcessFunction(params, hbaseOutputTag, receType3OutputTag))
-                        .name("KafkaToOracle4-process")
-                        .uid("KafkaToOracle4-process");
-
         KeyedStream<JSONObject, String> StringKeyedStream =
                 processStream.keyBy(
                         data ->
@@ -103,13 +93,12 @@ public class KafkaToOracle {
 
         SingleOutputStreamOperator<ArrayList<JSONObject>> operator =
                 StringKeyedStream.process(new MyKeyedProcessFunction(params))
-                        .uid("KafkaToOracle4-keyProcess")
-                        .name("KafkaToOracle4-keyProcess")
+                        .uid("KafkaToOracle-keyProcess")
+                        .name("KafkaToOracle-keyProcess")
                         .disableChaining();
-        // 目前入库sink   批量  增量  全量
         operator.addSink(new MyOracleSink(params))
-                .uid("KafkaToOracle4-sink")
-                .name("KafkaToOracle4-sink");
+                .uid("KafkaToOracle-sink")
+                .name("KafkaToOracle-sink");
 
         try {
             env.execute(params.get("jobName"));
