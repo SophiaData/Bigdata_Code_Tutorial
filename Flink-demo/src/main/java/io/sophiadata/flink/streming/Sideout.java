@@ -40,15 +40,17 @@ public class Sideout extends BaseCode {
         SingleOutputStreamOperator<String> sideout =
                 env.fromElements(STREAM)
                         .flatMap(
-                                (FlatMapFunction<String, String>)
-                                        (value, out) -> {
-                                            String[] splits = value.toLowerCase().split(",");
-                                            for (String split : splits) {
-                                                if (split.length() > 0) {
-                                                    out.collect(split);
-                                                }
+                                new FlatMapFunction<String, String>() {
+                                    @Override
+                                    public void flatMap(String value, Collector<String> out) throws Exception {
+                                        String[] splits = value.toLowerCase().split(",");
+                                        for (String split : splits) {
+                                            if (split.length() > 0) {
+                                                out.collect(split);
                                             }
-                                        })
+                                        }
+                                    }
+                                })
                         .process(
                                 new ProcessFunction<String, String>() {
                                     @Override
@@ -72,5 +74,5 @@ public class Sideout extends BaseCode {
     }
 
     private static final String[] STREAM =
-            new String[] {"hello,nihao,nihao,world,bigdata,hadoop,hive,hive,hello,big"};
+            new String[] {"hello,nihao,nihao,world,bigdata,hadoop,hive,hive,hello,big,null," + null};
 }
