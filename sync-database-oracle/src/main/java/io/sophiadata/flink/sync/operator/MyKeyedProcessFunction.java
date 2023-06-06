@@ -410,9 +410,6 @@ public class MyKeyedProcessFunction
         } catch (Exception e) {
             logger.error(" error -> {}, {}", e.getMessage(), sum);
         }
-        //        if (size > batchSize && batchSize != -1L && batchSize != 0) {
-        //            System.out.println(" 数据异常 " + taskId + " - " + size + " - " + batchSize);
-        //        }
         if (size == batchSize || size > batchSize && batchSize != 0 && batchSize != -1) {
             System.out.println(" size 大小 " + size + " -- " + batchSize);
         }
@@ -421,20 +418,7 @@ public class MyKeyedProcessFunction
 
     private static long getBatchSizeFromOracle(
             String taskId, String proMgtOrgCode, Connection connection) throws Exception {
-        String dataNumSql =
-                "select TAC_DATA_NUM from SGAMI_HEAD_OPERATION.A_DG_ORG_TASK_MONITOR where TASK_ID = ? and PRO_MGT_ORG_CODE = ?";
-        try (PreparedStatement statement = connection.prepareStatement(dataNumSql)) {
-            statement.setString(1, taskId);
-            statement.setString(2, proMgtOrgCode);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    String tacDataNum = resultSet.getString("TAC_DATA_NUM");
-                    if (tacDataNum != null) {
-                        return Long.parseLong(tacDataNum);
-                    }
-                }
-            }
-        }
+        // Your business logic
         logger.warn("The result of this tacDataNum query failed and was null!!!");
         return -1;
     }
@@ -455,48 +439,10 @@ public class MyKeyedProcessFunction
             String proMgtOrgCode, String tableCode, String receType, Connection connection) {
         switch (receType) {
             case "01":
-                String delSql01 = "delete from " + tableCode + " where PRO_MGT_ORG_CODE = ?";
-                try {
-                    PreparedStatement statement = connection.prepareStatement(delSql01);
-                    statement.setString(1, proMgtOrgCode);
-                    statement.executeUpdate();
-                } catch (SQLException e) {
-                    logger.error(" delTableData SQLException -> {}", e.getMessage());
-                }
+              // Your business logic
                 break;
             case "02":
-                String[] split = tableCode.split("\\.");
-                String delColumSql =
-                        "select DEL_INFO from SGAMI_SUPPORT.S_TABLE_LISTENER where ORG_CODE = ? and USER_NAME = ? and TAB_NAME = ?";
-                try {
-                    PreparedStatement statement = connection.prepareStatement(delColumSql);
-                    statement.setString(1, proMgtOrgCode);
-                    statement.setString(2, split[0]);
-                    statement.setString(3, split[1]);
-                    ResultSet resultSet = statement.executeQuery();
-                    if (resultSet.next()) {
-                        String delInfo = resultSet.getString("DEL_INFO");
-                        if (delInfo != null) {
-                            String delSql02 =
-                                    "delete from "
-                                            + tableCode
-                                            + " where "
-                                            + delInfo
-                                            + " and PRO_MGT_ORG_CODE = ?";
-                            PreparedStatement delStatement = connection.prepareStatement(delSql02);
-                            delStatement.setString(1, proMgtOrgCode);
-                            delStatement.executeUpdate();
-
-                        } else {
-                            logger.error("{} delInfo is null", proMgtOrgCode);
-                            System.out.println("delInfo is null");
-                        }
-                    } else {
-                        logger.error("delInfo is null");
-                    }
-                } catch (SQLException e) {
-                    logger.error(" delColumSql SQLException -> {} ", e.getMessage());
-                }
+               // Your business logic
                 break;
             default:
                 logger.warn(" Invalid receType: {}", receType);

@@ -69,9 +69,6 @@ public class JdbcUtil {
             dataSource.setUrl(oracleConfig.get("sinkOracleUrl").toString());
             dataSource.setUsername(oracleConfig.get("sinkOracleUsername").toString());
             dataSource.setPassword(oracleConfig.get("sinkOraclePassword").toString());
-            //            dataSource.setUrl("jdbc:oracle:thin:@192.168.1.202:1521/ORCL");
-            //            dataSource.setUsername("SGAMI_HEAD_OPERATION");
-            //            dataSource.setPassword("SGAMI_HEAD_OPERATION");
             dataSource.setInitialSize(10);
             dataSource.setMaxTotal(50);
             dataSource.setMinIdle(10);
@@ -216,73 +213,5 @@ public class JdbcUtil {
     public static void main(String[] args) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
         Connection connection = JdbcUtil.getOracleConnection(params).getConnection();
-        //        String receTypeSql =
-        //                "select RECE_TYPE from SGAMI_HEAD_OPERATION.A_DG_EXTRACT_TASK_DET where
-        // DICT_TEMPLATE_ID = ?";
-        //        @Cleanup PreparedStatement statement2 = connection.prepareStatement(receTypeSql);
-        //        statement2.setString(1, "11111");
-        //        @Cleanup ResultSet resultSet2 = statement2.executeQuery();
-        //        List<JSONObject> queryResult2 = new ArrayList<>();
-        //        while (resultSet2.next()) {
-        //            JSONObject jsonObject = new JSONObject();
-        //            jsonObject.put("RECE_TYPE", resultSet2.getString("RECE_TYPE"));
-        //            queryResult2.add(jsonObject);
-        //        }
-        //        if (!queryResult2.isEmpty()) {
-        //            String receType2 = queryResult2.get(0).getString("RECE_TYPE");
-        //            if (receType2 != null) {
-        //                LOG.info(" 111");
-        //            } else {
-        //
-        //                LOG.error(" RECE_TYPE is null ");
-        //            }
-        //        } else {
-        //            LOG.error(" queryResult size is 0 ");
-        //        }
-
-        String sql =
-                "INSERT ALL \n"
-                        + "  INTO SGAMI_STAT.A_BA_IND_ENERGY_DAY2 (IND_CLS2,IND_ENERGY6,IND_ENERGY5,ENERGY_TYPE2,IND_ENERGY4,IND_ENERGY3,IND_ENERGY2,IND_ENERGY1,INST_NUM2,DATA_DATE)  values('0822','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000',TO_DATE(SUBSTR('2023-03-07',1,19), 'YYYY-MM-DD HH24:MI:SS')) LOG ERRORS INTO SGAMI_STAT.MY_ERROR_INFO ('insert') REJECT LIMIT UNLIMITED\n"
-                        + "  INTO SGAMI_STAT.A_BA_IND_ENERGY_DAY2 (IND_CLS2,IND_ENERGY6,IND_ENERGY5,ENERGY_TYPE2,IND_ENERGY4,IND_ENERGY3,IND_ENERGY2,IND_ENERGY1,INST_NUM2,DATA_DATE)  values('0822','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000','0.0000',TO_DATE(SUBSTR('2023-03-07',1,19), 'YYYY-MM-DD HH24:MI:SS')) LOG ERRORS INTO SGAMI_STAT.MY_ERROR_INFO ('insert') REJECT LIMIT UNLIMITED\n"
-                        + " INTO  SGAMI_STAT.A_BA_IND_ENERGY_DAY2   (\n"
-                        + "  IND_CLS2, \n"
-                        + "  IND_ENERGY6, \n"
-                        + "  IND_ENERGY5, \n"
-                        + "  ENERGY_TYPE2, \n"
-                        + "  IND_ENERGY4, \n"
-                        + "  IND_ENERGY3, \n"
-                        + "  IND_ENERGY2, \n"
-                        + "  IND_ENERGY1, \n"
-                        + "  INST_NUM2, \n"
-                        + "  DATA_DATE, \n"
-                        + "  CONS_NUM2, \n"
-                        + "  DIST_LV2, \n"
-                        + "  CALC_TIME2, \n"
-                        + "  MGT_ORG_CODE, \n"
-                        + "  YN_FLAG2, \n"
-                        + "  PRO_MGT_ORG_CODE, \n"
-                        + "  IND_ENERGY\n"
-                        + ") VALUES (\n"
-                        + "  '0822', \n"
-                        + "  '0.0000', \n"
-                        + "  '0.0000', \n"
-                        + "  '86', \n"
-                        + "  '0.01000', \n"
-                        + "  '0.0000', \n"
-                        + "  '0.0000', \n"
-                        + "  '0',\n"
-                        + "  '0.0000',\n"
-                        + "  TO_DATE(SUBSTR('2023-03-07',1,19), 'YYYY-MM-DD HH24:MI:SS'),\n"
-                        + "  '0',\n"
-                        + "  '04',\n"
-                        + "  TO_DATE(SUBSTR('2023-03-23 14:42:35.53104',1,19), 'YYYY-MM-DD HH24:MI:SS'),\n"
-                        + "  '3741423',\n"
-                        + "  '1',\n"
-                        + "  '37102',\n"
-                        + "  '0.0000') LOG ERRORS INTO SGAMI_STAT.MY_ERROR_INFO ('insert') REJECT LIMIT UNLIMITED "
-                        + "  SELECT 1 FROM dual";
-
-        int i = connection.prepareStatement(sql).executeUpdate();
-        System.out.println(i);
     }
 }

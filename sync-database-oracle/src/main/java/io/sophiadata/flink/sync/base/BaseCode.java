@@ -84,9 +84,8 @@ public abstract class BaseCode {
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
         env.getCheckpointConfig().setTolerableCheckpointFailureNumber(50);
-        env.getCheckpointConfig()
-                .enableExternalizedCheckpoints(
-                        CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.getCheckpointConfig().setExternalizedCheckpointCleanup(
+                CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
     }
 
     public void restartTask(StreamExecutionEnvironment env) {

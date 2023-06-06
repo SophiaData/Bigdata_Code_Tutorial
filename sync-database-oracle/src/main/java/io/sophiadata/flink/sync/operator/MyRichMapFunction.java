@@ -49,7 +49,7 @@ public class MyRichMapFunction extends RichMapFunction<String, JSONObject> {
 
     private HashMap<String, String> receTypeMap;
 
-    private JedisCluster jedisCluster;
+    JedisCluster jedisCluster;
 
     public MyRichMapFunction(ParameterTool params) {
         this.params = params;
@@ -87,107 +87,8 @@ public class MyRichMapFunction extends RichMapFunction<String, JSONObject> {
             LOG.error(" json syntax ->  {} reason: {}  data -> {}", value, e.getMessage(), value);
         }
 
-        String replaceJsonString = replaceJson.getString(Constant.TABLE_CODE);
-        String templateId = replaceJson.getString("TEMPLATE_ID");
-
-        if (!jedisCluster.hgetAll("ZB_" + replaceJsonString).isEmpty()) {
-            // 内网测试环境
-            calibrate2(replaceJson, templateId);
-        } else {
-            // 正式环境
-            calibrate(replaceJson, templateId);
-        }
+        // Your business logic
         return replaceJson;
-    }
-
-    private void calibrate(JSONObject replaceJson, String templateId) {
-        if (templateId == null || templateId.isEmpty()) {
-            replaceJson.put("RECE_TYPE", "02");
-            //            LOG.warn(" templateId is empty : {} ", templateId);
-        } else {
-            String taskId = replaceJson.getString("TASK_ID");
-            if (receTypeMap.containsKey(taskId)) {
-                replaceJson.put("RECE_TYPE", receTypeMap.get(taskId));
-            } else {
-                String receTypeSql =
-                        "select RECE_TYPE from SGAMI_HEAD_OPERATION.A_DG_EXTRACT_TASK_DET where DICT_TEMPLATE_ID = ?";
-                PreparedStatement statement2 = null;
-                try {
-                    statement2 = connection.prepareStatement(receTypeSql);
-
-                    statement2.setString(1, templateId);
-                    @Cleanup ResultSet resultSet2 = statement2.executeQuery();
-                    List<JSONObject> queryResult2 = new ArrayList<>();
-                    while (resultSet2.next()) {
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("RECE_TYPE", resultSet2.getString("RECE_TYPE"));
-                        queryResult2.add(jsonObject);
-                    }
-
-                    if (!queryResult2.isEmpty()) {
-                        String receType2 = queryResult2.get(0).getString("RECE_TYPE");
-                        if (receType2 != null) {
-                            receTypeMap.put(taskId, receType2);
-                            replaceJson.put("RECE_TYPE", receType2);
-                        } else {
-                            receTypeMap.put(taskId, "02");
-                            replaceJson.put("RECE_TYPE", "02");
-                        }
-                    } else {
-                        replaceJson.put("RECE_TYPE", "00");
-                        receTypeMap.put(taskId, "00");
-                        LOG.error(" queryResult size is 0 ");
-                    }
-                } catch (SQLException e) {
-                    LOG.error(" SQLException -> {}", e.getMessage());
-                }
-            }
-        }
-    }
-
-    private void calibrate2(JSONObject replaceJson, String templateId) {
-        if (templateId == null || templateId.isEmpty()) {
-            replaceJson.put("RECE_TYPE", "02");
-            //            LOG.warn(" templateId is empty : {} ", templateId);
-        } else {
-            String taskId = replaceJson.getString("TASK_ID");
-            if (receTypeMap.containsKey(taskId)) {
-                replaceJson.put("RECE_TYPE", receTypeMap.get(taskId));
-            } else {
-                String receTypeSql =
-                        "select RECE_TYPE from ZB_SGAMI_HEAD_OPER.A_DG_EXTRACT_TASK_DET where DICT_TEMPLATE_ID = ?";
-                PreparedStatement statement2;
-                try {
-                    statement2 = connection.prepareStatement(receTypeSql);
-
-                    statement2.setString(1, templateId);
-                    @Cleanup ResultSet resultSet2 = statement2.executeQuery();
-                    List<JSONObject> queryResult2 = new ArrayList<>();
-                    while (resultSet2.next()) {
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("RECE_TYPE", resultSet2.getString("RECE_TYPE"));
-                        queryResult2.add(jsonObject);
-                    }
-
-                    if (!queryResult2.isEmpty()) {
-                        String receType2 = queryResult2.get(0).getString("RECE_TYPE");
-                        if (receType2 != null) {
-                            receTypeMap.put(taskId, receType2);
-                            replaceJson.put("RECE_TYPE", receType2);
-                        } else {
-                            receTypeMap.put(taskId, "02");
-                            replaceJson.put("RECE_TYPE", "02");
-                        }
-                    } else {
-                        replaceJson.put("RECE_TYPE", "00");
-                        receTypeMap.put(taskId, "00");
-                        LOG.error(" queryResult size is 0 ");
-                    }
-                } catch (SQLException e) {
-                    LOG.error(" SQLException -> {}", e.getMessage());
-                }
-            }
-        }
     }
 
     @Override
