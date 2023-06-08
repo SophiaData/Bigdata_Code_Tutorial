@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.sophiadata</groupId>
-        <artifactId>Bigdata_Code_Tutorial</artifactId>
+        <artifactId>bigdata_code_tutorial</artifactId>
         <version>1.0.0</version>
     </parent>
     
-    <artifactId>sync-database</artifactId>
+    <artifactId>sync_database_mysql</artifactId>
     
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
