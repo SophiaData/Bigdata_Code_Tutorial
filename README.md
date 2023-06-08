@@ -1,6 +1,6 @@
 整库同步代码
 
-https://github.com/SophiaData/Bigdata_Code_Tutorial/blob/master/sync-database_mysql/
+https://github.com/SophiaData/Bigdata_Code_Tutorial/blob/master/sync_database_mysql/src/main/java/io/sophiadata/flink/sync/FlinkSqlWDS.java
 
 Blog: https://sophiadata.github.io/Bigdata_Blog_Website/
 
