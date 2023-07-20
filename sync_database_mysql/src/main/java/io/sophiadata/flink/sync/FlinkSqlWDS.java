@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -21,7 +22,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.connector.jdbc.catalog.MySqlCatalog;
+import org.apache.flink.connector.jdbc.databases.mysql.catalog.MySqlCatalog;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Schema;
@@ -70,7 +71,7 @@ public class FlinkSqlWDS extends BaseCode {
     // 测试同步五张表百万数据，一分钟左右
     // refer: https://blog.csdn.net/qq_36062467/article/details/128117647
     // refer 环境: Flink 1.15 Flink CDC 2.3.0
-    // 本程序环境：Flink 1.16 Flink CDC 2.3.0  MySQL 8.0
+    // 本程序环境：Flink 1.17.1 Flink CDC 2.4.0  MySQL 8.0
     // 技术点：Flink MySQL CDC Connector，MySQL Catalog，Flink Operator，Flink JDBC
 
     @Override
@@ -118,6 +119,7 @@ public class FlinkSqlWDS extends BaseCode {
             DefaultCatalogTable catalogBaseTable;
             try {
                 catalogBaseTable = (DefaultCatalogTable) mySqlCatalog.getTable(objectPath);
+
             } catch (TableNotExistException e) {
                 LOG.error("{} 表不存在", table, e);
                 throw e;
