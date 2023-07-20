@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -69,7 +70,7 @@ public abstract class BaseCode {
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
-            env.enableCheckpointing(3000);
+            env.enableCheckpointing(5 * 60 * 1000);
             // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
             // 测试任务如数据量较大请指定文件存储
             // env.getCheckpointConfig()
