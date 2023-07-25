@@ -510,34 +510,34 @@
                     <testTarget>${java.version}</testTarget>
                 </configuration>
             </plugin>
-            <!-- 指定编译scala的插件 -->
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.2.2</version>
-                <configuration>
-                    <scalaVersion>2.12.12</scalaVersion>
-                </configuration>
-                
-                <executions>
-                    <execution>
-                        <id>compile-scala</id>
-                        <goals>
-                            <goal>add-source</goal>
-                            <goal>compile</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                    </execution>
-                    <execution>
-                        <id>scala-compile-first</id>
-                        <goals>
-                            <goal>add-source</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <phase>compile</phase>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            &lt;!&ndash; 指定编译scala的插件 &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>net.alchim31.maven</groupId>-->
+<!--                <artifactId>scala-maven-plugin</artifactId>-->
+<!--                <version>3.2.2</version>-->
+<!--                <configuration>-->
+<!--                    <scalaVersion>2.12.12</scalaVersion>-->
+<!--                </configuration>-->
+<!--                -->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>compile-scala</id>-->
+<!--                        <goals>-->
+<!--                            <goal>add-source</goal>-->
+<!--                            <goal>compile</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>process-resources</phase>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>scala-compile-first</id>-->
+<!--                        <goals>-->
+<!--                            <goal>add-source</goal>-->
+<!--                            <goal>testCompile</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>compile</phase>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -569,20 +569,20 @@
                             <file>tool/license.header</file>
                         </licenseHeader>
                     </java>
-                    <scala>
-                        <!-- These are the defaults, you can override if you want -->
-                        <includes>
-                            <include>src/main/scala/**/*.scala</include>
-                            <include>src/test/scala/**/*.scala</include>
-                            <include>src/main/scala/**/*.sc</include>
-                            <include>src/test/scala/**/*.sc</include>
-                        </includes>
-                        <scalafmt>
-                            <version>3.1.1</version>
-                            <file>.scalafmt.conf</file>
-                        </scalafmt>
-                        <!-- has its own section below -->
-                    </scala>
+<!--                    <scala>-->
+<!--                        &lt;!&ndash; These are the defaults, you can override if you want &ndash;&gt;-->
+<!--                        <includes>-->
+<!--                            <include>src/main/scala/**/*.scala</include>-->
+<!--                            <include>src/test/scala/**/*.scala</include>-->
+<!--                            <include>src/main/scala/**/*.sc</include>-->
+<!--                            <include>src/test/scala/**/*.sc</include>-->
+<!--                        </includes>-->
+<!--                        <scalafmt>-->
+<!--                            <version>3.1.1</version>-->
+<!--                            <file>.scalafmt.conf</file>-->
+<!--                        </scalafmt>-->
+<!--                        &lt;!&ndash; has its own section below &ndash;&gt;-->
+<!--                    </scala>-->
                     <pom>
                         <includes>
                             <include>pom.xml</include>

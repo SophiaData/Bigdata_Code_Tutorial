@@ -207,19 +207,6 @@
             <artifactId>lombok</artifactId>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-schema-registry-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-json-schema-provider</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.embeddedkafka</groupId>
-            <artifactId>embedded-kafka-schema-registry_2.12</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-jackson -->
         <dependency>
             <groupId>org.apache.flink</groupId>
