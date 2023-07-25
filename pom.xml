@@ -29,7 +29,7 @@
         <gson.version>2.8.9</gson.version>
         <fastjson.version>1.2.83</fastjson.version>
         <jedis.version>3.3.0</jedis.version>
-        <guava.version>32.0.0-jre</guava.version>
+        <guava.version>32.1.1-jre</guava.version>
         <json-path.version>2.4.0</json-path.version>
         <ikanalyzer.version>2012_u6</ikanalyzer.version>
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
