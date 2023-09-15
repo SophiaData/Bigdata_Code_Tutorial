@@ -93,20 +93,16 @@ public class FlinkSqlWDS extends BaseCode {
         // 如果整库同步，则从 Catalog 里取所有表，否则从指定表中取表名
         try {
             if (".*".equals(tableList)) {
-                tables = mySqlCatalog.listTables(databaseName);
+                tables = listAllTables(mySqlCatalog, databaseName);
             } else {
                 if (tableList.contains(",")) {
-                    String[] tableArray = tableList.split(",");
-                    tables =
-                            Arrays.stream(tableArray)
-                                    .map(table -> table.split("\\.")[1])
-                                    .collect(Collectors.toList());
+                    tables = extractTableNames(tableList);
                 } else {
                     tables = Collections.singletonList(tableList);
                 }
             }
         } catch (DatabaseNotExistException e) {
-            LOG.error("{} 库不存在", databaseName, e);
+            handleDatabaseNotExistException(databaseName, e);
             throw e;
         }
         // 创建表名和对应 RowTypeInfo 映射的 Map
@@ -213,5 +209,23 @@ public class FlinkSqlWDS extends BaseCode {
             statementSet.addInsertSql(insertSql);
         }
         statementSet.execute();
+    }
+    // 提取方法：列出所有表格
+    private List<String> listAllTables(MySqlCatalog mySqlCataLog, String databaseName)
+            throws DatabaseNotExistException {
+        return mySqlCataLog.listTables(databaseName);
+    }
+
+    // 提取方法：从逗号分隔的表格列表中提取表格名称
+    private List<String> extractTableNames(String tableList) {
+        String[] tableArray = tableList.split(",");
+        return Arrays.stream(tableArray)
+                .map(table -> table.split("\\.")[1])
+                .collect(Collectors.toList());
+    }
+
+    // 提取方法：处理数据库不存在异常
+    private void handleDatabaseNotExistException(String databaseName, DatabaseNotExistException e) {
+        LOG.error("{} 库不存在", databaseName, e);
     }
 }
