@@ -18,31 +18,24 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Test;
+import org.junit.jupiter.api.function.Executable;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
-/** (@SophiaData) (@date 2023/7/20 09:52). */
-public class PropertiesUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(PropertiesUtil.class);
+import static org.junit.jupiter.api.Assertions.*;
 
-    public static Properties load(String content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
-        }
+public class PropertiesUtilTest {
+    @Test
+    public void testLoadSuccess() {
+        String content = "k1=v1\nk2=v2";
+        Properties props = PropertiesUtil.load(content);
+        assertEquals("v1", props.get("k1"));
+    }
 
-        try (InputStream input = new ByteArrayInputStream(content.getBytes())) {
-            Properties props = new Properties();
-            props.load(input);
-            return props;
-
-        } catch (IOException e) {
-            LOG.error(" load properties failed {}", e.getMessage());
-            throw new RuntimeException("load properties failed", e);
-        }
+    @Test
+    public void testLoadWithNullContent() {
+        Executable exec = () -> PropertiesUtil.load(null);
+        assertThrows(IllegalArgumentException.class, exec);
     }
 }

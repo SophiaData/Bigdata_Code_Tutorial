@@ -41,7 +41,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/** (@gtk) (@date 2023/6/1 14:24). */
+/** (@sophiadata) (@date 2023/6/1 14:24). */
 public abstract class MySqlSourceTestBase extends TestLogger {
 
     protected static final Logger LOG = LoggerFactory.getLogger(MySqlSourceTestBase.class);
