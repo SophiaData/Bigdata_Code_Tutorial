@@ -27,7 +27,7 @@ import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-/** (@gtk) (@date 2023/5/31 18:56). */
+/** (@sophiadata) (@date 2023/5/31 18:56). */
 public abstract class BaseCode {
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
             throws Exception {

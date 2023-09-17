@@ -20,52 +20,52 @@ package io.sophiadata.flink.sync.util;
 
 import org.apache.flink.api.java.utils.ParameterTool;
 
+import io.sophiadata.flink.sync.common.Constants;
+
 /** (@SophiaData) (@date 2023/5/31 19:05). */
 public class ParameterUtil {
     // 这里你也可以使用 nacos 等工具来进行配置的私有化
     public static String sinkUrl(ParameterTool params) {
-        return params.get(
-                "sinkUrl",
-                "jdbc:mysql://localhost:3306/test2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
+        return params.get("sinkUrl", Constants.sinkUrl);
     }
 
     public static String sinkUsername(ParameterTool params) {
-        return params.get("sinkUsername", "root");
+        return params.get("sinkUsername", Constants.sinkUsername);
     }
 
     public static String sinkPassword(ParameterTool params) {
-        return params.get("sinkPassword", "123456");
+        return params.get("sinkPassword", Constants.sinkPassword);
     }
 
     public static String hostname(ParameterTool params) {
-        return params.get("hostname", "localhost");
+        return params.get("hostname", Constants.hostname);
     }
 
     public static Integer port(ParameterTool params) {
-        return params.getInt("port", 3306);
+        return params.getInt("port", Constants.port);
     }
 
     public static String username(ParameterTool params) {
-        return params.get("username", "root");
+        return params.get("username", Constants.username);
     }
 
     public static String password(ParameterTool params) {
-        return params.get("password", "123456");
+        return params.get("password", Constants.password);
     }
 
     public static String databaseName(ParameterTool params) {
-        return params.get("databaseName", "test");
+        return params.get("databaseName", Constants.databaseName);
     }
 
     public static String tableList(ParameterTool params) {
-        return params.get("tableList", ".*");
+        return params.get("tableList", Constants.tableList);
     }
 
     public static Integer setParallelism(ParameterTool params) {
-        return params.getInt("setParallelism", 2);
+        return params.getInt("setParallelism", Constants.setParallelism);
     }
 
     public static String cdcSourceName(ParameterTool params) {
-        return params.get("cdcSourceName", "mysql-cdc-1");
+        return params.get("cdcSourceName", Constants.cdcSourceName);
     }
 }
