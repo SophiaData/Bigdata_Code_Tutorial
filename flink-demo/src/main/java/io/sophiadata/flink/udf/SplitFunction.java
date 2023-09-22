@@ -23,8 +23,6 @@ import org.apache.flink.table.annotation.FunctionHint;
 import org.apache.flink.table.functions.TableFunction;
 import org.apache.flink.types.Row;
 
-import static org.apache.commons.collections.CollectionUtils.collect;
-
 /** (@sophiadata) (@date 2023/9/21 15:56). */
 @FunctionHint(output = @DataTypeHint("ROW<word STRING>"))
 public class SplitFunction extends TableFunction<Row> {
