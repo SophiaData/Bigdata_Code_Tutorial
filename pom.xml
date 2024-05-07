@@ -58,7 +58,6 @@
         <clickhouse-jdbc.version>0.4.6</clickhouse-jdbc.version>
         <flink-doris-connector-1.16.version>1.3.0</flink-doris-connector-1.16.version>
         <scala-library.version>2.12.7</scala-library.version>
-        <json-path.version>2.4.0</json-path.version>
         <flink-shaded-jackson.version>2.13.4-16.0</flink-shaded-jackson.version>
         <mockito.version>4.6.1</mockito.version>
         <javax.el-api.version>3.0.0</javax.el-api.version>
