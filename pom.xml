@@ -32,7 +32,7 @@
         <guava.version>32.1.1-jre</guava.version>
         <json-path.version>2.9.0</json-path.version>
         <ikanalyzer.version>2012_u6</ikanalyzer.version>
-        <commons-beanutils.version>1.9.4</commons-beanutils.version>
+        <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
         <lombok.version>1.18.20</lombok.version>
