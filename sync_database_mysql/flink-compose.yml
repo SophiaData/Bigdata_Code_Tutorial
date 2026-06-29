@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  jobmanager:
+    image: flink:1.20.1-scala_2.12-java11
+    container_name: flink-jobmanager
+    ports:
+      - "18081:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        state.backend: filesystem
+        state.checkpoints.dir: file:///tmp/flink/checkpoints
+        execution.checkpointing.interval: 10s
+    volumes:
+      - flink-jobmanager-checkpoints:/tmp/flink/checkpoints
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/cluster || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  taskmanager:
+    image: flink:1.20.1-scala_2.12-java11
+    container_name: flink-taskmanager
+    depends_on:
+      jobmanager:
+        condition: service_healthy
+    command: taskmanager
+    scale: 1
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        state.backend: filesystem
+        state.checkpoints.dir: file:///tmp/flink/checkpoints
+        execution.checkpointing.interval: 10s
+
+volumes:
+  flink-jobmanager-checkpoints:

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mysql-simple:
+    image: mysql:8.4.0
+    container_name: mysql-simple-test
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_db
+    ports:
+      - "33063:3306"
+    command: 
+      - "--server-id=1"
+      - "--log_bin=mysql-bin"
+      - "--binlog_format=ROW"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    
+  mysql-client:
+    image: mysql:8.4.0
+    container_name: mysql-client-test
+    depends_on:
+      mysql-simple:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for MySQL...'
+        while ! mysqladmin ping -h mysql-simple -u root -proot --silent; do
+          echo 'Waiting for MySQL to be ready...'
+          sleep 2
+        done
+        echo 'MySQL is ready!'
+        echo 'Testing connection...'
+        mysql -h mysql-simple -u root -proot test_db -e 'SELECT 1 as test;'
+        echo 'MySQL test completed successfully!'
+      "
