@@ -13,50 +13,43 @@
     <modules>
         <module>flink-demo</module>
         <module>sync_database_mysql</module>
+        <module>flink-function</module>
     </modules>
     
     <properties>
-        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <testcontainers.version>1.15.3</testcontainers.version>
-        <flink.version>1.17.1</flink.version>
-        <flink_cdc.version>2.4.0</flink_cdc.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
+        <flink.version>1.20.4</flink.version>
+        <flink-connector-kafka.version>3.3.0-1.20</flink-connector-kafka.version>
+        <flink_cdc.version>3.6.0-1.20</flink_cdc.version>
         <scala.version>2.12</scala.version>
-        <hadoop.version>3.1.3</hadoop.version>
-        <log4j.version>2.25.4</log4j.version>
+        <hadoop.version>3.3.6</hadoop.version>
         <slf4j.version>1.7.15</slf4j.version>
         <gson.version>2.8.9</gson.version>
-        <fastjson.version>1.2.83</fastjson.version>
         <jedis.version>3.3.0</jedis.version>
         <guava.version>32.1.1-jre</guava.version>
         <json-path.version>2.9.0</json-path.version>
-        <ikanalyzer.version>2012_u6</ikanalyzer.version>
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
-        <lombok.version>1.18.20</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <nacos.version>2.1.2</nacos.version>
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <jackson-annotations.version>2.12.6</jackson-annotations.version>
-        <maven-shade-plugin>3.1.0</maven-shade-plugin>
+        <jackson-annotations.version>2.21</jackson-annotations.version>
+        <maven-shade-plugin>3.5.1</maven-shade-plugin>
         <confluent.version>7.2.0</confluent.version>
-        <jackson-databind.version>2.13.5</jackson-databind.version>
-        <jackson-core.version>2.18.6</jackson-core.version>
-        <druid.version>1.1.16</druid.version>
-        <joda-time.version>2.10.2</joda-time.version>
-        <hudi-flink.version>0.12.1</hudi-flink.version>
-        <phoenix-core.version>5.0.0-HBase-2.0</phoenix-core.version>
-        <hbase-server.version>2.1.0-cdh6.3.2</hbase-server.version>
-        <ojdbc8.version>21.1.0.0</ojdbc8.version>
+        <docker.host />
+        <jackson-databind.version>2.21.4</jackson-databind.version>
+        <jackson-core.version>2.21.4</jackson-core.version>
         <protobuf-java.version>3.25.5</protobuf-java.version>
-        <ikanalyzer.version>2012_u6</ikanalyzer.version>
-        <clickhouse-jdbc.version>0.4.6</clickhouse-jdbc.version>
-        <flink-doris-connector-1.16.version>1.3.0</flink-doris-connector-1.16.version>
         <scala-library.version>2.12.7</scala-library.version>
         <flink-shaded-jackson.version>2.13.4-16.0</flink-shaded-jackson.version>
         <mockito.version>4.6.1</mockito.version>
@@ -65,14 +58,46 @@
         <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
         <javafaker.version>1.0.2</javafaker.version>
         <versions-maven-plugin.version>2.14.2</versions-maven-plugin.version>
+        <!-- 统一管理的依赖版本 -->
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <commons-configuration2.version>2.15.1</commons-configuration2.version>
+        <log4j.version>2.25.4</log4j.version>
+        <mysql.version>8.4.0</mysql.version>
+        <debezium.version>1.9.8.Final</debezium.version>
+        <jetty.version>9.4.58.v20250814</jetty.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
+        <json-smart.version>2.5.2</json-smart.version>
+        <netty.version>4.1.135.Final</netty.version>
+        <avro.version>1.12.1</avro.version>
+        <okio.version>3.4.0</okio.version>
+        <commons-compress.version>1.26.0</commons-compress.version>
+        <assertj.version>3.27.7</assertj.version>
+        <fastjson.version>2.0.52</fastjson.version>
+        <kafka.version>4.1.2</kafka.version>
+        <zookeeper.version>3.9.5</zookeeper.version>
+        <!-- CVE 修复版本 -->
+        <commons-beanutils.version>1.11.0</commons-beanutils.version>
+        <httpclient.version>4.5.14</httpclient.version>
+        <httpcore.version>4.4.16</httpcore.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
+        <json-smart.version>2.5.2</json-smart.version>
+        <commons-net.version>3.10.0</commons-net.version>
+        <okhttp.version>4.12.0</okhttp.version>
+        <okio.version>3.4.0</okio.version>
+        <commons-cli.version>1.5.0</commons-cli.version>
+        <dnsjava.version>3.6.0</dnsjava.version>
+        <plexus-utils.version>3.6.1</plexus-utils.version>
+        <lz4.version>1.10.1</lz4.version>
+        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
     </properties>
     
     <dependencyManagement>
         <dependencies>
+            <!-- Test -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
-                <version>1.17.6</version>
+                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -82,38 +107,29 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.ververica</groupId>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mysql</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- Flink -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
                 <artifactId>flink-connector-mysql-cdc</artifactId>
                 <version>${flink_cdc.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hudi</groupId>
-                <artifactId>hudi-flink</artifactId>
-                <version>${hudi-flink.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.kafka</groupId>
-                        <artifactId>kafka-clients</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java</artifactId>
                 <version>${flink.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-scala_${scala.version}</artifactId>
-                <version>${flink.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-connector-hive_${scala.version}</artifactId>
-                <version>${flink.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -132,12 +148,6 @@
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
-            <!-- fastjson -->
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-table-api-java-bridge</artifactId>
@@ -149,12 +159,6 @@
                         <artifactId>slf4j-api</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -171,53 +175,53 @@
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-connector-jdbc</artifactId>
-                <version>3.1.1-1.17</version>
+                <version>3.3.0-1.20</version>
                 <scope>provided</scope>
             </dependency>
-            <!-- flink-rocksdb -->
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-statebackend-rocksdb</artifactId>
                 <version>${flink.version}</version>
             </dependency>
-            <!--commons-beanutils是Apache开源组织提供的用于操作JAVA BEAN的工具包。
-    使用commons-beanutils，我们可以很方便的对bean对象的属性进行操作-->
             <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils</artifactId>
-                <version>${commons-beanutils.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid</artifactId>
-                <version>${druid.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>redis.clients</groupId>
-                <artifactId>jedis</artifactId>
-                <version>${jedis.version}</version>
-            </dependency>
-            
-            <!--如果保存检查点到hdfs上，需要引入此依赖-->
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-connector-kafka</artifactId>
+                <version>${flink-connector-kafka.version}</version>
+                <scope>compile</scope>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.apache.avro</groupId>
-                        <artifactId>avro</artifactId>
+                        <groupId>org.apache.kafka</groupId>
+                        <artifactId>kafka-clients</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-shaded-jackson</artifactId>
+                <version>${flink-shaded-jackson.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-test-utils</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-test-utils-junit</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Logging -->
+            <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
+                <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
@@ -240,96 +244,173 @@
                 <artifactId>log4j-slf4j-impl</artifactId>
                 <version>${log4j.version}</version>
             </dependency>
+            <!-- Database -->
             <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-dbcp2</artifactId>
-                <version>${commons-dbcp2.version}</version>
-                <scope>compile</scope>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
             </dependency>
-            
-            <!--Guava工程包含了若干被Google的Java项目广泛依赖的核心库,方便开发-->
             <dependency>
-                <groupId>org.apache.phoenix</groupId>
-                <artifactId>phoenix-core</artifactId>
-                <version>${phoenix-core.version}</version>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.glassfish</groupId>
-                        <artifactId>javax.el</artifactId>
+                        <groupId>org.apache.avro</groupId>
+                        <artifactId>avro</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-configuration2</artifactId>
+                    </exclusion>
+                    <!-- 排除有漏洞的传递依赖 -->
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.apache.hbase</groupId>
-                        <artifactId>hbase-zookeeper</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-server</artifactId>
-                <version>${hbase-server.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.glassfish</groupId>
-                        <artifactId>javax.el</artifactId>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpcore</artifactId>
                     </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.database.jdbc</groupId>
-                <artifactId>ojdbc8</artifactId>
-                <version>${ojdbc8.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>${protobuf-java.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.janeluo</groupId>
-                <artifactId>ikanalyzer</artifactId>
-                <version>${ikanalyzer.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.clickhouse</groupId>
-                <artifactId>clickhouse-jdbc</artifactId>
-                <version>${clickhouse-jdbc.version}</version>
-                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>com.fasterxml.jackson.core</groupId>
                         <artifactId>jackson-core</artifactId>
                     </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>${scala-library.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-connector-kafka</artifactId>
-                <version>${flink.version}</version>
-                <scope>compile</scope>
-                <exclusions>
                     <exclusion>
-                        <groupId>org.apache.kafka</groupId>
-                        <artifactId>kafka-clients</artifactId>
+                        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                        <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                        <artifactId>jackson-jaxrs-base</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-jaxb-annotations</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.minidev</groupId>
+                        <artifactId>json-smart</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.minidev</groupId>
+                        <artifactId>accessors-smart</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-net</groupId>
+                        <artifactId>commons-net</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-util</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-security</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-servlet</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-webapp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-xml</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-http</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-io</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-continuation</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-servlets</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-compress</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.squareup.okhttp</groupId>
+                        <artifactId>okhttp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.squareup.okio</groupId>
+                        <artifactId>okio</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-cli</groupId>
+                        <artifactId>commons-cli</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-collections</groupId>
+                        <artifactId>commons-collections</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-io</groupId>
+                        <artifactId>commons-io</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-math3</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- CVE-2024-29131/CVE-2024-29133/CVE-2024-337m: 升级 commons-configuration2 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
+                <version>${commons-configuration2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${nacos.version}</version>
+                <classifier>pure</classifier>
+            </dependency>
+            <!-- JSON / Serialization -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -337,111 +418,9 @@
                 <version>${gson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.doris</groupId>
-                <artifactId>flink-doris-connector-1.16</artifactId>
-                <version>${flink-doris-connector-1.16.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-test-utils</artifactId>
-                <version>${flink.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <!-- test dependencies on TestContainers -->
-            
-            <dependency>
-                <groupId>com.jayway.jsonpath</groupId>
-                <artifactId>json-path</artifactId>
-                <version>${json-path.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.nacos</groupId>
-                <artifactId>nacos-client</artifactId>
-                <version>${nacos.version}</version>
-                <!-- 指定纯净版SDK -->
-                <classifier>pure</classifier>
-            </dependency>
-            <!-- 使用纯净版时必须要引入同版本nacos-api和nacos-common，否则可能出现运行时找不到类的问题 -->
-            <dependency>
-                <groupId>com.alibaba.nacos</groupId>
-                <artifactId>nacos-common</artifactId>
-                <version>${nacos.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.nacos</groupId>
-                <artifactId>nacos-api</artifactId>
-                <version>${nacos.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>${httpcore.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>${httpclient.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson-annotations.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-schema-registry-client</artifactId>
-                <version>${confluent.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-json-schema-provider</artifactId>
-                <version>${confluent.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.embeddedkafka</groupId>
-                <artifactId>embedded-kafka-schema-registry_2.12</artifactId>
-                <version>${confluent.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-jackson -->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-shaded-jackson</artifactId>
-                <version>${flink-shaded-jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-test-utils-junit</artifactId>
-                <version>${flink.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-junit-jupiter</artifactId>
-                <version>${mockitor.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>javax.el</groupId>
-                <artifactId>javax.el-api</artifactId>
-                <version>${javax.el-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.web</groupId>
-                <artifactId>javax.el</artifactId>
-                <version>${org.glassfish.web.javax.el.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish</groupId>
-                <artifactId>javax.el</artifactId>
-                <version>${org.glassfish.javax.el.version}</version>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -449,44 +428,112 @@
                 <version>${jackson-databind.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson-core.version}</version>
+                <groupId>com.jayway.jsonpath</groupId>
+                <artifactId>json-path</artifactId>
+                <version>${json-path.version}</version>
+                <scope>test</scope>
             </dependency>
+            <!-- Mock / Test -->
             <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>${joda-time.version}</version>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.github.javafaker</groupId>
                 <artifactId>javafaker</artifactId>
                 <version>${javafaker.version}</version>
             </dependency>
-            <!-- test containers -->
+            <!-- CVE 安全修复依赖 -->
             <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>mysql</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons-beanutils.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>postgresql</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>oracle-xe</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${httpcore.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>kafka</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json-smart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>accessors-smart</artifactId>
+                <version>2.5.0</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${commons-net.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
+            <!-- CVE-2023-44981/CVE-2024-23944: 覆盖 flink-shaded-zookeeper 中的漏洞版本 -->
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>${commons-cli.version}</version>
+            </dependency>
+            <!-- CVE-2024-25638: dnsjava 升级到 3.6.0 -->
+            <dependency>
+                <groupId>dnsjava</groupId>
+                <artifactId>dnsjava</artifactId>
+                <version>${dnsjava.version}</version>
+            </dependency>
+            <!-- plexus-utils 升级到 3.6.1 -->
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>${plexus-utils.version}</version>
+            </dependency>
+            <!-- lz4-java 升级到 1.10.1，groupId 变更为 at.yawk.lz4 -->
+            <dependency>
+                <groupId>at.yawk.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>${lz4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>3.2.2</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.15.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>3.6.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -497,6 +544,84 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>${versions-maven-plugin.version}</version>
+            </plugin>
+            <!-- Maven Enforcer Plugin: 检测依赖版本不一致 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-dependency-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- 检测依赖树中版本不一致的传递依赖 -->
+                                <requireUpperBoundDeps>
+                                    <!-- 以下为 Flink 传递依赖引入的已知版本冲突，无法在不修改 Flink BOM
+                                         的前提下修复，已通过 dependencyManagement 统一，使用 exclude 排除 -->
+                                    <excludes>
+                                        <exclude>commons-io:commons-io</exclude>
+                                        <exclude>com.google.code.findbugs:jsr305</exclude>
+                                        <exclude>org.slf4j:slf4j-api</exclude>
+                                        <exclude>org.apache.commons:commons-lang3</exclude>
+                                    </excludes>
+                                    <message>依赖版本不一致，可能引入漏洞版本。请运行 'mvn dependency:tree' 检查。</message>
+                                </requireUpperBoundDeps>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- JaCoCo: 测试覆盖率收集 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <phase>test</phase>
+                    </execution>
+                    <execution>
+                        <id>report-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -509,38 +634,16 @@
                     <testTarget>${java.version}</testTarget>
                 </configuration>
             </plugin>
-<!--            &lt;!&ndash; 指定编译scala的插件 &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>net.alchim31.maven</groupId>-->
-<!--                <artifactId>scala-maven-plugin</artifactId>-->
-<!--                <version>3.2.2</version>-->
-<!--                <configuration>-->
-<!--                    <scalaVersion>2.12.12</scalaVersion>-->
-<!--                </configuration>-->
-<!--                -->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>compile-scala</id>-->
-<!--                        <goals>-->
-<!--                            <goal>add-source</goal>-->
-<!--                            <goal>compile</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>process-resources</phase>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>scala-compile-first</id>-->
-<!--                        <goals>-->
-<!--                            <goal>add-source</goal>-->
-<!--                            <goal>testCompile</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>compile</phase>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <environmentVariables>
+                        <DOCKER_HOST>${docker.host}</DOCKER_HOST>
+                        <TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
+                    </environmentVariables>
+                </configuration>
             </plugin>
             
             <plugin>
@@ -548,11 +651,9 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless.version}</version>
                 <configuration>
-                    <!-- optional: limit format enforcement to just the files changed by this feature branch -->
-                    <ratchetFrom>HEAD</ratchetFrom>
                     <java>
                         <googleJavaFormat>
-                            <version>1.7</version>
+                            <version>1.15.0</version>
                             <style>AOSP</style>
                         </googleJavaFormat>
                         <removeUnusedImports />
@@ -568,20 +669,20 @@
                             <file>tool/license.header</file>
                         </licenseHeader>
                     </java>
-<!--                    <scala>-->
-<!--                        &lt;!&ndash; These are the defaults, you can override if you want &ndash;&gt;-->
-<!--                        <includes>-->
-<!--                            <include>src/main/scala/**/*.scala</include>-->
-<!--                            <include>src/test/scala/**/*.scala</include>-->
-<!--                            <include>src/main/scala/**/*.sc</include>-->
-<!--                            <include>src/test/scala/**/*.sc</include>-->
-<!--                        </includes>-->
-<!--                        <scalafmt>-->
-<!--                            <version>3.1.1</version>-->
-<!--                            <file>.scalafmt.conf</file>-->
-<!--                        </scalafmt>-->
-<!--                        &lt;!&ndash; has its own section below &ndash;&gt;-->
-<!--                    </scala>-->
+                    <!--                    <scala>-->
+                    <!--                        &lt;!&ndash; These are the defaults, you can override if you want &ndash;&gt;-->
+                    <!--                        <includes>-->
+                    <!--                            <include>src/main/scala/**/*.scala</include>-->
+                    <!--                            <include>src/test/scala/**/*.scala</include>-->
+                    <!--                            <include>src/main/scala/**/*.sc</include>-->
+                    <!--                            <include>src/test/scala/**/*.sc</include>-->
+                    <!--                        </includes>-->
+                    <!--                        <scalafmt>-->
+                    <!--                            <version>3.1.1</version>-->
+                    <!--                            <file>.scalafmt.conf</file>-->
+                    <!--                        </scalafmt>-->
+                    <!--                        &lt;!&ndash; has its own section below &ndash;&gt;-->
+                    <!--                    </scala>-->
                     <pom>
                         <includes>
                             <include>pom.xml</include>
@@ -615,37 +716,43 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Checkstyle 阿里巴巴 Java 规范 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven-checkstyle-plugin.version}</version>
+                <configuration>
+                    <configLocation>checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     
     <repositories>
         <repository>
-            <snapshots>
+            <releases>
                 <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
             </snapshots>
-            <id>snapshot-repos</id>
-            <name>Apache Snapshot Repository</name>
-            <url>https://repository.apache.org/snapshots/</url>
-            <layout>default</layout>
-        </repository>
-        <repository>
-            <id>confluent</id>
-            <url>https://packages.confluent.io/maven/</url>
-        </repository>
-        <repository>
-            <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
         </repository>
     </repositories>
     
-    <profiles>
-        <profile>
-            <id>google-mirror</id>
-            <properties>
-                <mavenCentralId>gcs-maven-central-mirror</mavenCentralId>
-                <mavenCentralName>GCS Maven Central mirror</mavenCentralName>
-                <mavenCentralUrl>https://maven-central.storage-download.googleapis.com/maven2</mavenCentralUrl>
-            </properties>
-        </profile>
-    </profiles>
+    <profiles />
 </project>

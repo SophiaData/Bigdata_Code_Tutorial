@@ -35,13 +35,15 @@ import io.sophiadata.flink.source.utils.RandomOptionGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /** (@sophiadata) (@date 2023/8/2 11:23). */
 @Slf4j
+@SuppressWarnings("deprecation")
 public class MockSourceFunction implements ParallelSourceFunction<String> {
 
     private volatile Long ts;
@@ -49,25 +51,25 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
 
     @Override
     public void run(SourceContext<String> ctx) throws Exception {
-        for (; mockCount < AppConfig.mock_count; mockCount++) {
+        for (; mockCount < AppConfig.MOCK_COUNT; mockCount++) {
             List<AppMain> appMainList = doAppMock();
             for (AppMain appMain : appMainList) {
                 ctx.collect(appMain.toString());
-                Thread.sleep(AppConfig.log_sleep);
+                Thread.sleep(AppConfig.LOG_SLEEP);
             }
         }
     }
 
     @Override
     public void cancel() {
-        mockCount = AppConfig.mock_count;
+        mockCount = AppConfig.MOCK_COUNT;
     }
 
     public List<AppMain> doAppMock() {
         List<AppMain> logList = new ArrayList<>();
 
-        Date curDate = ParamUtil.checkDate(AppConfig.mock_date);
-        ts = curDate.getTime();
+        LocalDateTime curDate = ParamUtil.checkDateTime(AppConfig.MOCK_DATE);
+        ts = curDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
         AppMain.AppMainBuilder appMainBuilder = AppMain.builder();
 
@@ -91,16 +93,18 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
                         + "  {\"path\":[\"home\",\"good_detail\"],\"rate\":70 },\n"
                         + "  {\"path\":[\"home\"  ],\"rate\":10 }\n"
                         + "]";
-        List<Map> pathList = JSON.parseArray(jsonFile, Map.class);
-        RandomOptionGroup.Builder<List> builder = RandomOptionGroup.builder();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> pathList =
+                (List<Map<String, Object>>) (List<?>) JSON.parseArray(jsonFile);
+        RandomOptionGroup.Builder<List<String>> builder = RandomOptionGroup.builder();
 
         // 抽取一个访问路径
-        for (Map map : pathList) {
-            List path = (List) map.get("path");
+        for (Map<String, Object> map : pathList) {
+            List<String> path = (List<String>) map.get("path");
             Integer rate = (Integer) map.get("rate");
             builder.add(path, rate);
         }
-        List chosenPath = builder.build().getRandomOpt().getValue();
+        List<String> chosenPath = builder.build().getRandomOpt().getValue();
         // ts+=appStart.getLoading_time() ;
 
         // 逐个输入日志
@@ -112,12 +116,12 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
 
             String path = (String) o;
 
-            int pageDuringTime = RandomNum.getRandInt(1000, AppConfig.page_during_max_ms);
+            int pageDuringTime = RandomNum.getRandInt(1000, AppConfig.PAGE_DURING_MAX_MS);
             // 添加页面
             PageId pageId = EnumUtils.getEnum(PageId.class, path);
             AppPage page = AppPage.build(pageId, lastPageId, pageDuringTime);
             if (pageId == null) {
-                System.out.println();
+                log.warn("Unknown page id: {}", path);
             }
             pageBuilder.page(page);
             // 置入上一个页面

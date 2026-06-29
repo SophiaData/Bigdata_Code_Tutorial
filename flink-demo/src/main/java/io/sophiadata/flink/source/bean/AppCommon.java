@@ -54,15 +54,15 @@ public class AppCommon {
         String ba; // (String) 手机品牌
         String isnew;
 
-        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.mock_skew);
+        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
         RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
         // 设备唯一标识
         // 添加倾斜开关
         if (isSkew && isSkewRandom.getRandBoolValue()) {
-            mid = "mid_" + AppConfig.max_mid / 2 + "";
+            mid = "mid_" + AppConfig.MAX_MID / 2 + "";
         } else {
-            mid = "mid_" + RandomNum.getRandInt(1, AppConfig.max_mid) + "";
+            mid = "mid_" + RandomNum.getRandInt(1, AppConfig.MAX_MID) + "";
         }
 
         // 区域
@@ -144,7 +144,7 @@ public class AppCommon {
                                         new RanOpt<String>("2.0.1", 5))
                                 .getRandStringValue();
 
-        uid = RandomNum.getRandInt(1, AppConfig.max_uid) + "";
+        uid = RandomNum.getRandInt(1, AppConfig.MAX_UID) + "";
 
         isnew = RandomNum.getRandInt(0, 1) + "";
 

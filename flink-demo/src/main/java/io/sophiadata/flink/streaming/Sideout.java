@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.streming;
+package io.sophiadata.flink.streaming;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -27,6 +28,7 @@ import org.apache.flink.util.OutputTag;
 import io.sophiadata.flink.base.BaseCode;
 
 /** (@SophiaData) (@date 2022/10/29 19:12). */
+@SuppressWarnings("deprecation")
 public class Sideout extends BaseCode {
 
     public static void main(String[] args) throws Exception {
@@ -42,9 +44,9 @@ public class Sideout extends BaseCode {
                         .flatMap(
                                 new FlatMapFunction<String, String>() {
                                     @Override
-                                    public void flatMap(String value, Collector<String> out) throws Exception {
-                                        String[] splits = value.toLowerCase().split(",");
-                                        for (String split : splits) {
+                                    public void flatMap(String value, Collector<String> out)
+                                            throws Exception {
+                                        for (String split : value.toLowerCase().split(",")) {
                                             if (split.length() > 0) {
                                                 out.collect(split);
                                             }
@@ -74,5 +76,7 @@ public class Sideout extends BaseCode {
     }
 
     private static final String[] STREAM =
-            new String[] {"hello,nihao,nihao,world,bigdata,hadoop,hive,hive,hello,big,null," + null};
+            new String[] {
+                "hello,nihao,nihao,world,bigdata,hadoop,hive,hive,hello,big,null," + null
+            };
 }

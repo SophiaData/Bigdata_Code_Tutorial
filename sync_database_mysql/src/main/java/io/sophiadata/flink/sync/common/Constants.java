@@ -20,26 +20,27 @@ package io.sophiadata.flink.sync.common;
 
 /** (@sophiadata) (@date 2023/9/17 10:25). */
 public class Constants {
-    public static final String sinkUrl =
+
+    public static final String SINK_URL =
             "jdbc:mysql://localhost:3306/test2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
 
-    public static final String sinkUsername = "root";
+    public static final String SINK_USERNAME = System.getenv("MYSQL_SINK_USERNAME");
 
-    public static final String sinkPassword = "123456";
+    public static final String SINK_PASSWORD = System.getenv("MYSQL_SINK_PASSWORD");
 
-    public static final String hostname = "localhost";
+    public static final String HOSTNAME = "localhost";
 
-    public static final Integer port = 3306;
+    public static final Integer PORT = 3306;
 
-    public static final String username = "root";
+    public static final String USERNAME = System.getenv("MYSQL_USERNAME");
 
-    public static final String password = "123456";
+    public static final String PASSWORD = System.getenv("MYSQL_PASSWORD");
 
-    public static final String databaseName = "test";
+    public static final String DATABASE_NAME = "test";
 
-    public static final String tableList = ".*";
+    public static final String TABLE_LIST = ".*";
 
-    public static final Integer setParallelism = 2;
+    public static final Integer SET_PARALLELISM = 2;
 
-    public static final String cdcSourceName = "mysql-cdc-1";
+    public static final String CDC_SOURCE_NAME = "mysql-cdc-1";
 }

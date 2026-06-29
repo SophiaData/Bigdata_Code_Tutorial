@@ -21,11 +21,11 @@ package io.sophiadata.flink.ddl;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
+import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import io.sophiadata.flink.base.BaseCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +52,8 @@ public class FlinkCDCDDL extends BaseCode {
 
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
-        String username = params.get("username", "root");
-        String password = params.get("password", "123456");
+        String username = params.getRequired("username");
+        String password = params.getRequired("password");
         String databaseList = params.get("databaseList", "test");
         String tableList = params.get("tableList", "test.test2");
 

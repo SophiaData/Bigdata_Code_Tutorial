@@ -54,7 +54,7 @@ public class AppMain {
     public static class AppMainBuilder {
 
         public void checkError() {
-            Integer errorRate = AppConfig.error_rate;
+            Integer errorRate = AppConfig.ERROR_RATE;
             Boolean ifError =
                     RandomOptionGroup.builder()
                             .add(true, errorRate)

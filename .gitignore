@@ -29,8 +29,23 @@ docs/build
 target
 tmp
 *.classpath
-*.idea
-*.metadata
+.idea/
+.metadata
 *.settings
 *.cache
 *.iml
+.env
+.env.*
+config.properties
+dependency-reduced-pom.xml
+.mimocode/
+
+# Claude Code per-machine local config
+.claude/settings.local.json
+
+# Logs (spotless audit, hooks output, etc.)
+logs/
+*.log
+
+# OS
+Thumbs.db

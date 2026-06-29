@@ -29,25 +29,17 @@ import java.io.InputStream;
 public class ConfigUtil {
 
     public static String loadJsonFile(String fileName) {
-
         String filePath = getJarDir() + "/" + fileName;
-        //  System.out.println(filePath);
         File file = new File(filePath);
-        InputStream resourceAsStream = null;
-        try {
-            if (file.exists()) {
-                resourceAsStream = new FileInputStream(file);
-            } else {
-                resourceAsStream =
-                        Thread.currentThread()
+        try (InputStream resourceAsStream =
+                file.exists()
+                        ? new FileInputStream(file)
+                        : Thread.currentThread()
                                 .getContextClassLoader()
-                                .getResourceAsStream(fileName);
-            }
-            String json = IOUtils.toString(resourceAsStream, "utf-8");
-            return json;
+                                .getResourceAsStream(fileName)) {
+            return IOUtils.toString(resourceAsStream, "utf-8");
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("配置文件" + fileName + "读取异常");
+            throw new RuntimeException("配置文件" + fileName + "读取异常", e);
         }
     }
 

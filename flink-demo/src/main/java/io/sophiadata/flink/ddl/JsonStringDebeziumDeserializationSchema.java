@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,11 +21,11 @@ package io.sophiadata.flink.ddl;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;
@@ -50,18 +51,17 @@ public class JsonStringDebeziumDeserializationSchema
         } else if (op == Envelope.Operation.DELETE) {
             String delete = extractBeforeRow(value);
             out.collect(new Tuple2<>(false, delete));
-        }
-        // read 操作单独抽离，本地测试发现如不单独操作，getRowMap 方法在 initial 启动模式下报空指针异常
-        // 原因可能是 schema change ---- 或者是其他原因
-        else if (op == Envelope.Operation.READ) {
+            // read 操作单独抽离，本地测试发现如不单独操作，getRowMap 方法在 initial 启动模式下报空指针异常
+            // 原因可能是 schema change ---- 或者是其他原因
+        } else if (op == Envelope.Operation.READ) {
             Struct after = value.getStruct("after");
             JSONObject afterJson = new JSONObject();
             if (after != null) {
                 List<Field> fields = after.schema().fields();
                 for (Field field : fields) {
                     afterJson.put(field.name(), after.get(field));
-                    out.collect(new Tuple2<>(true, afterJson.toJSONString()));
                 }
+                out.collect(new Tuple2<>(true, afterJson.toJSONString()));
             }
         } else {
             String after = extractAfterRow(value);
