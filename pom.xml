@@ -27,53 +27,53 @@
         <flink-connector-kafka.version>3.3.0-1.20</flink-connector-kafka.version>
         <flink_cdc.version>3.6.0-1.20</flink_cdc.version>
         <scala.version>2.12</scala.version>
-        <hadoop.version>3.3.6</hadoop.version>
-        <slf4j.version>1.7.15</slf4j.version>
-        <gson.version>2.8.9</gson.version>
+        <hadoop.version>3.5.0</hadoop.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <gson.version>2.14.0</gson.version>
         <jedis.version>3.3.0</jedis.version>
         <guava.version>32.1.1-jre</guava.version>
-        <json-path.version>2.9.0</json-path.version>
+        <json-path.version>3.0.0</json-path.version>
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
-        <spotless.version>2.23.0</spotless.version>
-        <lombok.version>1.18.36</lombok.version>
-        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
-        <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <nacos.version>2.1.2</nacos.version>
+        <spotless.version>3.7.0</spotless.version>
+        <lombok.version>1.18.46</lombok.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.6.0-M1</maven-surefire-plugin.version>
+        <nacos.version>3.2.2</nacos.version>
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <jackson-annotations.version>2.21</jackson-annotations.version>
-        <maven-shade-plugin>3.5.1</maven-shade-plugin>
+        <jackson-annotations.version>2.22</jackson-annotations.version>
+        <maven-shade-plugin>3.6.2</maven-shade-plugin>
         <confluent.version>7.2.0</confluent.version>
         <docker.host />
-        <jackson-databind.version>2.21.4</jackson-databind.version>
-        <jackson-core.version>2.21.4</jackson-core.version>
-        <protobuf-java.version>3.25.5</protobuf-java.version>
-        <scala-library.version>2.12.7</scala-library.version>
+        <jackson-databind.version>2.22.0</jackson-databind.version>
+        <jackson-core.version>2.22.0</jackson-core.version>
+        <protobuf-java.version>4.35.1</protobuf-java.version>
+        <scala-library.version>3.8.4</scala-library.version>
         <flink-shaded-jackson.version>2.13.4-16.0</flink-shaded-jackson.version>
         <mockito.version>4.6.1</mockito.version>
         <javax.el-api.version>3.0.0</javax.el-api.version>
         <org.glassfish.web.javax.el.version>2.2.4</org.glassfish.web.javax.el.version>
         <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
         <javafaker.version>1.0.2</javafaker.version>
-        <versions-maven-plugin.version>2.14.2</versions-maven-plugin.version>
+        <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
         <!-- 统一管理的依赖版本 -->
         <commons-lang3.version>3.18.0</commons-lang3.version>
         <commons-configuration2.version>2.15.1</commons-configuration2.version>
-        <log4j.version>2.25.4</log4j.version>
-        <mysql.version>8.4.0</mysql.version>
+        <log4j.version>2.26.0</log4j.version>
+        <mysql.version>9.7.0</mysql.version>
         <debezium.version>1.9.8.Final</debezium.version>
         <jetty.version>9.4.58.v20250814</jetty.version>
         <snakeyaml.version>2.2</snakeyaml.version>
-        <json-smart.version>2.5.2</json-smart.version>
+        <json-smart.version>2.6.0</json-smart.version>
         <netty.version>4.1.135.Final</netty.version>
         <avro.version>1.12.1</avro.version>
-        <okio.version>3.4.0</okio.version>
+        <okio.version>3.17.0</okio.version>
         <commons-compress.version>1.26.0</commons-compress.version>
         <assertj.version>3.27.7</assertj.version>
-        <fastjson.version>2.0.52</fastjson.version>
-        <kafka.version>4.1.2</kafka.version>
+        <fastjson.version>2.0.62</fastjson.version>
+        <kafka.version>4.3.1</kafka.version>
         <zookeeper.version>3.9.5</zookeeper.version>
         <!-- CVE 修复版本 -->
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
@@ -81,14 +81,14 @@
         <httpcore.version>4.4.16</httpcore.version>
         <protobuf-java.version>3.25.5</protobuf-java.version>
         <json-smart.version>2.5.2</json-smart.version>
-        <commons-net.version>3.10.0</commons-net.version>
+        <commons-net.version>3.13.0</commons-net.version>
         <okhttp.version>4.12.0</okhttp.version>
         <okio.version>3.4.0</okio.version>
-        <commons-cli.version>1.5.0</commons-cli.version>
-        <dnsjava.version>3.6.0</dnsjava.version>
-        <plexus-utils.version>3.6.1</plexus-utils.version>
-        <lz4.version>1.10.1</lz4.version>
-        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <commons-cli.version>1.11.0</commons-cli.version>
+        <dnsjava.version>3.6.5</dnsjava.version>
+        <plexus-utils.version>4.0.3</plexus-utils.version>
+        <lz4.version>1.11.0</lz4.version>
+        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
     </properties>
     
     <dependencyManagement>
@@ -474,7 +474,7 @@
             <dependency>
                 <groupId>net.minidev</groupId>
                 <artifactId>accessors-smart</artifactId>
-                <version>2.5.0</version>
+                <version>2.6.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
@@ -528,7 +528,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.15.1</version>
+                <version>2.22.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -549,7 +549,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.3</version>
                 <executions>
                     <execution>
                         <id>enforce-dependency-versions</id>
