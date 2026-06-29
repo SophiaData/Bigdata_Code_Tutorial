@@ -213,7 +213,8 @@ public class FlinkSqlWDS extends BaseCode {
                                 finalSkp,
                                 BATCH_SIZE,
                                 BATCH_INTERVAL_MS,
-                                schemas));
+                                schemas,
+                                pks));
 
         LOG.info("CDC pipeline with SchemaEvolver ready for database {}", db);
 
@@ -427,6 +428,7 @@ public class FlinkSqlWDS extends BaseCode {
         private final int batchSize;
         private final long batchIntervalMs;
         private final Map<String, Map<String, String>> schemas;
+        private final Map<String, String> pks;
         private transient Connection conn;
         private transient List<Record> batch;
         private transient long lastFlush;
@@ -437,13 +439,15 @@ public class FlinkSqlWDS extends BaseCode {
                 String sinkPassword,
                 int batchSize,
                 long batchIntervalMs,
-                Map<String, Map<String, String>> schemas) {
+                Map<String, Map<String, String>> schemas,
+                Map<String, String> pks) {
             this.sinkJdbcUrl = sinkJdbcUrl;
             this.sinkUser = sinkUser;
             this.sinkPassword = sinkPassword;
             this.batchSize = batchSize;
             this.batchIntervalMs = batchIntervalMs;
             this.schemas = schemas;
+            this.pks = pks;
         }
 
         @Override
@@ -490,36 +494,80 @@ public class FlinkSqlWDS extends BaseCode {
                 }
                 String fullTable = "`sink_" + table + "`";
                 List<String> columnNames = new ArrayList<>(cols.keySet());
-                String colList = "`" + String.join("`,`", columnNames) + "`";
-                String placeholders =
-                        String.join(",", Collections.nCopies(columnNames.size(), "?"));
-                String updateClause =
-                        columnNames.stream()
-                                .map(c -> "`" + c + "`=?")
-                                .collect(Collectors.joining(","));
-                String sql =
-                        String.format(
-                                "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
-                                fullTable, colList, placeholders, updateClause);
 
-                try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-                    for (Record r : e.getValue()) {
-                        Object[] row = (r.op == OperationType.DELETE) ? r.before : r.after;
-                        if (row == null) {
-                            continue;
-                        }
-                        for (int i = 0; i < columnNames.size(); i++) {
-                            Object val = i < row.length ? row[i] : null;
-                            preparedStatement.setObject(i + 1, val);
-                            preparedStatement.setObject(i + 1 + columnNames.size(), val);
-                        }
-                        preparedStatement.addBatch();
+                List<Record> upserts = new ArrayList<>();
+                List<Record> deletes = new ArrayList<>();
+                for (Record r : e.getValue()) {
+                    if (r.op == OperationType.DELETE) {
+                        deletes.add(r);
+                    } else {
+                        upserts.add(r);
                     }
-                    preparedStatement.executeBatch();
-                } catch (SQLException ex) {
-                    LOG.error("Batch write failed for table {}: {}", table, ex.getMessage());
-                    conn.rollback();
-                    throw ex;
+                }
+
+                if (!upserts.isEmpty()) {
+                    String colList = "`" + String.join("`,`", columnNames) + "`";
+                    String placeholders =
+                            String.join(",", Collections.nCopies(columnNames.size(), "?"));
+                    String updateClause =
+                            columnNames.stream()
+                                    .map(c -> "`" + c + "`=?")
+                                    .collect(Collectors.joining(","));
+                    String sql =
+                            String.format(
+                                    "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
+                                    fullTable, colList, placeholders, updateClause);
+
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        for (Record r : upserts) {
+                            Object[] row = r.after;
+                            if (row == null) {
+                                continue;
+                            }
+                            for (int i = 0; i < columnNames.size(); i++) {
+                                Object val = i < row.length ? row[i] : null;
+                                ps.setObject(i + 1, val);
+                                ps.setObject(i + 1 + columnNames.size(), val);
+                            }
+                            ps.addBatch();
+                        }
+                        ps.executeBatch();
+                    } catch (SQLException ex) {
+                        LOG.error("Batch upsert failed for table {}: {}", table, ex.getMessage());
+                        conn.rollback();
+                        throw ex;
+                    }
+                }
+
+                if (!deletes.isEmpty()) {
+                    String pk = pks.getOrDefault(table, "id");
+                    String deleteSql =
+                            String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
+
+                    try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                        for (Record r : deletes) {
+                            Object[] row = r.before;
+                            if (row == null) {
+                                continue;
+                            }
+                            int pkIdx = columnNames.indexOf(pk);
+                            if (pkIdx < 0) {
+                                LOG.warn(
+                                        "PK '{}' not found in columns for table {}, skipping delete",
+                                        pk,
+                                        table);
+                                continue;
+                            }
+                            Object val = pkIdx < row.length ? row[pkIdx] : null;
+                            ps.setObject(1, val);
+                            ps.addBatch();
+                        }
+                        ps.executeBatch();
+                    } catch (SQLException ex) {
+                        LOG.error("Batch delete failed for table {}: {}", table, ex.getMessage());
+                        conn.rollback();
+                        throw ex;
+                    }
                 }
             }
             conn.commit();
