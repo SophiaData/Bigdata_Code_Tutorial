@@ -653,8 +653,14 @@ public class FlinkSqlWDS extends BaseCode {
 
     static String mapType(String cdcType) {
         String upper = cdcType.toUpperCase();
+        if (upper.contains("BOOLEAN") || upper.contains("BOOL")) {
+            return "TINYINT(1)";
+        }
+        if (upper.contains("BIGINT")) {
+            return "BIGINT";
+        }
         if (upper.contains("INT")) {
-            return upper.contains("BIGINT") ? "BIGINT" : "INT";
+            return "INT";
         }
         if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
             return cdcType;
@@ -662,7 +668,7 @@ public class FlinkSqlWDS extends BaseCode {
         if (upper.contains("TEXT")) {
             return "VARCHAR(1024)";
         }
-        if (upper.contains("DECIMAL")) {
+        if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
             return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
         }
         if (upper.contains("TIMESTAMP")) {
@@ -682,9 +688,6 @@ public class FlinkSqlWDS extends BaseCode {
         }
         if (upper.contains("FLOAT")) {
             return "FLOAT";
-        }
-        if (upper.contains("BOOLEAN")) {
-            return "TINYINT(1)";
         }
         if (upper.contains("BLOB") || upper.contains("BINARY")) {
             return "BLOB";
