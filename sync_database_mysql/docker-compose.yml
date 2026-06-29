@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mysql-source:
+    image: mysql:8.0
+    container_name: cdc-test-source
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flink_source
+      MYSQL_USER: cdc_user
+      MYSQL_PASSWORD: cdc_password
+    ports:
+      - "33061:3306"
+    volumes:
+      - mysql-source-data:/var/lib/mysql
+    command:
+      - "--server-id=1"
+      - "--log_bin=mysql-bin"
+      - "--binlog_format=ROW"
+      - "--gtid_mode=ON"
+      - "--enforce_gtid_consistency=ON"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mysql-sink:
+    image: mysql:8.0
+    container_name: cdc-test-sink
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flink_sink
+    ports:
+      - "33062:3306"
+    volumes:
+      - mysql-sink-data:/var/lib/mysql
+    command:
+      - "--server-id=2"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-source-data:
+  mysql-sink-data:
