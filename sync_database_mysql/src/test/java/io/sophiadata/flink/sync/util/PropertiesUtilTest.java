@@ -18,23 +18,24 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class PropertiesUtilTest {
+class PropertiesUtilTest {
     @Test
-    public void testLoadSuccess() {
+    void testLoadSuccess() {
         String content = "k1=v1\nk2=v2";
         Properties props = PropertiesUtil.load(content);
         assertEquals("v1", props.get("k1"));
     }
 
     @Test
-    public void testLoadWithNullContent() {
+    void testLoadWithNullContent() {
         Executable exec = () -> PropertiesUtil.load(null);
         assertThrows(IllegalArgumentException.class, exec);
     }

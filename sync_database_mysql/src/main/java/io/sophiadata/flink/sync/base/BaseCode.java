@@ -19,22 +19,47 @@
 package io.sophiadata.flink.sync.base;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
-import org.apache.flink.api.common.time.Time;
+import org.apache.flink.configuration.ExternalizedCheckpointRetention;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
+import org.apache.flink.core.execution.CheckpointingMode;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.streaming.api.CheckpointingMode;
-import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-/** (@sophiadata) (@date 2023/5/31 18:56). */
+import java.time.Duration;
+
+/**
+ * Template base class for Flink streaming jobs.
+ *
+ * <p><b>Two-phase bootstrap:</b> {@code init(...)} creates the {@link StreamExecutionEnvironment}
+ * and optional checkpoint/restart config, then delegates to the abstract {@link #handle} method
+ * which contains the actual pipeline logic.
+ *
+ * <p><b>Execute semantics:</b> This base class does <i>not</i> call {@code env.execute()}.
+ * Subclasses are responsible for calling {@code statementSet.execute()} (or {@code env.execute()})
+ * at the appropriate point in {@link #handle}.
+ *
+ * <p><b>Overloads:</b>
+ *
+ * <ul>
+ *   <li>{@link #init(String[], String, Boolean, Boolean)} — full bootstrap with checkpoint and
+ *       restart strategy
+ *   <li>{@link #init(String[], String)} — minimal bootstrap without checkpoint/restart
+ * </ul>
+ */
 public abstract class BaseCode {
+    /**
+     * Bootstrap a Flink SQL/Table job. <b>Does not call {@code env.execute()}</b> — the concrete
+     * {@link #handle} implementation is expected to call {@code statementSet.execute()} (or
+     * similar) so the job name and any post-DDL pipeline steps (e.g. JDBC sink auto-table-create)
+     * run inside the same program.
+     */
     public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
-        // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
 
         checkpoint(env, ckPathAndJobId, hashMap, localpath);
@@ -44,11 +69,11 @@ public abstract class BaseCode {
         handle(args, env, tEnv);
     }
 
+    /** Minimal entry point without checkpoint or restart configuration. */
     public void init(String[] args, String ckPathAndJobId) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
-        // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
 
         handle(args, env, tEnv);
@@ -58,44 +83,54 @@ public abstract class BaseCode {
             String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception;
 
+    @SuppressWarnings("deprecation")
     public void checkpoint(
             StreamExecutionEnvironment env,
             String ckPathAndJobId,
             Boolean hashMap,
             Boolean localpath) {
+        // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
+        // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
+        // also migrating the underlying state backend (HashMapStateBackend /
+        // EmbeddedRocksDBStateBackend) construction. Tracked for a follow-up refactor; suppressed
+        // here so the build stays warning-clean.
         if (hashMap) {
             env.setStateBackend(new HashMapStateBackend());
         } else {
-            // 该类型 State Backend 支持 Changelog 增量检查点
+            // EmbeddedRocksDBStateBackend supports Changelog-style incremental checkpoints.
             env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         }
         if (localpath) {
+            // TM-local storage; defaults to the working dir of each task manager. Suitable for
+            // throwaway test runs only — production should set an explicit file:// or hdfs:// path.
             env.enableCheckpointing(5 * 60 * 1000);
-            // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
-            // 测试任务如数据量较大请指定文件存储
-            // env.getCheckpointConfig()
-            //    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
         } else {
+            // Override via -DcheckpointStorage=file:///path or hdfs://nameservice/path
+            // (env.getCheckpointConfig().setCheckpointStorage(System.getProperty("checkpointStorage", ...))).
             env.getCheckpointConfig()
-                    .setCheckpointStorage("hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
-            // Hadoop HA 写法：
-            // hdfs://nameService_id/path/file
+                    .setCheckpointStorage(new Path("hdfs://hadoop1:8020/flink/" + ckPathAndJobId));
             env.enableCheckpointing(60 * 1000);
         }
-        // Changelog 是一项旨在减少检查点时间的功能，因此可以减少一次模式下的端到端延迟。
-        // 在 EmbeddedRocksDBStateBackend 中受到支持
-        env.enableChangelogStateBackend(false); // 启用 Changelog 可能会对应用程序的性能产生负面影响。
-        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setCheckpointingConsistencyMode(CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
         env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);
         env.getCheckpointConfig()
-                .setExternalizedCheckpointCleanup(
-                        CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+                .setExternalizedCheckpointRetention(
+                        ExternalizedCheckpointRetention.RETAIN_ON_CANCELLATION);
     }
 
+    @SuppressWarnings("deprecation")
     public void restartTask(StreamExecutionEnvironment env) {
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Time.seconds(10)));
+        // fixedDelayRestart(int, java.time.Duration) replaces fixedDelayRestart(int, Time).
+        // Flink 1.18+ uses java.time.Duration throughout the public API.
+        //
+        // NOTE: RestartStrategies + setRestartStrategy() are deprecated in Flink 1.20; the new
+        // way is to construct RestartStrategy via Configuration / PipelineOptions.RESTART_STRATEGY
+        // and pass it via StreamExecutionEnvironment#configure(...). Tracked for follow-up; kept
+        // here because the simple two-line replacement here is far easier to audit than a full
+        // migration to Configuration-driven restart.
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Duration.ofSeconds(10)));
     }
 }

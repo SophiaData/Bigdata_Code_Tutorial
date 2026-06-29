@@ -59,10 +59,10 @@ public class AppPage {
 
         RandomOptionGroup<DisplayType> sourceTypeGroup =
                 RandomOptionGroup.<DisplayType>builder()
-                        .add(DisplayType.query, AppConfig.sourceTypeRate[0])
-                        .add(DisplayType.promotion, AppConfig.sourceTypeRate[1])
-                        .add(DisplayType.recommend, AppConfig.sourceTypeRate[2])
-                        .add(DisplayType.activity, AppConfig.sourceTypeRate[3])
+                        .add(DisplayType.query, AppConfig.SOURCE_TYPE_RATE[0])
+                        .add(DisplayType.promotion, AppConfig.SOURCE_TYPE_RATE[1])
+                        .add(DisplayType.recommend, AppConfig.SOURCE_TYPE_RATE[2])
+                        .add(DisplayType.activity, AppConfig.SOURCE_TYPE_RATE[3])
                         .build();
 
         if (pageId == PageId.good_detail
@@ -73,17 +73,17 @@ public class AppPage {
             sourceType = sourceTypeGroup.getValue();
 
             itemType = ItemType.sku_id;
-            item = RandomNum.getRandInt(1, AppConfig.max_sku_id) + "";
+            item = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID) + "";
         } else if (pageId == PageId.good_list) {
             itemType = ItemType.keyword;
-            item = new RandomOptionGroup(AppConfig.searchKeywords).getRandStringValue();
+            item = new RandomOptionGroup(AppConfig.SEARCH_KEYWORDS).getRandStringValue();
         } else if (pageId == PageId.trade
                 || pageId == PageId.payment
                 || pageId == PageId.payment_done) {
             itemType = ItemType.sku_ids;
             item =
                     RandomNumString.getRandNumString(
-                            1, AppConfig.max_sku_id, RandomNum.getRandInt(1, 3), ",", false);
+                            1, AppConfig.MAX_SKU_ID, RandomNum.getRandInt(1, 3), ",", false);
         }
         return new AppPage(
                 lastPageId, pageId, itemType, item, duringTime, extend1, extend2, sourceType);

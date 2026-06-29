@@ -31,11 +31,11 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.sophiadata.flink.source.config.AppConfig.max_activity_count;
-import static io.sophiadata.flink.source.config.AppConfig.max_display_count;
-import static io.sophiadata.flink.source.config.AppConfig.max_pos_id;
-import static io.sophiadata.flink.source.config.AppConfig.max_sku_id;
-import static io.sophiadata.flink.source.config.AppConfig.min_display_count;
+import static io.sophiadata.flink.source.config.AppConfig.MAX_ACTIVITY_COUNT;
+import static io.sophiadata.flink.source.config.AppConfig.MAX_DISPLAY_COUNT;
+import static io.sophiadata.flink.source.config.AppConfig.MAX_POS_ID;
+import static io.sophiadata.flink.source.config.AppConfig.MAX_SKU_ID;
+import static io.sophiadata.flink.source.config.AppConfig.MIN_DISPLAY_COUNT;
 
 /** (@gtk) (@date 2023/8/2 11:08). */
 @Data
@@ -54,8 +54,8 @@ public class AppDisplay {
 
     public static List<AppDisplay> buildList(AppPage appPage) {
 
-        List<AppDisplay> displayList = new ArrayList();
-        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.mock_skew);
+        List<AppDisplay> displayList = new ArrayList<>();
+        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
         RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
 
@@ -63,10 +63,10 @@ public class AppDisplay {
         if (appPage.page_id == PageId.home
                 || appPage.page_id == PageId.discovery
                 || appPage.page_id == PageId.category) {
-            int displayCount = RandomNum.getRandInt(1, max_activity_count);
-            int pos_id = RandomNum.getRandInt(1, max_pos_id);
+            int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
+            int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
             for (int i = 1; i <= displayCount; i++) {
-                int actId = RandomNum.getRandInt(1, max_activity_count);
+                int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
                 AppDisplay appDisplay =
                         new AppDisplay(
                                 ItemType.activity_id, actId + "", DisplayType.activity, i, pos_id);
@@ -83,7 +83,7 @@ public class AppDisplay {
                 || appPage.page_id == PageId.good_list // 商品列表
                 || appPage.page_id == PageId.discovery) { // 发现
 
-            int displayCount = RandomNum.getRandInt(min_display_count, max_display_count);
+            int displayCount = RandomNum.getRandInt(MIN_DISPLAY_COUNT, MAX_DISPLAY_COUNT);
             int activityCount = displayList.size(); // 商品显示从 活动后面开始
             for (int i = 1 + activityCount; i <= displayCount + activityCount; i++) {
                 // TODO 商品点击，添加倾斜逻辑
@@ -91,12 +91,12 @@ public class AppDisplay {
                 if (appPage.page_id == PageId.good_detail
                         && isSkew
                         && isSkewRandom.getRandBoolValue()) {
-                    skuId = max_sku_id / 2;
+                    skuId = MAX_SKU_ID / 2;
                 } else {
-                    skuId = RandomNum.getRandInt(1, max_sku_id);
+                    skuId = RandomNum.getRandInt(1, MAX_SKU_ID);
                 }
 
-                int pos_id = RandomNum.getRandInt(1, max_pos_id);
+                int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
                 // 商品推广：查询结果：算法推荐 = 30：60：10
                 RandomOptionGroup<DisplayType> dispTypeGroup =
                         RandomOptionGroup.<DisplayType>builder()

@@ -18,214 +18,630 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.connector.jdbc.databases.mysql.catalog.MySqlCatalog;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.cdc.common.data.GenericRecordData;
+import org.apache.flink.cdc.common.event.AddColumnEvent;
+import org.apache.flink.cdc.common.event.CreateTableEvent;
+import org.apache.flink.cdc.common.event.DataChangeEvent;
+import org.apache.flink.cdc.common.event.Event;
+import org.apache.flink.cdc.common.event.OperationType;
+import org.apache.flink.cdc.common.event.SchemaChangeEvent;
+import org.apache.flink.cdc.common.event.TruncateTableEvent;
+import org.apache.flink.cdc.common.schema.Column;
+import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.Schema;
-import org.apache.flink.table.api.StatementSet;
-import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.table.catalog.DefaultCatalogTable;
-import org.apache.flink.table.catalog.ObjectPath;
-import org.apache.flink.table.catalog.exceptions.DatabaseNotExistException;
-import org.apache.flink.table.catalog.exceptions.TableNotExistException;
-import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
-import org.apache.flink.table.types.DataType;
-import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.RowType;
-import org.apache.flink.types.Row;
-
-import org.apache.flink.shaded.guava30.com.google.common.collect.Maps;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.sync.base.BaseCode;
-import io.sophiadata.flink.sync.sink.CreateMysqlLSinkTable;
-import io.sophiadata.flink.sync.source.MysqlCdcSource;
+import io.sophiadata.flink.sync.schema.SchemaEvolver;
 import io.sophiadata.flink.sync.util.MysqlUtil;
+import io.sophiadata.flink.sync.util.NacosUtil;
 import io.sophiadata.flink.sync.util.ParameterUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/** (@SophiaData) (@date 2023/5/31 19:09). */
+/** Whole-Database Sync main class using flink-cdc 3.x MySqlSource. */
 public class FlinkSqlWDS extends BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlWDS.class);
+    private static final int BATCH_SIZE = 200;
+    private static final long BATCH_INTERVAL_MS = 1000;
 
     public static void main(String[] args) throws Exception {
-        new FlinkSqlWDS().init(args, "flink_sql_job_FlinkSqlWDS", true, true);
-        LOG.info(" init 方法正常 ");
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String[] effectiveArgs = (args.length == 0) ? findDefaultArgs() : args;
+        String[] mergedArgs =
+                NacosUtil.mergeInto(ParameterTool.fromArgs(effectiveArgs))
+                        .toMap()
+                        .entrySet()
+                        .stream()
+                        .flatMap(e -> java.util.stream.Stream.of("--" + e.getKey(), e.getValue()))
+                        .toArray(String[]::new);
+        new FlinkSqlWDS().init(mergedArgs, "flink_sql_wds", true, true);
     }
 
-    // 本程序测试 Whole database synchronization 之 MySQL to MySQL 捕捉表需包含主键并实现自动建表，DDL 同步暂不支持 ！！！
-    // 可根据此案例拓展其他 sink 组件
-    // 需要注意的点：不同表数据量不一样，同步时可以适当放大同步资源，但会造成资源浪费，不加大可能反压
-    // 测试同步五张表百万数据，一分钟左右
-    // refer: https://blog.csdn.net/qq_36062467/article/details/128117647
-    // refer 环境: Flink 1.15 Flink CDC 2.3.0
-    // 本程序环境：Flink 1.17.1 Flink CDC 2.4.0  MySQL 8.0
-    // 技术点：Flink MySQL CDC Connector，MySQL Catalog，Flink Operator，Flink JDBC
+    private static String[] findDefaultArgs() {
+        String configPath = findDefaultConfig();
+        return (configPath != null) ? new String[] {"--config", configPath} : new String[0];
+    }
+
+    private static String findDefaultConfig() {
+        try {
+            if (FlinkSqlWDS.class.getResource("/config.properties") != null) {
+                return "classpath:config.properties";
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        java.nio.file.Path l = java.nio.file.Paths.get("config.properties");
+        if (java.nio.file.Files.exists(l)) {
+            return l.toAbsolutePath().toString();
+        }
+        java.nio.file.Path m = java.nio.file.Paths.get("sync_database_mysql", "config.properties");
+        if (java.nio.file.Files.exists(m)) {
+            return m.toAbsolutePath().toString();
+        }
+        return null;
+    }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
+    public void handle(
+            String[] args,
+            StreamExecutionEnvironment env,
+            org.apache.flink.table.api.bridge.java.StreamTableEnvironment tEnv)
             throws Exception {
-        final ParameterTool params = ParameterTool.fromArgs(args);
-        env.getConfig().setGlobalJobParameters(params);
-        String databaseName = ParameterUtil.databaseName(params);
-        String tableList = ParameterUtil.tableList(params);
 
-        String connectorWithBody = CreateMysqlLSinkTable.connectorWithBody(params);
+        ParameterTool p = ParameterTool.fromArgs(args);
+        String h = ParameterUtil.hostname(p);
+        int port = ParameterUtil.port(p);
+        String u = ParameterUtil.username(p);
+        String pw = ParameterUtil.password(p);
+        String db = ParameterUtil.databaseName(p);
+        String tz = p.get("serverTimeZone", "Asia/Shanghai");
+        String su = ParameterUtil.sinkUrl(p);
+        String sku = ParameterUtil.sinkUsername(p);
+        String skp = ParameterUtil.sinkPassword(p);
 
-        // 注册同步的库对应的 Catalog 这里是 mysql catalog
+        String sinkJdbcUrl = extractSinkJdbcUrl(su);
 
-        MySqlCatalog mySqlCatalog = MysqlUtil.useMysqlCatalog(params);
+        Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
+        Map<String, String> pks = new ConcurrentHashMap<>();
 
-        List<String> tables;
+        SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
+        LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
 
-        // 如果整库同步，则从 Catalog 里取所有表，否则从指定表中取表名
-        try {
-            if (".*".equals(tableList)) {
-                tables = listAllTables(mySqlCatalog, databaseName);
-            } else {
-                if (tableList.contains(",")) {
-                    tables = extractTableNames(tableList);
-                } else {
-                    tables = Collections.singletonList(tableList);
+        MySqlSource<Event> source =
+                MySqlSource.<Event>builder()
+                        .hostname(h)
+                        .port(port)
+                        .username(u)
+                        .password(pw)
+                        .databaseList(db)
+                        .tableList(db + ".*")
+                        .serverTimeZone(tz)
+                        .deserializer(new CdcEventDeserializer())
+                        .includeSchemaChanges(true)
+                        .build();
+
+        DataStream<Event> cdcStream =
+                env.fromSource(source, WatermarkStrategy.noWatermarks(), "mysql-cdc-all")
+                        .setParallelism(1);
+
+        final String finalSinkJdbcUrl = sinkJdbcUrl;
+        final String finalSku = sku;
+        final String finalSkp = skp;
+        final SchemaEvolver finalEvolver = schemaEvolver;
+
+        cdcStream
+                .process(
+                        new ProcessFunction<Event, Event>() {
+                            @Override
+                            public void processElement(
+                                    Event event, Context ctx, Collector<Event> out) {
+                                if (event instanceof SchemaChangeEvent) {
+                                    SchemaChangeEvent sce = (SchemaChangeEvent) event;
+                                    try {
+                                        finalEvolver.processEvent(sce);
+                                    } catch (Exception e) {
+                                        LOG.error("SchemaEvolver error: {}", e.getMessage());
+                                    }
+                                    if (event instanceof CreateTableEvent) {
+                                        CreateTableEvent cte = (CreateTableEvent) event;
+                                        String tableName = cte.tableId().getTableName();
+                                        Map<String, String> colMap = new LinkedHashMap<>();
+                                        for (Column col : cte.getSchema().getColumns()) {
+                                            colMap.put(col.getName(), col.getType().toString());
+                                        }
+                                        schemas.put(tableName, colMap);
+                                        String pk =
+                                                cte.getSchema().primaryKeys().isEmpty()
+                                                        ? "id"
+                                                        : cte.getSchema().primaryKeys().get(0);
+                                        pks.put(tableName, pk);
+                                        createSinkTableIfNotExists(
+                                                finalSinkJdbcUrl,
+                                                finalSku,
+                                                finalSkp,
+                                                tableName,
+                                                colMap,
+                                                pk);
+                                        LOG.info("CreateTable schema stored for {}", tableName);
+                                    } else if (event instanceof AddColumnEvent) {
+                                        AddColumnEvent ace = (AddColumnEvent) event;
+                                        String tableName = ace.tableId().getTableName();
+                                        Map<String, String> colMap = schemas.get(tableName);
+                                        if (colMap != null) {
+                                            for (AddColumnEvent.ColumnWithPosition cp :
+                                                    ace.getAddedColumns()) {
+                                                colMap.put(
+                                                        cp.getAddColumn().getName(),
+                                                        cp.getAddColumn().getType().toString());
+                                            }
+                                            LOG.info("AddColumn schema updated for {}", tableName);
+                                        }
+                                    }
+                                }
+                                out.collect(event);
+                            }
+                        })
+                .name("schema-evolver")
+                .uid("schema-evolver")
+                .addSink(
+                        new CDBBatchSink(
+                                finalSinkJdbcUrl,
+                                finalSku,
+                                finalSkp,
+                                BATCH_SIZE,
+                                BATCH_INTERVAL_MS,
+                                schemas));
+
+        LOG.info("CDC pipeline with SchemaEvolver ready for database {}", db);
+
+        bootstrapSinkTables(h, port, u, pw, db, finalSinkJdbcUrl, finalSku, finalSkp, schemas, pks);
+
+        env.execute("flink-cdc-wds-" + db);
+    }
+
+    private static void bootstrapSinkTables(
+            String host,
+            int port,
+            String user,
+            String pw,
+            String db,
+            String sinkJdbcUrl,
+            String sinkUser,
+            String sinkPw,
+            Map<String, Map<String, String>> schemas,
+            Map<String, String> pks)
+            throws SQLException, ClassNotFoundException {
+        String sourceUrl =
+                String.format(
+                        "jdbc:mysql://%s:%d?useSSL=false&allowPublicKeyRetrieval=true", host, port);
+        try (Connection conn = MysqlUtil.getConnection(sourceUrl, user, pw)) {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            String validatedDb = validateIdentifier(db);
+            String[] tables;
+            try (Statement st = conn.createStatement();
+                    java.sql.ResultSet rs =
+                            st.executeQuery("SHOW TABLES FROM `" + validatedDb + "`")) {
+                List<String> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(rs.getString(1));
+                }
+                tables = list.toArray(new String[0]);
+            }
+            LOG.info("Bootstrapping {} source tables from {}: {}", tables.length, db, tables);
+
+            for (String table : tables) {
+                Map<String, String> cols = new LinkedHashMap<>();
+                String pk = "id";
+                try (PreparedStatement psCol =
+                        conn.prepareStatement(
+                                "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?")) {
+                    psCol.setString(1, db);
+                    psCol.setString(2, table);
+                    try (java.sql.ResultSet rs = psCol.executeQuery()) {
+                        while (rs.next()) {
+                            cols.put(rs.getString("COLUMN_NAME"), rs.getString("DATA_TYPE"));
+                        }
+                    }
+                }
+                try (PreparedStatement psPk =
+                        conn.prepareStatement(
+                                "SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'")) {
+                    psPk.setString(1, db);
+                    psPk.setString(2, table);
+                    try (java.sql.ResultSet rs = psPk.executeQuery()) {
+                        if (rs.next()) {
+                            pk = rs.getString(1);
+                        }
+                    }
+                }
+                if (cols.isEmpty()) {
+                    LOG.warn("Skipping empty schema for {}.{}", db, table);
+                    continue;
+                }
+                String sinkTable = "sink_" + table;
+                schemas.put(table, cols);
+                pks.put(table, pk);
+                createSinkTableIfNotExists(sinkJdbcUrl, sinkUser, sinkPw, sinkTable, cols, pk);
+                LOG.info("Bootstrapped sink for {}.{} -> {} (pk={})", db, table, sinkTable, pk);
+            }
+        }
+    }
+
+    private static String extractSinkJdbcUrl(String su) {
+        int dbStart = su.indexOf("//") + 2;
+        int dbEnd = su.indexOf("/", dbStart);
+        String hostPort = su.substring(dbStart, dbEnd);
+        int paramStart = su.indexOf("?");
+        String database = su.substring(dbEnd + 1, paramStart > 0 ? paramStart : su.length());
+        return "jdbc:mysql://" + hostPort + "/" + database;
+    }
+
+    private static final Pattern VALID_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+    private static String validateIdentifier(String identifier) {
+        if (identifier == null || !VALID_IDENTIFIER.matcher(identifier).matches()) {
+            throw new IllegalArgumentException("Invalid SQL identifier: " + identifier);
+        }
+        return identifier;
+    }
+
+    public static class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
+        private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
+
+        @Override
+        public void deserialize(
+                org.apache.kafka.connect.source.SourceRecord record, Collector<Event> out) {
+            if (record == null) {
+                return;
+            }
+            org.apache.kafka.connect.data.Struct valueStruct =
+                    (org.apache.kafka.connect.data.Struct) record.value();
+            if (valueStruct == null) {
+                return;
+            }
+
+            String op = valueStruct.getString("op");
+            if (op == null) {
+                return;
+            }
+
+            org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
+            if (source == null) {
+                LOG.warn("Missing source info, skipping event");
+                return;
+            }
+            String dbName = source.getString("db");
+            String tableName = source.getString("table");
+
+            org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
+            org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
+
+            Object[] beforeVals = extractValues(before);
+            Object[] afterVals = extractValues(after);
+            org.apache.flink.cdc.common.event.TableId tid =
+                    org.apache.flink.cdc.common.event.TableId.tableId(dbName, tableName);
+
+            switch (op) {
+                case "c":
+                case "r":
+                    out.collect(DataChangeEvent.insertEvent(tid, GenericRecordData.of(afterVals)));
+                    break;
+                case "u":
+                    out.collect(
+                            DataChangeEvent.updateEvent(
+                                    tid,
+                                    GenericRecordData.of(beforeVals),
+                                    GenericRecordData.of(afterVals)));
+                    break;
+                case "d":
+                    out.collect(DataChangeEvent.deleteEvent(tid, GenericRecordData.of(beforeVals)));
+                    break;
+                case "t":
+                    out.collect(new TruncateTableEvent(tid));
+                    break;
+                default:
+                    LOG.debug("Unknown op: {}", op);
+            }
+        }
+
+        private Object[] extractValues(org.apache.kafka.connect.data.Struct row) {
+            if (row == null) {
+                return null;
+            }
+            Object[] values = new Object[row.schema().fields().size()];
+            int i = 0;
+            for (org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+                values[i++] = convertValue(row.get(f.name()));
+            }
+            return values;
+        }
+
+        private Object convertValue(Object value) {
+            if (value == null) {
+                return null;
+            }
+            if (value instanceof java.time.OffsetDateTime) {
+                return java.sql.Timestamp.from(((java.time.OffsetDateTime) value).toInstant());
+            }
+            if (value instanceof java.time.ZonedDateTime) {
+                return java.sql.Timestamp.from(((java.time.ZonedDateTime) value).toInstant());
+            }
+            if (value instanceof java.time.Instant) {
+                return java.sql.Timestamp.from((java.time.Instant) value);
+            }
+            if (value instanceof java.time.LocalDateTime) {
+                return java.sql.Timestamp.valueOf((java.time.LocalDateTime) value);
+            }
+            if (value instanceof java.util.Date) {
+                return new java.sql.Timestamp(((java.util.Date) value).getTime());
+            }
+            if (value instanceof String) {
+                String s = (String) value;
+                if (s.contains("T")) {
+                    try {
+                        return java.sql.Timestamp.from(java.time.Instant.parse(s));
+                    } catch (Exception e) {
+                        return s;
+                    }
+                }
+                return s;
+            }
+            return value;
+        }
+
+        @Override
+        public TypeInformation<Event> getProducedType() {
+            return TypeInformation.of(Event.class);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class CDBBatchSink extends RichSinkFunction<Event> {
+        private static final Logger LOG = LoggerFactory.getLogger(CDBBatchSink.class);
+        private final String sinkJdbcUrl;
+        private final String sinkUser;
+        private final String sinkPassword;
+        private final int batchSize;
+        private final long batchIntervalMs;
+        private final Map<String, Map<String, String>> schemas;
+        private transient Connection conn;
+        private transient List<Record> batch;
+        private transient long lastFlush;
+
+        CDBBatchSink(
+                String sinkJdbcUrl,
+                String sinkUser,
+                String sinkPassword,
+                int batchSize,
+                long batchIntervalMs,
+                Map<String, Map<String, String>> schemas) {
+            this.sinkJdbcUrl = sinkJdbcUrl;
+            this.sinkUser = sinkUser;
+            this.sinkPassword = sinkPassword;
+            this.batchSize = batchSize;
+            this.batchIntervalMs = batchIntervalMs;
+            this.schemas = schemas;
+        }
+
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            super.open(parameters);
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
+            conn.setAutoCommit(false);
+            batch = new ArrayList<>();
+            lastFlush = System.currentTimeMillis();
+            LOG.info("CDBBatchSink connected to sink");
+        }
+
+        @Override
+        public void invoke(Event event, Context context) throws Exception {
+            if (!(event instanceof DataChangeEvent)) {
+                return;
+            }
+            batch.add(new Record((DataChangeEvent) event));
+            if (batch.size() >= batchSize
+                    || System.currentTimeMillis() - lastFlush >= batchIntervalMs) {
+                flush();
+            }
+        }
+
+        private void flush() throws Exception {
+            if (batch.isEmpty()) {
+                return;
+            }
+            List<Record> currentBatch = new ArrayList<>(batch);
+            batch.clear();
+            lastFlush = System.currentTimeMillis();
+
+            Map<String, List<Record>> byTable = new LinkedHashMap<>();
+            for (Record r : currentBatch) {
+                byTable.computeIfAbsent(r.tableName, k -> new ArrayList<>()).add(r);
+            }
+
+            for (Map.Entry<String, List<Record>> e : byTable.entrySet()) {
+                String table = e.getKey();
+                Map<String, String> cols = schemas.get(table);
+                if (cols == null || cols.isEmpty()) {
+                    continue;
+                }
+                String fullTable = "`sink_" + table + "`";
+                List<String> columnNames = new ArrayList<>(cols.keySet());
+                String colList = "`" + String.join("`,`", columnNames) + "`";
+                String placeholders =
+                        String.join(",", Collections.nCopies(columnNames.size(), "?"));
+                String updateClause =
+                        columnNames.stream()
+                                .map(c -> "`" + c + "`=?")
+                                .collect(Collectors.joining(","));
+                String sql =
+                        String.format(
+                                "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
+                                fullTable, colList, placeholders, updateClause);
+
+                try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+                    for (Record r : e.getValue()) {
+                        Object[] row = (r.op == OperationType.DELETE) ? r.before : r.after;
+                        if (row == null) {
+                            continue;
+                        }
+                        for (int i = 0; i < columnNames.size(); i++) {
+                            Object val = i < row.length ? row[i] : null;
+                            preparedStatement.setObject(i + 1, val);
+                            preparedStatement.setObject(i + 1 + columnNames.size(), val);
+                        }
+                        preparedStatement.addBatch();
+                    }
+                    preparedStatement.executeBatch();
+                } catch (SQLException ex) {
+                    LOG.error("Batch write failed for table {}: {}", table, ex.getMessage());
+                    conn.rollback();
+                    throw ex;
                 }
             }
-        } catch (DatabaseNotExistException e) {
-            handleDatabaseNotExistException(databaseName, e);
-            throw e;
+            conn.commit();
         }
-        // 创建表名和对应 RowTypeInfo 映射的 Map
-        Map<String, RowTypeInfo> tableTypeInformationMap = Maps.newConcurrentMap();
-        Map<String, DataType[]> tableDataTypesMap = Maps.newConcurrentMap();
-        Map<String, RowType> tableRowTypeMap = Maps.newConcurrentMap();
-        for (String table : tables) {
-            // 获取  Catalog 中注册的表
-            ObjectPath objectPath = new ObjectPath(databaseName, table);
-            DefaultCatalogTable catalogBaseTable;
+
+        @Override
+        public void close() {
             try {
-                catalogBaseTable = (DefaultCatalogTable) mySqlCatalog.getTable(objectPath);
-
-            } catch (TableNotExistException e) {
-                LOG.error("{} 表不存在", table, e);
-                throw e;
+                if (batch != null && !batch.isEmpty()) {
+                    flush();
+                }
+            } catch (Exception e) {
+                LOG.error("Error during final flush", e);
+            } finally {
+                try {
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    LOG.error("Error closing connection", e);
+                }
+                try {
+                    super.close();
+                } catch (Exception e) {
+                    LOG.error("Error in super.close()", e);
+                }
             }
-            // 获取表的 Schema
-            assert catalogBaseTable != null;
-            Schema schema = catalogBaseTable.getUnresolvedSchema();
-            // 获取表中字段名列表
-            String[] fieldNames = new String[schema.getColumns().size()];
-            // 获取DataType
-            DataType[] fieldDataTypes = new DataType[schema.getColumns().size()];
-            LogicalType[] logicalTypes = new LogicalType[schema.getColumns().size()];
-
-            // 获取表字段类型
-            TypeInformation<?>[] fieldTypes = new TypeInformation[schema.getColumns().size()];
-            // 获取表的主键
-            List<String> primaryKeys;
-            try {
-                primaryKeys = schema.getPrimaryKey().get().getColumnNames(); // 此处不用 orElse
-            } catch (NullPointerException e) {
-                LOG.error("捕捉表异常: {} 表没有主键！！！ 当前 mysql cdc 尚不支持捕捉没有主键的表！！！", table, e);
-                throw e;
-            }
-
-            for (int i = 0; i < schema.getColumns().size(); i++) {
-                Schema.UnresolvedPhysicalColumn column =
-                        (Schema.UnresolvedPhysicalColumn) schema.getColumns().get(i);
-                fieldNames[i] = column.getName();
-                fieldDataTypes[i] = (DataType) column.getDataType();
-                fieldTypes[i] =
-                        InternalTypeInfo.of(((DataType) column.getDataType()).getLogicalType());
-                logicalTypes[i] = ((DataType) column.getDataType()).getLogicalType();
-            }
-            RowType rowType = RowType.of(logicalTypes, fieldNames);
-            tableRowTypeMap.put(table, rowType);
-
-            // 组装 Flink Sink 表 DDL sql
-            StringBuilder stmt = new StringBuilder();
-            String sinkTableName =
-                    String.format(params.get("sinkPrefix", "sink_%s"), table); // Sink 表前缀
-            stmt.append("create table if not exists ").append(sinkTableName).append("(\n");
-
-            for (int i = 0; i < fieldNames.length; i++) {
-                String column = fieldNames[i];
-                String fieldDataType = fieldDataTypes[i].toString();
-                stmt.append("\t`").append(column).append("` ").append(fieldDataType).append(",\n");
-            }
-
-            stmt.append(
-                    String.format(
-                            "PRIMARY KEY (%s) NOT ENFORCED\n)",
-                            StringUtils.join(primaryKeys, ",")));
-            String formatJdbcSinkWithBody =
-                    connectorWithBody.replace("${sinkTableName}", sinkTableName);
-            String createSinkTableDdl = stmt + formatJdbcSinkWithBody;
-            // 创建 Flink Sink 表
-            LOG.info("createSinkTableDdl: \r {}", createSinkTableDdl);
-            tEnv.executeSql(createSinkTableDdl);
-            tableDataTypesMap.put(table, fieldDataTypes);
-            tableTypeInformationMap.put(table, new RowTypeInfo(fieldTypes, fieldNames));
-
-            // 下游 MySQL 建表逻辑
-            new CreateMysqlLSinkTable()
-                    .createMysqlSinkTable(
-                            params, sinkTableName, fieldNames, fieldDataTypes, primaryKeys);
         }
 
-        //  MySQL CDC
-        SingleOutputStreamOperator<Tuple2<String, Row>> dataStreamSource =
-                new MysqlCdcSource()
-                        .singleOutputStreamOperator(params, env, tableRowTypeMap); // 切断任务链
-        StatementSet statementSet = tEnv.createStatementSet();
-        // DataStream 转 Table，创建临时视图，插入 sink 表
-        for (Map.Entry<String, RowTypeInfo> entry : tableTypeInformationMap.entrySet()) {
-            String tableName = entry.getKey();
-            RowTypeInfo rowTypeInfo = entry.getValue();
-            SingleOutputStreamOperator<Row> mapStream =
-                    dataStreamSource
-                            .filter(data -> data.f0.equals(tableName))
-                            .setParallelism(ParameterUtil.setParallelism(params))
-                            .map(data -> data.f1, rowTypeInfo)
-                            .setParallelism(ParameterUtil.setParallelism(params));
-            Table table = tEnv.fromChangelogStream(mapStream);
-            String temporaryViewName = String.format("t_%s", tableName);
-            tEnv.createTemporaryView(temporaryViewName, table);
-            String sinkTableName = String.format("sink_%s", tableName);
-            String insertSql =
-                    String.format(
-                            "insert into %s select * from %s", sinkTableName, temporaryViewName);
-            LOG.info("add insertSql for {}, sql: {}", tableName, insertSql);
-            statementSet.addInsertSql(insertSql);
+        private static class Record {
+            final String tableName;
+            final OperationType op;
+            final Object[] before;
+            final Object[] after;
+
+            Record(DataChangeEvent event) {
+                this.tableName = event.tableId().getTableName();
+                this.op = event.op();
+                this.before = extractValues(event.before());
+                this.after = extractValues(event.after());
+            }
+
+            private static Object[] extractValues(org.apache.flink.cdc.common.data.RecordData row) {
+                if (row == null) {
+                    return null;
+                }
+                Object[] values = new Object[row.getArity()];
+                for (int i = 0; i < row.getArity(); i++) {
+                    values[i] = ((GenericRecordData) row).getField(i);
+                }
+                return values;
+            }
         }
-        statementSet.execute();
-    }
-    // 提取方法：列出所有表格
-    private List<String> listAllTables(MySqlCatalog mySqlCataLog, String databaseName)
-            throws DatabaseNotExistException {
-        return mySqlCataLog.listTables(databaseName);
     }
 
-    // 提取方法：从逗号分隔的表格列表中提取表格名称
-    private List<String> extractTableNames(String tableList) {
-        String[] tableArray = tableList.split(",");
-        return Arrays.stream(tableArray)
-                .map(table -> table.split("\\.")[1])
-                .collect(Collectors.toList());
+    private static void createSinkTableIfNotExists(
+            String jdbcUrl,
+            String user,
+            String pass,
+            String table,
+            Map<String, String> cols,
+            String pk) {
+        StringBuilder cl = new StringBuilder();
+        int i = 0;
+        for (Map.Entry<String, String> e : cols.entrySet()) {
+            if (i > 0) {
+                cl.append(", ");
+            }
+            cl.append("`").append(e.getKey()).append("` ").append(mapType(e.getValue()));
+            i++;
+        }
+        String sql =
+                String.format(
+                        "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))", table, cl, pk);
+        try (Connection c = DriverManager.getConnection(jdbcUrl, user, pass);
+                Statement s = c.createStatement()) {
+            s.executeUpdate(sql);
+            LOG.info("Sink table '{}' ready", table);
+        } catch (SQLException e) {
+            LOG.warn("Sink table create error (may already exist): {}", e.getMessage());
+        }
     }
 
-    // 提取方法：处理数据库不存在异常
-    private void handleDatabaseNotExistException(String databaseName, DatabaseNotExistException e) {
-        LOG.error("{} 库不存在", databaseName, e);
+    static String mapType(String cdcType) {
+        String upper = cdcType.toUpperCase();
+        if (upper.contains("INT")) {
+            return upper.contains("BIGINT") ? "BIGINT" : "INT";
+        }
+        if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
+            return cdcType;
+        }
+        if (upper.contains("TEXT")) {
+            return "VARCHAR(1024)";
+        }
+        if (upper.contains("DECIMAL")) {
+            return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
+        }
+        if (upper.contains("TIMESTAMP")) {
+            return "TIMESTAMP(6)";
+        }
+        if (upper.contains("DATETIME")) {
+            return "DATETIME(6)";
+        }
+        if (upper.contains("DATE")) {
+            return "DATE";
+        }
+        if (upper.contains("TIME")) {
+            return "TIME";
+        }
+        if (upper.contains("DOUBLE")) {
+            return "DOUBLE";
+        }
+        if (upper.contains("FLOAT")) {
+            return "FLOAT";
+        }
+        if (upper.contains("BOOLEAN")) {
+            return "TINYINT(1)";
+        }
+        if (upper.contains("BLOB") || upper.contains("BINARY")) {
+            return "BLOB";
+        }
+        LOG.warn("Unknown CDC type '{}', mapping to VARCHAR(1024)", cdcType);
+        return "VARCHAR(1024)";
     }
 }

@@ -24,9 +24,12 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import io.sophiadata.flink.function.SplitFunction;
+
 /** (@sophiadata) (@date 2023/9/21 15:57). */
 public class SQLTest1 {
 
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -37,11 +40,7 @@ public class SQLTest1 {
 
         DataStreamSource<Tuple4<Integer, String, String, String>> tuple4DataStreamSource =
                 env.fromElements(
-                        Tuple4.of(
-                                200,
-                                "e40153bd-8a88-46e1-7996-47e1cd77fe1c",
-                                "136",
-                                "8z!8k1!80"));
+                        Tuple4.of(200, "e40153bd-8a88-46e1-7996-47e1cd77fe1c", "136", "8z!8k1!80"));
 
         // 将输入数据流注册为表
         tEnv.createTemporaryView("myTable", tuple4DataStreamSource);

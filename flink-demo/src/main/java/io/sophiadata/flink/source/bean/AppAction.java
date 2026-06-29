@@ -53,41 +53,41 @@ public class AppAction {
 
     public static List<AppAction> buildList(AppPage appPage, Long startTs, Integer duringTime) {
 
-        List<AppAction> actionList = new ArrayList();
+        List<AppAction> actionList = new ArrayList<>();
         Boolean ifFavor =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_favor_rate)
-                        .add(false, 100 - AppConfig.if_favor_rate)
+                        .add(true, AppConfig.IF_FAVOR_RATE)
+                        .add(false, 100 - AppConfig.IF_FAVOR_RATE)
                         .build()
                         .getRandBoolValue();
         Boolean ifCart =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_cart_rate)
-                        .add(false, 100 - AppConfig.if_cart_rate)
+                        .add(true, AppConfig.IF_CART_RATE)
+                        .add(false, 100 - AppConfig.IF_CART_RATE)
                         .build()
                         .getRandBoolValue();
         Boolean ifCartAddNum =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_cart_add_num_rate)
-                        .add(false, 100 - AppConfig.if_cart_add_num_rate)
+                        .add(true, AppConfig.IF_CART_ADD_NUM_RATE)
+                        .add(false, 100 - AppConfig.IF_CART_ADD_NUM_RATE)
                         .build()
                         .getRandBoolValue();
         Boolean ifCartMinusNum =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_cart_minus_num_rate)
-                        .add(false, 100 - AppConfig.if_cart_minus_num_rate)
+                        .add(true, AppConfig.IF_CART_MINUS_NUM_RATE)
+                        .add(false, 100 - AppConfig.IF_CART_MINUS_NUM_RATE)
                         .build()
                         .getRandBoolValue();
         Boolean ifCartRm =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_cart_rm_rate)
-                        .add(false, 100 - AppConfig.if_cart_rm_rate)
+                        .add(true, AppConfig.IF_CART_RM_RATE)
+                        .add(false, 100 - AppConfig.IF_CART_RM_RATE)
                         .build()
                         .getRandBoolValue();
         Boolean ifGetCouponRm =
                 RandomOptionGroup.builder()
-                        .add(true, AppConfig.if_get_coupon)
-                        .add(false, 100 - AppConfig.if_get_coupon)
+                        .add(true, AppConfig.IF_GET_COUPON)
+                        .add(false, 100 - AppConfig.IF_GET_COUPON)
                         .build()
                         .getRandBoolValue();
         if (appPage.page_id == PageId.good_detail) {
@@ -103,7 +103,7 @@ public class AppAction {
                 actionList.add(cartAction);
             }
             if (ifGetCouponRm) {
-                int couponId = RandomNum.getRandInt(1, AppConfig.max_coupon_id);
+                int couponId = RandomNum.getRandInt(1, AppConfig.MAX_COUPON_ID);
                 AppAction couponAction =
                         new AppAction(
                                 ActionId.get_coupon, ItemType.coupon_id, String.valueOf(couponId));
@@ -113,19 +113,19 @@ public class AppAction {
         } else if (appPage.page_id == PageId.cart) {
 
             if (ifCartAddNum) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.max_sku_id);
+                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
                 AppAction favorAction =
                         new AppAction(ActionId.cart_add_num, ItemType.sku_id, skuId + "");
                 actionList.add(favorAction);
             }
             if (ifCartMinusNum) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.max_sku_id);
+                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
                 AppAction favorAction =
                         new AppAction(ActionId.cart_minus_num, ItemType.sku_id, skuId + "");
                 actionList.add(favorAction);
             }
             if (ifCartRm) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.max_sku_id);
+                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
                 AppAction favorAction =
                         new AppAction(ActionId.cart_remove, ItemType.sku_id, skuId + "");
                 actionList.add(favorAction);
@@ -134,8 +134,8 @@ public class AppAction {
         } else if (appPage.page_id == PageId.trade) {
             Boolean ifAddAddress =
                     RandomOptionGroup.builder()
-                            .add(true, AppConfig.if_add_address)
-                            .add(false, 100 - AppConfig.if_add_address)
+                            .add(true, AppConfig.IF_ADD_ADDRESS)
+                            .add(false, 100 - AppConfig.IF_ADD_ADDRESS)
                             .build()
                             .getRandBoolValue();
             if (ifAddAddress) {
@@ -146,11 +146,11 @@ public class AppAction {
         } else if (appPage.page_id == PageId.favor) {
             Boolean ifFavorCancel =
                     RandomOptionGroup.builder()
-                            .add(true, AppConfig.if_favor_cancel_rate)
-                            .add(false, 100 - AppConfig.if_favor_cancel_rate)
+                            .add(true, AppConfig.IF_FAVOR_CANCEL_RATE)
+                            .add(false, 100 - AppConfig.IF_FAVOR_CANCEL_RATE)
                             .build()
                             .getRandBoolValue();
-            int skuId = RandomNum.getRandInt(1, AppConfig.max_sku_id);
+            int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
             for (int i = 0; i < 3; i++) {
                 if (ifFavorCancel) {
                     AppAction appAction =

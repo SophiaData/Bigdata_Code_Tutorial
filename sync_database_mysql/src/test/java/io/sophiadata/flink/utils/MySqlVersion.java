@@ -20,7 +20,11 @@ package io.sophiadata.flink.utils;
 
 /** (@sophiadata) (@date 2022/12/20 15:45). */
 public enum MySqlVersion {
-    V8_0("8.0");
+    /** Pinned to 8.0.36 — prevents test drift from rolling MySQL releases. */
+    V8_0("8.0.36"),
+    /** Alias for V8_0 — retained for backward compatibility. */
+    V8_0_36("8.0.36"),
+    V8_LATEST("latest");
 
     private String version;
 

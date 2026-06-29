@@ -26,46 +26,46 @@ import io.sophiadata.flink.sync.common.Constants;
 public class ParameterUtil {
     // 这里你也可以使用 nacos 等工具来进行配置的私有化
     public static String sinkUrl(ParameterTool params) {
-        return params.get("sinkUrl", Constants.sinkUrl);
+        return params.get("sinkUrl", Constants.SINK_URL);
     }
 
     public static String sinkUsername(ParameterTool params) {
-        return params.get("sinkUsername", Constants.sinkUsername);
+        return params.get("sinkUsername", Constants.SINK_USERNAME);
     }
 
     public static String sinkPassword(ParameterTool params) {
-        return params.get("sinkPassword", Constants.sinkPassword);
+        return params.get("sinkPassword", Constants.SINK_PASSWORD);
     }
 
     public static String hostname(ParameterTool params) {
-        return params.get("hostname", Constants.hostname);
+        return params.get("hostname", Constants.HOSTNAME);
     }
 
     public static Integer port(ParameterTool params) {
-        return params.getInt("port", Constants.port);
+        return params.getInt("port", Constants.PORT);
     }
 
     public static String username(ParameterTool params) {
-        return params.get("username", Constants.username);
+        return params.get("username", Constants.USERNAME);
     }
 
     public static String password(ParameterTool params) {
-        return params.get("password", Constants.password);
+        return params.get("password", Constants.PASSWORD);
     }
 
     public static String databaseName(ParameterTool params) {
-        return params.get("databaseName", Constants.databaseName);
+        return params.get("databaseName", Constants.DATABASE_NAME);
     }
 
     public static String tableList(ParameterTool params) {
-        return params.get("tableList", Constants.tableList);
+        return params.get("tableList", Constants.TABLE_LIST);
     }
 
     public static Integer setParallelism(ParameterTool params) {
-        return params.getInt("setParallelism", Constants.setParallelism);
+        return params.getInt("setParallelism", Constants.SET_PARALLELISM);
     }
 
     public static String cdcSourceName(ParameterTool params) {
-        return params.get("cdcSourceName", Constants.cdcSourceName);
+        return params.get("cdcSourceName", Constants.CDC_SOURCE_NAME);
     }
 }

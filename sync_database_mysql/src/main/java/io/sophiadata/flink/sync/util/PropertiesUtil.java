@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /** (@SophiaData) (@date 2023/7/20 09:52). */
@@ -35,7 +36,8 @@ public class PropertiesUtil {
             throw new IllegalArgumentException("content is null");
         }
 
-        try (InputStream input = new ByteArrayInputStream(content.getBytes())) {
+        try (InputStream input =
+                new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
             Properties props = new Properties();
             props.load(input);
             return props;

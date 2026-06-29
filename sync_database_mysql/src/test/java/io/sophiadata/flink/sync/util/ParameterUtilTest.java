@@ -31,17 +31,17 @@ public class ParameterUtilTest {
     public void testValidParameters() {
         // Create a ParameterTool instance with valid parameters
         String[] args = {
-                "--sinkUrl", "jdbc:mysql://localhost:3306/mydb",
-                "--sinkUsername", "user",
-                "--sinkPassword", "password",
-                "--hostname", "localhost",
-                "--port", "5432",
-                "--username", "user",
-                "--password", "password",
-                "--databaseName", "mydb",
-                "--tableList", "table1,table2",
-                "--setParallelism", "4",
-                "--cdcSourceName", "source"
+            "--sinkUrl", "jdbc:mysql://localhost:3306/mydb",
+            "--sinkUsername", "user",
+            "--sinkPassword", "password",
+            "--hostname", "localhost",
+            "--port", "5432",
+            "--username", "user",
+            "--password", "password",
+            "--databaseName", "mydb",
+            "--tableList", "table1,table2",
+            "--setParallelism", "4",
+            "--cdcSourceName", "source"
         };
         ParameterTool params = ParameterTool.fromArgs(args);
 
@@ -67,16 +67,16 @@ public class ParameterUtilTest {
 
         // Test each parameter retrieval method with missing parameters
         // Ensure that they return the default values from Constants class
-        assertEquals(Constants.sinkUrl, ParameterUtil.sinkUrl(params));
-        assertEquals(Constants.sinkUsername, ParameterUtil.sinkUsername(params));
-        assertEquals(Constants.sinkPassword, ParameterUtil.sinkPassword(params));
-        assertEquals(Constants.hostname, ParameterUtil.hostname(params));
-        assertEquals(Constants.port, ParameterUtil.port(params));
-        assertEquals(Constants.username, ParameterUtil.username(params));
-        assertEquals(Constants.password, ParameterUtil.password(params));
-        assertEquals(Constants.databaseName, ParameterUtil.databaseName(params));
-        assertEquals(Constants.tableList, ParameterUtil.tableList(params));
-        assertEquals(Constants.setParallelism, ParameterUtil.setParallelism(params));
-        assertEquals(Constants.cdcSourceName, ParameterUtil.cdcSourceName(params));
+        assertEquals(Constants.SINK_URL, ParameterUtil.sinkUrl(params));
+        assertEquals(Constants.SINK_USERNAME, ParameterUtil.sinkUsername(params));
+        assertEquals(Constants.SINK_PASSWORD, ParameterUtil.sinkPassword(params));
+        assertEquals(Constants.HOSTNAME, ParameterUtil.hostname(params));
+        assertEquals(Constants.PORT, ParameterUtil.port(params));
+        assertEquals(Constants.USERNAME, ParameterUtil.username(params));
+        assertEquals(Constants.PASSWORD, ParameterUtil.password(params));
+        assertEquals(Constants.DATABASE_NAME, ParameterUtil.databaseName(params));
+        assertEquals(Constants.TABLE_LIST, ParameterUtil.tableList(params));
+        assertEquals(Constants.SET_PARALLELISM, ParameterUtil.setParallelism(params));
+        assertEquals(Constants.CDC_SOURCE_NAME, ParameterUtil.cdcSourceName(params));
     }
 }

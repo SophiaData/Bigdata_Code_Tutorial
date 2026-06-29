@@ -20,9 +20,10 @@ package io.sophiadata.flink.source.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /** (@sophiadata) (@date 2023/8/2 11:15). */
 @Slf4j
@@ -40,16 +41,19 @@ public class ParamUtil {
         }
     }
 
-    public static final Date checkDate(String dateString) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        SimpleDateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    /**
+     * Parse a {@code yyyy-MM-dd} date string and combine it with the current local time, returning
+     * the result as a {@link LocalDateTime}. Replaces the previous {@code Date}-based helper.
+     */
+    public static final LocalDateTime checkDateTime(String dateString) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
-            String timeString = timeFormat.format(new Date());
-            String datetimeString = dateString + " " + timeString;
-            Date date = datetimeFormat.parse(datetimeString);
-            return date;
-        } catch (ParseException e) {
+            LocalDate date = LocalDate.parse(dateString, dateFormatter);
+            LocalDateTime combined = LocalDateTime.of(date, LocalTime.now());
+            log.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
+            return combined;
+        } catch (Exception e) {
             throw new RuntimeException("必须为日期型格式 例如： 2020-02-02");
         }
     }
@@ -104,7 +108,7 @@ public class ParamUtil {
     }
 
     public static void main(String[] args) {
-        System.out.println(ParamUtil.checkDate("2019-13-1123"));
+        System.out.println(ParamUtil.checkDateTime("2024-01-15"));
         ;
         System.out.println("ok");
     }

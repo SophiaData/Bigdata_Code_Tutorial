@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -32,6 +33,8 @@ public class SQLTest extends BaseSql {
     @Override
     public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception {
+        String username = System.getenv("MYSQL_USERNAME");
+        String password = System.getenv("MYSQL_PASSWORD");
         tEnv.executeSql(
                 "CREATE TABLE test2 (\n"
                         + "  id STRING,\n"
@@ -42,8 +45,12 @@ public class SQLTest extends BaseSql {
                         + "   'connector' = 'jdbc',\n"
                         + "   'url' = 'jdbc:mysql://localhost:3306/test',\n"
                         + "   'table-name' = 'test2',\n"
-                        + " 'username' = 'root',"
-                        + "'password' = '123456'"
+                        + " 'username' = '"
+                        + username
+                        + "',"
+                        + "'password' = '"
+                        + password
+                        + "'"
                         + ");");
 
         Table table = tEnv.sqlQuery("select * from test2");
