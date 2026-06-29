@@ -25,7 +25,7 @@
         <testcontainers.version>1.19.8</testcontainers.version>
         <flink.version>1.20.4</flink.version>
         <flink-connector-kafka.version>3.3.0-1.20</flink-connector-kafka.version>
-        <flink_cdc.version>3.6.0-1.20</flink_cdc.version>
+        <flink_cdc.version>3.6.0-2.2</flink_cdc.version>
         <scala.version>2.12</scala.version>
         <hadoop.version>3.3.6</hadoop.version>
         <slf4j.version>1.7.15</slf4j.version>
