@@ -1,0 +1,75 @@
+# Dependabot — weekly automated dependency PRs for Maven modules.
+# Groups minor/patch updates per ecosystem to keep PR volume manageable.
+
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    groups:
+      # Keep all Flink minor versions together so a single PR tests compatibility.
+      apache-flink:
+        patterns:
+          - "org.apache.flink:*"
+          - "org.apache.flink:flink-shaded-*"
+      # CDC connector upgrades are coordinated with Flink group above.
+      flink-cdc:
+        patterns:
+          - "org.apache.flink:flink-cdc-*"
+          - "org.apache.flink:flink-sql-connector-mysql-cdc"
+          - "com.ververica:*"
+      # Test dependencies batched separately — higher churn, lower risk.
+      test:
+        patterns:
+          - "org.junit*:*"
+          - "org.testcontainers:*"
+          - "org.mockito:*"
+          - "io.opentelemetry:*"
+      # Generic batch for everything else.
+      other-deps:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "org.apache.flink:*"
+          - "org.apache.flink:flink-shaded-*"
+          - "org.apache.flink:flink-cdc-*"
+          - "org.apache.flink:flink-sql-connector-mysql-cdc"
+          - "com.ververica:*"
+          - "org.junit*:*"
+          - "org.testcontainers:*"
+          - "org.mockito:*"
+          - "io.opentelemetry:*"
+    # Ignore major version bumps for Flink (likely breaking) — bump manually.
+    ignore:
+      - dependency-name: "org.apache.flink:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.apache.flink:flink-shaded-*"
+        update-types: ["version-update:semver-major"]
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "automated"
+      - "github-actions"
