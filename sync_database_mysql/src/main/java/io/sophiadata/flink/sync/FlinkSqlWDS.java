@@ -19,24 +19,16 @@
 package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.cdc.common.data.GenericRecordData;
 import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.CreateTableEvent;
-import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.Event;
-import org.apache.flink.cdc.common.event.OperationType;
 import org.apache.flink.cdc.common.event.SchemaChangeEvent;
-import org.apache.flink.cdc.common.event.TruncateTableEvent;
 import org.apache.flink.cdc.common.schema.Column;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
-import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
-import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.sync.base.BaseCode;
@@ -48,20 +40,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-/** Whole-Database Sync main class using flink-cdc 3.x MySqlSource. */
+/**
+ * MySQL 整库实时同步示例 —— 基于 flink-cdc 3.x 的 MySqlSource。
+ *
+ * <p>数据流：MySQL binlog → {@link CdcEventDeserializer} → {@code schema-evolver}（处理 DDL 变更） → {@link
+ * CDBBatchSink}（批量写入 sink MySQL）。
+ *
+ * <p>同步流程分两阶段：
+ *
+ * <ol>
+ *   <li><b>Bootstrap</b>（启动时）：通过 JDBC 读取源端 information_schema，为每张表在 sink 端 建好对应的 {@code
+ *       sink_<table>} 表，并缓存列信息和主键。
+ *   <li><b>CDC 追赶</b>（运行时）：从 MySQL binlog 实时捕获增量变更，通过 {@link CDBBatchSink} 以 upsert / delete 方式写入
+ *       sink 表。DDL 变更（建表、加列） 由 {@link io.sophiadata.flink.sync.schema.SchemaEvolver} 自动同步到 sink 端。
+ * </ol>
+ */
 public class FlinkSqlWDS extends BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkSqlWDS.class);
     private static final int BATCH_SIZE = 200;
@@ -104,6 +107,10 @@ public class FlinkSqlWDS extends BaseCode {
         return null;
     }
 
+    /**
+     * 核心管道组装。读取参数 → 构建 CDC Source → 挂载 schema 变更处理 → 接入批量 JDBC Sink。 注意：CDC source 的并行度必须为 1，否则无法保证
+     * binlog 事件的全局有序性。
+     */
     @Override
     public void handle(
             String[] args,
@@ -111,6 +118,7 @@ public class FlinkSqlWDS extends BaseCode {
             org.apache.flink.table.api.bridge.java.StreamTableEnvironment tEnv)
             throws Exception {
 
+        // 1. 解析连接参数（host / port / username / password / database / sinkUrl 等）
         ParameterTool p = ParameterTool.fromArgs(args);
         String h = ParameterUtil.hostname(p);
         int port = ParameterUtil.port(p);
@@ -124,12 +132,16 @@ public class FlinkSqlWDS extends BaseCode {
 
         String sinkJdbcUrl = extractSinkJdbcUrl(su);
 
+        // schemas: tableName → {columnName → cdcType}，用于动态建表和生成 INSERT SQL
+        // pks:      tableName → 主键列名，用于生成 DELETE SQL 和 ON DUPLICATE KEY
         Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
         Map<String, String> pks = new ConcurrentHashMap<>();
 
         SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
         LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
 
+        // 构建 CDC Source：监听整个数据库（db + ".*" 匹配所有表）
+        // includeSchemaChanges(true) 让 DDL 事件（建表、加列）也能流入管道
         MySqlSource<Event> source =
                 MySqlSource.<Event>builder()
                         .hostname(h)
@@ -143,6 +155,7 @@ public class FlinkSqlWDS extends BaseCode {
                         .includeSchemaChanges(true)
                         .build();
 
+        // 并行度 = 1：binlog 是全局有序的，多并行度会导致事件乱序
         DataStream<Event> cdcStream =
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "mysql-cdc-all")
                         .setParallelism(1);
@@ -152,6 +165,8 @@ public class FlinkSqlWDS extends BaseCode {
         final String finalSkp = skp;
         final SchemaEvolver finalEvolver = schemaEvolver;
 
+        // 在数据流中拦截 DDL 事件：建表时同步到 sink 端，加列时更新 schemas 缓存
+        // 所有事件（DDL + DML）都原样传递给下游 Sink
         cdcStream
                 .process(
                         new ProcessFunction<Event, Event>() {
@@ -178,7 +193,7 @@ public class FlinkSqlWDS extends BaseCode {
                                                         ? "id"
                                                         : cte.getSchema().primaryKeys().get(0);
                                         pks.put(tableName, pk);
-                                        createSinkTableIfNotExists(
+                                        MysqlUtil.createSinkTableIfNotExists(
                                                 finalSinkJdbcUrl,
                                                 finalSku,
                                                 finalSkp,
@@ -218,11 +233,17 @@ public class FlinkSqlWDS extends BaseCode {
 
         LOG.info("CDC pipeline with SchemaEvolver ready for database {}", db);
 
+        // Bootstrap：在 CDC 追赶之前，先通过 JDBC 读取源端元数据，
+        // 为已有的表在 sink 端建好对应的 sink_<table> 表
         bootstrapSinkTables(h, port, u, pw, db, finalSinkJdbcUrl, finalSku, finalSkp, schemas, pks);
 
         env.execute("flink-cdc-wds-" + db);
     }
 
+    /**
+     * 通过 JDBC 直连源端 MySQL，读取 information_schema 获取每张表的列信息和主键， 然后在 sink 端创建对应的 {@code sink_<table>}
+     * 表，并将元数据写入 schemas / pks 缓存。 这样 CDC 流启动后，即使还没有收到 CreateTableEvent，sink 表也已经就绪。
+     */
     private static void bootstrapSinkTables(
             String host,
             int port,
@@ -240,11 +261,10 @@ public class FlinkSqlWDS extends BaseCode {
                         "jdbc:mysql://%s:%d?useSSL=false&allowPublicKeyRetrieval=true", host, port);
         try (Connection conn = MysqlUtil.getConnection(sourceUrl, user, pw)) {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String validatedDb = validateIdentifier(db);
+            String validatedDb = MysqlUtil.validateIdentifier(db);
             String[] tables;
             try (Statement st = conn.createStatement();
-                    java.sql.ResultSet rs =
-                            st.executeQuery("SHOW TABLES FROM `" + validatedDb + "`")) {
+                    ResultSet rs = st.executeQuery("SHOW TABLES FROM `" + validatedDb + "`")) {
                 List<String> list = new ArrayList<>();
                 while (rs.next()) {
                     list.add(rs.getString(1));
@@ -261,7 +281,7 @@ public class FlinkSqlWDS extends BaseCode {
                                 "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?")) {
                     psCol.setString(1, db);
                     psCol.setString(2, table);
-                    try (java.sql.ResultSet rs = psCol.executeQuery()) {
+                    try (ResultSet rs = psCol.executeQuery()) {
                         while (rs.next()) {
                             cols.put(rs.getString("COLUMN_NAME"), rs.getString("DATA_TYPE"));
                         }
@@ -272,7 +292,7 @@ public class FlinkSqlWDS extends BaseCode {
                                 "SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'")) {
                     psPk.setString(1, db);
                     psPk.setString(2, table);
-                    try (java.sql.ResultSet rs = psPk.executeQuery()) {
+                    try (ResultSet rs = psPk.executeQuery()) {
                         if (rs.next()) {
                             pk = rs.getString(1);
                         }
@@ -285,7 +305,8 @@ public class FlinkSqlWDS extends BaseCode {
                 String sinkTable = "sink_" + table;
                 schemas.put(table, cols);
                 pks.put(table, pk);
-                createSinkTableIfNotExists(sinkJdbcUrl, sinkUser, sinkPw, sinkTable, cols, pk);
+                MysqlUtil.createSinkTableIfNotExists(
+                        sinkJdbcUrl, sinkUser, sinkPw, sinkTable, cols, pk);
                 LOG.info("Bootstrapped sink for {}.{} -> {} (pk={})", db, table, sinkTable, pk);
             }
         }
@@ -298,401 +319,5 @@ public class FlinkSqlWDS extends BaseCode {
         int paramStart = su.indexOf("?");
         String database = su.substring(dbEnd + 1, paramStart > 0 ? paramStart : su.length());
         return "jdbc:mysql://" + hostPort + "/" + database;
-    }
-
-    private static final Pattern VALID_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
-
-    private static String validateIdentifier(String identifier) {
-        if (identifier == null || !VALID_IDENTIFIER.matcher(identifier).matches()) {
-            throw new IllegalArgumentException("Invalid SQL identifier: " + identifier);
-        }
-        return identifier;
-    }
-
-    public static class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
-        private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
-
-        @Override
-        public void deserialize(
-                org.apache.kafka.connect.source.SourceRecord record, Collector<Event> out) {
-            if (record == null) {
-                return;
-            }
-            org.apache.kafka.connect.data.Struct valueStruct =
-                    (org.apache.kafka.connect.data.Struct) record.value();
-            if (valueStruct == null) {
-                return;
-            }
-
-            String op = valueStruct.getString("op");
-            if (op == null) {
-                return;
-            }
-
-            org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
-            if (source == null) {
-                LOG.warn("Missing source info, skipping event");
-                return;
-            }
-            String dbName = source.getString("db");
-            String tableName = source.getString("table");
-
-            org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
-            org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
-
-            Object[] beforeVals = extractValues(before);
-            Object[] afterVals = extractValues(after);
-            org.apache.flink.cdc.common.event.TableId tid =
-                    org.apache.flink.cdc.common.event.TableId.tableId(dbName, tableName);
-
-            switch (op) {
-                case "c":
-                case "r":
-                    out.collect(DataChangeEvent.insertEvent(tid, GenericRecordData.of(afterVals)));
-                    break;
-                case "u":
-                    out.collect(
-                            DataChangeEvent.updateEvent(
-                                    tid,
-                                    GenericRecordData.of(beforeVals),
-                                    GenericRecordData.of(afterVals)));
-                    break;
-                case "d":
-                    out.collect(DataChangeEvent.deleteEvent(tid, GenericRecordData.of(beforeVals)));
-                    break;
-                case "t":
-                    out.collect(new TruncateTableEvent(tid));
-                    break;
-                default:
-                    LOG.debug("Unknown op: {}", op);
-            }
-        }
-
-        private Object[] extractValues(org.apache.kafka.connect.data.Struct row) {
-            if (row == null) {
-                return null;
-            }
-            Object[] values = new Object[row.schema().fields().size()];
-            int i = 0;
-            for (org.apache.kafka.connect.data.Field f : row.schema().fields()) {
-                values[i++] = convertValue(row.get(f.name()));
-            }
-            return values;
-        }
-
-        private Object convertValue(Object value) {
-            if (value == null) {
-                return null;
-            }
-            if (value instanceof java.time.OffsetDateTime) {
-                return java.sql.Timestamp.from(((java.time.OffsetDateTime) value).toInstant());
-            }
-            if (value instanceof java.time.ZonedDateTime) {
-                return java.sql.Timestamp.from(((java.time.ZonedDateTime) value).toInstant());
-            }
-            if (value instanceof java.time.Instant) {
-                return java.sql.Timestamp.from((java.time.Instant) value);
-            }
-            if (value instanceof java.time.LocalDateTime) {
-                return java.sql.Timestamp.valueOf((java.time.LocalDateTime) value);
-            }
-            if (value instanceof java.util.Date) {
-                return new java.sql.Timestamp(((java.util.Date) value).getTime());
-            }
-            if (value instanceof String) {
-                String s = (String) value;
-                if (s.contains("T")) {
-                    try {
-                        return java.sql.Timestamp.from(java.time.Instant.parse(s));
-                    } catch (Exception e) {
-                        return s;
-                    }
-                }
-                return s;
-            }
-            return value;
-        }
-
-        @Override
-        public TypeInformation<Event> getProducedType() {
-            return TypeInformation.of(Event.class);
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    private static class CDBBatchSink extends RichSinkFunction<Event> {
-        private static final Logger LOG = LoggerFactory.getLogger(CDBBatchSink.class);
-        private final String sinkJdbcUrl;
-        private final String sinkUser;
-        private final String sinkPassword;
-        private final int batchSize;
-        private final long batchIntervalMs;
-        private final Map<String, Map<String, String>> schemas;
-        private final Map<String, String> pks;
-        private transient Connection conn;
-        private transient List<Record> batch;
-        private transient long lastFlush;
-
-        CDBBatchSink(
-                String sinkJdbcUrl,
-                String sinkUser,
-                String sinkPassword,
-                int batchSize,
-                long batchIntervalMs,
-                Map<String, Map<String, String>> schemas,
-                Map<String, String> pks) {
-            this.sinkJdbcUrl = sinkJdbcUrl;
-            this.sinkUser = sinkUser;
-            this.sinkPassword = sinkPassword;
-            this.batchSize = batchSize;
-            this.batchIntervalMs = batchIntervalMs;
-            this.schemas = schemas;
-            this.pks = pks;
-        }
-
-        @Override
-        public void open(Configuration parameters) throws Exception {
-            super.open(parameters);
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
-            conn.setAutoCommit(false);
-            batch = new ArrayList<>();
-            lastFlush = System.currentTimeMillis();
-            LOG.info("CDBBatchSink connected to sink");
-        }
-
-        @Override
-        public void invoke(Event event, Context context) throws Exception {
-            if (!(event instanceof DataChangeEvent)) {
-                return;
-            }
-            batch.add(new Record((DataChangeEvent) event));
-            if (batch.size() >= batchSize
-                    || System.currentTimeMillis() - lastFlush >= batchIntervalMs) {
-                flush();
-            }
-        }
-
-        private void flush() throws Exception {
-            if (batch.isEmpty()) {
-                return;
-            }
-            List<Record> currentBatch = new ArrayList<>(batch);
-            batch.clear();
-            lastFlush = System.currentTimeMillis();
-
-            Map<String, List<Record>> byTable = new LinkedHashMap<>();
-            for (Record r : currentBatch) {
-                byTable.computeIfAbsent(r.tableName, k -> new ArrayList<>()).add(r);
-            }
-
-            for (Map.Entry<String, List<Record>> e : byTable.entrySet()) {
-                String table = e.getKey();
-                Map<String, String> cols = schemas.get(table);
-                if (cols == null || cols.isEmpty()) {
-                    continue;
-                }
-                String fullTable = "`sink_" + table + "`";
-                List<String> columnNames = new ArrayList<>(cols.keySet());
-
-                List<Record> upserts = new ArrayList<>();
-                List<Record> deletes = new ArrayList<>();
-                for (Record r : e.getValue()) {
-                    if (r.op == OperationType.DELETE) {
-                        deletes.add(r);
-                    } else {
-                        upserts.add(r);
-                    }
-                }
-
-                if (!upserts.isEmpty()) {
-                    String colList = "`" + String.join("`,`", columnNames) + "`";
-                    String placeholders =
-                            String.join(",", Collections.nCopies(columnNames.size(), "?"));
-                    String updateClause =
-                            columnNames.stream()
-                                    .map(c -> "`" + c + "`=?")
-                                    .collect(Collectors.joining(","));
-                    String sql =
-                            String.format(
-                                    "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
-                                    fullTable, colList, placeholders, updateClause);
-
-                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                        for (Record r : upserts) {
-                            Object[] row = r.after;
-                            if (row == null) {
-                                continue;
-                            }
-                            for (int i = 0; i < columnNames.size(); i++) {
-                                Object val = i < row.length ? row[i] : null;
-                                ps.setObject(i + 1, val);
-                                ps.setObject(i + 1 + columnNames.size(), val);
-                            }
-                            ps.addBatch();
-                        }
-                        ps.executeBatch();
-                    } catch (SQLException ex) {
-                        LOG.error("Batch upsert failed for table {}: {}", table, ex.getMessage());
-                        conn.rollback();
-                        throw ex;
-                    }
-                }
-
-                if (!deletes.isEmpty()) {
-                    String pk = pks.getOrDefault(table, "id");
-                    String deleteSql =
-                            String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
-
-                    try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-                        for (Record r : deletes) {
-                            Object[] row = r.before;
-                            if (row == null) {
-                                continue;
-                            }
-                            int pkIdx = columnNames.indexOf(pk);
-                            if (pkIdx < 0) {
-                                LOG.warn(
-                                        "PK '{}' not found in columns for table {}, skipping delete",
-                                        pk,
-                                        table);
-                                continue;
-                            }
-                            Object val = pkIdx < row.length ? row[pkIdx] : null;
-                            ps.setObject(1, val);
-                            ps.addBatch();
-                        }
-                        ps.executeBatch();
-                    } catch (SQLException ex) {
-                        LOG.error("Batch delete failed for table {}: {}", table, ex.getMessage());
-                        conn.rollback();
-                        throw ex;
-                    }
-                }
-            }
-            conn.commit();
-        }
-
-        @Override
-        public void close() {
-            try {
-                if (batch != null && !batch.isEmpty()) {
-                    flush();
-                }
-            } catch (Exception e) {
-                LOG.error("Error during final flush", e);
-            } finally {
-                try {
-                    if (conn != null) {
-                        conn.close();
-                    }
-                } catch (SQLException e) {
-                    LOG.error("Error closing connection", e);
-                }
-                try {
-                    super.close();
-                } catch (Exception e) {
-                    LOG.error("Error in super.close()", e);
-                }
-            }
-        }
-
-        private static class Record {
-            final String tableName;
-            final OperationType op;
-            final Object[] before;
-            final Object[] after;
-
-            Record(DataChangeEvent event) {
-                this.tableName = event.tableId().getTableName();
-                this.op = event.op();
-                this.before = extractValues(event.before());
-                this.after = extractValues(event.after());
-            }
-
-            private static Object[] extractValues(org.apache.flink.cdc.common.data.RecordData row) {
-                if (row == null) {
-                    return null;
-                }
-                Object[] values = new Object[row.getArity()];
-                for (int i = 0; i < row.getArity(); i++) {
-                    values[i] = ((GenericRecordData) row).getField(i);
-                }
-                return values;
-            }
-        }
-    }
-
-    private static void createSinkTableIfNotExists(
-            String jdbcUrl,
-            String user,
-            String pass,
-            String table,
-            Map<String, String> cols,
-            String pk) {
-        StringBuilder cl = new StringBuilder();
-        int i = 0;
-        for (Map.Entry<String, String> e : cols.entrySet()) {
-            if (i > 0) {
-                cl.append(", ");
-            }
-            cl.append("`").append(e.getKey()).append("` ").append(mapType(e.getValue()));
-            i++;
-        }
-        String sql =
-                String.format(
-                        "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))", table, cl, pk);
-        try (Connection c = DriverManager.getConnection(jdbcUrl, user, pass);
-                Statement s = c.createStatement()) {
-            s.executeUpdate(sql);
-            LOG.info("Sink table '{}' ready", table);
-        } catch (SQLException e) {
-            LOG.warn("Sink table create error (may already exist): {}", e.getMessage());
-        }
-    }
-
-    static String mapType(String cdcType) {
-        String upper = cdcType.toUpperCase();
-        if (upper.contains("BOOLEAN") || upper.contains("BOOL")) {
-            return "TINYINT(1)";
-        }
-        if (upper.contains("BIGINT")) {
-            return "BIGINT";
-        }
-        if (upper.contains("INT")) {
-            return "INT";
-        }
-        if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
-            return cdcType;
-        }
-        if (upper.contains("TEXT")) {
-            return "VARCHAR(1024)";
-        }
-        if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
-            return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
-        }
-        if (upper.contains("TIMESTAMP")) {
-            return "TIMESTAMP(6)";
-        }
-        if (upper.contains("DATETIME")) {
-            return "DATETIME(6)";
-        }
-        if (upper.contains("DATE")) {
-            return "DATE";
-        }
-        if (upper.contains("TIME")) {
-            return "TIME";
-        }
-        if (upper.contains("DOUBLE")) {
-            return "DOUBLE";
-        }
-        if (upper.contains("FLOAT")) {
-            return "FLOAT";
-        }
-        if (upper.contains("BLOB") || upper.contains("BINARY")) {
-            return "BLOB";
-        }
-        LOG.warn("Unknown CDC type '{}', mapping to VARCHAR(1024)", cdcType);
-        return "VARCHAR(1024)";
     }
 }
