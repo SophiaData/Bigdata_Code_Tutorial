@@ -13,7 +13,7 @@
     <description>Flink CDC to Paimon sync examples</description>
     
     <properties>
-        <paimon.version>1.4.1</paimon.version>
+        <paimon.version>1.4.2</paimon.version>
     </properties>
     
     <dependencies>
