@@ -29,7 +29,7 @@ public enum ActionId {
     trade_add_address("增加收货地址"),
     get_coupon("领取优惠券");
 
-    private String desc;
+    private final String desc;
 
     ActionId(String desc) {
         this.desc = desc;

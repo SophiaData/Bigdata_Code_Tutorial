@@ -96,7 +96,7 @@ public class GLMTest {
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
                 if (jsonResponse.has("choices")) {
                     com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
-                    if (choices.size() > 0) {
+                    if (!choices.isEmpty()) {
                         JsonObject choice = choices.get(0).getAsJsonObject();
                         JsonObject msg = choice.getAsJsonObject("message");
                         System.out.println("AI Response: " + msg.get("content").getAsString());
@@ -193,7 +193,7 @@ public class GLMTest {
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
                 if (jsonResponse.has("choices")) {
                     com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
-                    if (choices.size() > 0) {
+                    if (!choices.isEmpty()) {
                         JsonObject choice = choices.get(0).getAsJsonObject();
                         JsonObject msg = choice.getAsJsonObject("message");
                         System.out.println("AI Response: " + msg.get("content").getAsString());

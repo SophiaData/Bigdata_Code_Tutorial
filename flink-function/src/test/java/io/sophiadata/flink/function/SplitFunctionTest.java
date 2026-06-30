@@ -57,7 +57,6 @@ class SplitFunctionTest {
         assertEquals("", out.get(0).getField(0));
     }
 
-    @SuppressWarnings("unchecked")
     private List<Row> invoke(String input, String separator) throws Exception {
         SplitFunction fn = new SplitFunction();
         // TableFunction 通过反射访问 protected collector 字段

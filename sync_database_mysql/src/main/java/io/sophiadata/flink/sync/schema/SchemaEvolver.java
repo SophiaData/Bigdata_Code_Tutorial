@@ -148,8 +148,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     @Override
     public void initializeState(FunctionInitializationContext initContext) throws Exception {
         ListStateDescriptor<AlterRecord> descriptor =
-                new ListStateDescriptor<>(
-                        STATE_NAME, TypeInformation.of(new TypeHint<AlterRecord>() {}));
+                new ListStateDescriptor<>(STATE_NAME, TypeInformation.of(new TypeHint<>() {}));
 
         alterState = initContext.getOperatorStateStore().getListState(descriptor);
 

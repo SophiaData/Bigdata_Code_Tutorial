@@ -47,7 +47,7 @@ public class Sideout extends BaseCode {
                                     public void flatMap(String value, Collector<String> out)
                                             throws Exception {
                                         for (String split : value.toLowerCase().split(",")) {
-                                            if (split.length() > 0) {
+                                            if (!split.isEmpty()) {
                                                 out.collect(split);
                                             }
                                         }

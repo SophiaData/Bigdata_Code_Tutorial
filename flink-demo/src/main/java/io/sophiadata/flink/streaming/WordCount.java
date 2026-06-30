@@ -47,7 +47,7 @@ public class WordCount extends BaseCode {
                                     String value, Collector<Tuple2<String, Integer>> out)
                                     throws Exception {
                                 for (String word : value.toLowerCase().split(",")) {
-                                    if (word.length() > 0) {
+                                    if (!word.isEmpty()) {
                                         out.collect(new Tuple2<>(word, 1));
                                     }
                                 }

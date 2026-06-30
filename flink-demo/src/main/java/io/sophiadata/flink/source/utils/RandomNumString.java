@@ -27,7 +27,7 @@ import java.util.Random;
 /** (@sophiadata) (@date 2023/8/2 11:18). */
 public class RandomNumString {
 
-    public static final String getRandNumString(
+    public static String getRandNumString(
             int fromNum, int toNum, int count, String delimiter, boolean canRepeat) {
         String numString = "";
         if (canRepeat) {
@@ -59,8 +59,7 @@ public class RandomNumString {
         return numString;
     }
 
-    public static final String getRandNumString(
-            int fromNum, int toNum, int count, String delimiter) {
+    public static String getRandNumString(int fromNum, int toNum, int count, String delimiter) {
         return getRandNumString(fromNum, toNum, count, delimiter, true);
     }
 

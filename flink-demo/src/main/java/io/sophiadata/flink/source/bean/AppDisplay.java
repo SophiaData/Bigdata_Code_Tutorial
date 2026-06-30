@@ -56,7 +56,7 @@ public class AppDisplay {
 
         List<AppDisplay> displayList = new ArrayList<>();
         Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup isSkewRandom =
+        RandomOptionGroup<Boolean> isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
 
         // 促销活动：首页、发现页、分类页
@@ -87,7 +87,7 @@ public class AppDisplay {
             int activityCount = displayList.size(); // 商品显示从 活动后面开始
             for (int i = 1 + activityCount; i <= displayCount + activityCount; i++) {
                 // TODO 商品点击，添加倾斜逻辑
-                int skuId = 0;
+                int skuId;
                 if (appPage.page_id == PageId.good_detail
                         && isSkew
                         && isSkewRandom.getRandBoolValue()) {
