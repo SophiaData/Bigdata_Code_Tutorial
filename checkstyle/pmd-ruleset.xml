@@ -7,20 +7,9 @@
 
     <!-- Use basic ruleset and exclude most rules -->
     <rule ref="rulesets/java/quickstart.xml">
-        <!-- Exclude all rules except the most critical ones -->
-        <exclude name="CloseResource"/>
-        <exclude name="EmptyCatchBlock"/>
-        <exclude name="EmptyFinallyBlock"/>
-        <exclude name="EmptyTryBlock"/>
-        <exclude name="EmptyWhileStmt"/>
-        <exclude name="UnusedPrivateField"/>
-        <exclude name="UnusedPrivateMethod"/>
-        <exclude name="UnusedLocalVariable"/>
-        <exclude name="UnusedFormalParameter"/>
-        <exclude name="UnusedAssignment"/>
-        <exclude name="UnusedImports"/>
-        <exclude name="UnnecessaryImport"/>
-        <exclude name="AtLeastOneConstructor"/>
+        <!-- ====== 已排除的规则（代码风格/设计类，非关键） ====== -->
+
+        <!-- 命名规范 - 风格偏好，非错误 -->
         <exclude name="ClassNamingConventions"/>
         <exclude name="FieldNamingConventions"/>
         <exclude name="FormalParameterNamingConventions"/>
@@ -29,16 +18,24 @@
         <exclude name="ShortClassName"/>
         <exclude name="ShortVariable"/>
         <exclude name="TooManyStaticImports"/>
+        <exclude name="AtLeastOneConstructor"/>
+
+        <!-- final 检查 - 风格偏好 -->
         <exclude name="MethodArgumentCouldBeFinal"/>
         <exclude name="LocalVariableCouldBeFinal"/>
         <exclude name="OnlyOneReturn"/>
         <exclude name="UnnecessaryLocalBeforeReturn"/>
+
+        <!-- 代码结构 - 设计建议 -->
         <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
         <exclude name="CommentDefaultAccessModifier"/>
         <exclude name="UseDiamondOperator"/>
-        <exclude name="SignatureDeclareThrowsException"/>
-        <exclude name="LawOfDemeter"/>
+        <exclude name="ConstructorCallsOverridableMethod"/>
         <exclude name="SingularField"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="SignatureDeclareThrowsException"/>
+
+        <!-- 复杂度 - 超出阈值才报错 -->
         <exclude name="CyclomaticComplexity"/>
         <exclude name="CognitiveComplexity"/>
         <exclude name="ExcessiveImports"/>
@@ -46,8 +43,8 @@
         <exclude name="ExcessivePublicCount"/>
         <exclude name="ExcessiveParameterList"/>
         <exclude name="LoosePackageCoupling"/>
-        <exclude name="AddEmptyString"/>
-        <exclude name="LinguisticNaming"/>
+
+        <!-- 性能微优化 - 收益低 -->
         <exclude name="AvoidArrayLoops"/>
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
         <exclude name="AvoidStringBufferField"/>
@@ -55,54 +52,21 @@
         <exclude name="ConsecutiveStringConcatenation"/>
         <exclude name="OptimizableToArrayCall"/>
         <exclude name="UselessStringValueBuffer"/>
+        <exclude name="AddEmptyString"/>
+
+        <!-- 多线程 - Flink 项目特殊性 -->
         <exclude name="AvoidUsingVolatile"/>
         <exclude name="DoNotUseThreads"/>
         <exclude name="SynchronizedMethod"/>
         <exclude name="SynchronizedStatement"/>
+
+        <!-- 日志/比较 - 非关键 -->
         <exclude name="LiteralsFirstInComparisons"/>
-        <exclude name="UseUtilityClass"/>
-        <exclude name="PreserveStackTrace"/>
-        <exclude name="GuardLogStatement"/>
-        <exclude name="UnusedNullCheckInEquals"/>
-        <exclude name="UselessParentheses"/>
         <exclude name="UseLocaleWithCaseConversions"/>
-        <exclude name="ImplicitSwitchFallThrough"/>
-        <exclude name="ReturnEmptyCollectionRatherThanNull"/>
-        <exclude name="UnnecessaryFullyQualifiedName"/>
-        <exclude name="AvoidUsingHardCodedIP"/>
-        <exclude name="AvoidUsingHardCoded passwords"/>
-        <exclude name="DoNotCallGarbageCollectionExplicitly"/>
-        <exclude name="DoNotCallSystemExit"/>
-        <exclude name="DoNotCallThreadRun"/>
-        <exclude name="DoNotUseThreads"/>
         <exclude name="MoreThanOneLogger"/>
         <exclude name="MissingSerialVersionUID"/>
-        <exclude name="ConstructorCallsOverridableMethod"/>
-        <exclude name="FieldNamingConventions"/>
-        <exclude name="FormalParameterNamingConventions"/>
-        <exclude name="LocalVariableNamingConventions"/>
-        <exclude name="MethodNamingConventions"/>
-        <exclude name="ShortClassName"/>
-        <exclude name="ShortVariable"/>
-        <exclude name="TooManyStaticImports"/>
-        <exclude name="ClassNamingConventions"/>
-        <exclude name="AtLeastOneConstructor"/>
-        <exclude name="MethodArgumentCouldBeFinal"/>
-        <exclude name="LocalVariableCouldBeFinal"/>
-        <exclude name="OnlyOneReturn"/>
-        <exclude name="UnnecessaryLocalBeforeReturn"/>
-        <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
-        <exclude name="CommentDefaultAccessModifier"/>
-        <exclude name="UseDiamondOperator"/>
-        <exclude name="CyclomaticComplexity"/>
-        <exclude name="CognitiveComplexity"/>
-        <exclude name="ExcessiveImports"/>
-        <exclude name="ExcessiveMethodLength"/>
-        <exclude name="ExcessivePublicCount"/>
-        <exclude name="ExcessiveParameterList"/>
-        <exclude name="LoosePackageCoupling"/>
-        <exclude name="SingularField"/>
-        <exclude name="SignatureDeclareThrowsException"/>
-        <exclude name="LawOfDemeter"/>
+        <exclude name="LinguisticNaming"/>
+        <exclude name="UselessParentheses"/>
+        <exclude name="UnnecessaryFullyQualifiedName"/>
     </rule>
 </ruleset>
