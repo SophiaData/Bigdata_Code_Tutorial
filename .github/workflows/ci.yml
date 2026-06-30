@@ -65,6 +65,14 @@ jobs:
       - name: Verify spotless format
         run: ./mvnw -pl ${{ matrix.module }} -am spotless:check
 
+      - name: Run checkstyle analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
+        continue-on-error: false
+
+      - name: Run PMD static analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
+        continue-on-error: false
+
       - name: Run unit tests (skip *IT and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
         run: |
