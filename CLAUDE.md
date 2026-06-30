@@ -46,6 +46,13 @@ export PATH="$JAVA_HOME/bin:$PATH"
 - **命名**: 类 `PascalCase`，方法/变量 `camelCase`，常量 `UPPER_SNAKE_CASE`
 - **包名**: 主包 `io.sophiadata.flink.*`；`flink-function` 用 `com.zyzx.realtime.flink.function`
 - **JUnit**: 新代码用 JUnit 5 Jupiter（`org.junit.jupiter.api.Test`）
+- **禁止 Lombok**: 手写 getter/setter/constructor，不使用 `@Data`、`@Builder` 等注解
+- **类型安全**: 使用 `<>` 钻石操作符，避免 raw type 警告
+- **资源管理**: AutoCloseable 对象必须用 try-with-resources
+- **异常处理**: 不吞异常，保留堆栈信息，空 catch 块必须有注释
+- **CI 必须通过**: 提交前运行 `./mvnw spotless:check test` 验证
+
+详细规范见 [`docs/ai-context/coding-standards.md`](docs/ai-context/coding-standards.md)
 
 ## 测试约定
 

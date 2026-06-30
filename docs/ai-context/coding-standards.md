@@ -1,76 +1,149 @@
 # 编码规范
 
-> 仓库已用 spotless + google-java-format 强制大部分格式。本文件补充**格式以外的**约定。
+## 核心原则
 
-## 命名
+1. **显式优于隐式** — 不使用 Lombok，手写 getter/setter/constructor
+2. **类型安全** — 使用泛型，避免 raw type 警告
+3. **资源管理** — AutoCloseable 对象必须用 try-with-resources
+4. **异常处理** — 不吞异常，保留堆栈信息
+5. **CI 必须通过** — 提交前本地验证编译和测试
 
-| 类型 | 风格 | 例子 |
+## 禁止事项
+
+| 禁止 | 原因 | 替代方案 |
 |---|---|---|
-| 类 / 接口 | `PascalCase` | `FlinkSqlWDS`, `MysqlUtil` |
-| 方法 / 变量 | `camelCase` | `createTable`, `sinkJdbcUrl` |
-| 常量 | `UPPER_SNAKE_CASE` | `BATCH_SIZE`, `MYSQL_TIMESTAMP_DEFAULT` |
-| 包名 | 全小写 | `io.sophiadata.flink.sync` |
-| 测试方法 | `camelCase` + 描述性 | `createTable_emitsExpectedColumnsAndPrimaryKey` |
+| Lombok 注解 | IDEA 无法识别生成代码，导致误报 | 手写 getter/setter |
+| `x.size() > 0` | 不直观 | `!x.isEmpty()` |
+| `"utf-8"` 字符串 | 编码不一致 | `StandardCharsets.UTF_8` |
+| 空 catch 块 | 吞异常，隐藏 bug | 至少打日志 |
+| `Thread.sleep` 循环 | 忙等待，浪费 CPU | `CountDownLatch` / `Awaitility` |
+| 未关闭的流/连接 | 资源泄漏 | try-with-resources |
+| `switch` 无 `default` | 遗漏分支 | 添加 default 分支 |
+| 通配符导入 `import foo.*` | 命名空间污染 | 显式导入 |
 
-## 类 / 方法大小
+## 命名规范
 
-- 类不超过 300 行（超出就拆）
-- 方法不超过 50 行
-- 嵌套类 ≤ 2 层
+```java
+// 类名：PascalCase
+public class UserAccount { }
 
-## 错误处理
+// 方法名：camelCase
+public void getUserById() { }
 
-- 不要吞异常：至少 `LOG.error(...)` 后再决定抛 / 吞
-- `try-with-resources` 处理所有 `AutoCloseable`（Connection、Statement、InputStream）
-- 自定义异常用包装：`throw new IllegalStateException("context", cause)`，不要直接抛 cause
-- 在 catch 里**不要**空块 `{ }`，至少一条 log
+// 变量名：camelCase
+String userName;
 
-## 日志
+// 常量：UPPER_SNAKE_CASE
+public static final int MAX_RETRY_COUNT = 3;
 
-- 用 SLF4J：`LOG.info("Loaded {} keys from {}", n, path)`
-- 占位符用 `{}`，不要用 `String.format`
-- 不要拼字符串再传 `LOG.info(msg + "extra")`
-- 异常用 `LOG.error("Failed: {}", sql, e)`，把异常当最后参数
+// 包名：全小写
+package io.sophiadata.flink.sync;
 
-## 并发
-
-- 跨线程共享状态用 `ConcurrentHashMap` 或 `ConcurrentLinkedQueue`
-- 不要在 lambda 里修改外部非 final 变量
-- 线程池用 `Executors.newCachedThreadPool()` 时记得 `setDaemon(true)`
-- 关闭线程池：`shutdown()` 后 `awaitTermination(timeout)`，不要 `shutdownNow()` 除非紧急
-
-## SQL 生成
-
-- 表名 / 列名一律反引号包裹 `` `name` ``
-- 用户传入的标识符必须过 `isValidIdentifier()`（白名单正则 `[a-zA-Z0-9_]+`）
-- 用 `PreparedStatement` 而不是字符串拼接，避免注入
-
-## 配置 / ParameterTool
-
-- 新增参数：在 `Constants` 加默认值 + 在 `ParameterUtil` 加 accessor
-- 不要在业务代码里直接 `params.get("xxx")`，统一走 `ParameterUtil.xxx(params)`
-- 配置前缀约定：`sinkXxx` 是 sink 端，`xxx` 是 source 端
-
-## 测试
-
-- 单元测试**只用 JUnit 5**（`org.junit.jupiter.api.Test`），不要再用 JUnit 4
-- 测试方法命名：`<methodUnderTest>_<expectedBehavior>` 或 `<methodUnderTest>_<scenario>`
-- 断言写**失败信息**：`assertTrue(sql.contains("BIGINT"), "missing BIGINT: " + sql)`
-- 不要写 `Thread.sleep` 在单元测试里；集成测试可以但要短
-- 集成测试用 `*IT` 后缀（surefire 默认会跑，需要 `-Dtest='!*IT'` 排除）
-
-## 提交前自检
-
-```bash
-./mvnw spotless:apply
-./mvnw -DskipTests=false -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest' test
+// 枚举字段：camelCase（不用下划线）
+public enum Status {
+    ACTIVE, INACTIVE, PENDING
+}
 ```
 
-## 不要做的事
+## 资源管理
 
-- 不要写 `System.out.println` / `System.err.println`
-- 不要 `import xxx.*;`
-- 不要 catch 后只 `// ignore`
-- 不要 hardcode URL / 账号 / 密码
-- 不要 `git add .`（明确文件逐个加）
-- 不要 commit `target/`、`*.class`、`.idea/`、`dependency-reduced-pom.xml`
+```java
+// ✅ 正确：try-with-resources
+try (Connection conn = DriverManager.getConnection(url);
+     Statement stmt = conn.createStatement();
+     ResultSet rs = stmt.executeQuery(sql)) {
+    // 处理结果
+}
+
+// ❌ 错误：手动关闭
+Connection conn = null;
+try {
+    conn = DriverManager.getConnection(url);
+    // ...
+} finally {
+    if (conn != null) conn.close(); // 可能抛异常
+}
+```
+
+## 异常处理
+
+```java
+// ✅ 正确：保留堆栈信息
+try {
+    // 业务逻辑
+} catch (SQLException e) {
+    LOG.error("Database error: {}", e.getMessage(), e); // 传入异常对象
+    throw new RuntimeException("Failed to query database", e);
+}
+
+// ❌ 错误：丢失堆栈
+try {
+    // 业务逻辑
+} catch (SQLException e) {
+    throw new RuntimeException(e.getMessage()); // 堆栈丢失
+}
+
+// ❌ 错误：空 catch
+try {
+    // 业务逻辑
+} catch (Exception e) {
+    // 什么都没有
+}
+```
+
+## Flink 特定规范
+
+```java
+// ✅ StreamExecutionEnvironment 不需要手动关闭
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+env.execute("Job Name"); // Flink 运行时管理生命周期
+
+// ✅ 使用参数化日志（SLF4J）
+LOG.info("Processing record: {}", record.getId()); // 不需要 if(log.isInfoEnabled())
+
+// ❌ 不需要守卫
+if (LOG.isInfoEnabled()) {
+    LOG.info("Processing record: {}", record.getId()); // 多余
+}
+```
+
+## CI 检查清单
+
+提交前必须通过：
+
+```bash
+# 1. 格式检查
+./mvnw spotless:check
+
+# 2. 单元测试
+./mvnw test -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
+
+# 3. 静态分析（可选但推荐）
+./mvnw pmd:check checkstyle:check
+```
+
+## IDE 配置建议
+
+### IntelliJ IDEA
+- 安装 CheckStyle-IDEA 插件
+- 配置 `checkstyle/checkstyle.xml` 作为项目规则
+- 开启 `Analyze → Inspections` 中的关键检查
+
+### 禁用 Lombok 插件
+- `Settings → Plugins → Lombok → Uninstall`
+- 或禁用 `Annotation Processors → Lombok`
+
+## 提交规范
+
+```
+<type>(<scope>): <description>
+
+type: feat | fix | refactor | test | docs | ci | chore
+scope: sync | demo | function | paimon | ci | deps
+description: 简短描述（中文或英文）
+```
+
+示例：
+- `fix(sync): 修复 DELETE 事件处理逻辑`
+- `feat(paimon): 添加 MySQL → Paimon 同步示例`
+- `refactor(demo): 移除 Lombok 依赖，使用显式代码`
