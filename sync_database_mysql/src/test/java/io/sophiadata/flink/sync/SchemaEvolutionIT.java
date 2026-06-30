@@ -290,6 +290,7 @@ public class SchemaEvolutionIT {
         return DriverManager.getConnection(sinkUrl, "root", "root");
     }
 
+    @SuppressWarnings("BusyWait")
     private void waitForSinkRowCount(String table, int expected, int timeoutSeconds)
             throws Exception {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
