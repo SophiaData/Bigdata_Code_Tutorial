@@ -71,7 +71,6 @@ jobs:
 
       - name: Run PMD static analysis
         run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
-        continue-on-error: true
 
       - name: Upload PMD report on warnings
         if: always()

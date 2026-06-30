@@ -588,7 +588,7 @@
                     <rulesets>
                         <ruleset>checkstyle/pmd-ruleset.xml</ruleset>
                     </rulesets>
-                    <failOnViolation>false</failOnViolation>
+                    <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
                     <linkXref>true</linkXref>
                     <sourceEncoding>UTF-8</sourceEncoding>

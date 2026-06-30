@@ -94,7 +94,7 @@ public class FlinkSqlWDS extends BaseCode {
                 return "classpath:config.properties";
             }
         } catch (Exception e) {
-            // Ignore
+            LOG.debug("config.properties not on classpath, trying file paths");
         }
         java.nio.file.Path l = java.nio.file.Paths.get("config.properties");
         if (java.nio.file.Files.exists(l)) {

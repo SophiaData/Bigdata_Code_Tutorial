@@ -37,7 +37,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /** (@SophiaData) (@date 2023/5/31 19:02). */
-public class MysqlUtil {
+public final class MysqlUtil {
+
+    private MysqlUtil() {}
 
     private static final Logger LOG = LoggerFactory.getLogger(MysqlUtil.class);
     private static final String DRIVER_NAME = "com.mysql.cj.jdbc.Driver";

@@ -23,7 +23,10 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import io.sophiadata.flink.sync.common.Constants;
 
 /** (@SophiaData) (@date 2023/5/31 19:05). */
-public class ParameterUtil {
+public final class ParameterUtil {
+
+    private ParameterUtil() {}
+
     // 这里你也可以使用 nacos 等工具来进行配置的私有化
     public static String sinkUrl(ParameterTool params) {
         return params.get("sinkUrl", Constants.SINK_URL);
