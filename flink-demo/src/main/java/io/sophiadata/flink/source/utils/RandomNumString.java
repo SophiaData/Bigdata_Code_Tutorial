@@ -29,7 +29,7 @@ public class RandomNumString {
 
     public static String getRandNumString(
             int fromNum, int toNum, int count, String delimiter, boolean canRepeat) {
-        String numString = "";
+        String numString;
         if (canRepeat) {
             ArrayList<Integer> numList = new ArrayList<>();
             while (numList.size() < count) {
