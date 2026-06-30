@@ -91,7 +91,7 @@ public class GLMTest {
                 while ((responseLine = br.readLine()) != null) {
                     response.append(responseLine.trim());
                 }
-                System.out.println("Response: " + response.toString());
+                System.out.println("Response: " + response);
 
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
                 if (jsonResponse.has("choices")) {
@@ -113,7 +113,7 @@ public class GLMTest {
                 while ((errorLine = br.readLine()) != null) {
                     error.append(errorLine.trim());
                 }
-                System.err.println("Error Response: " + error.toString());
+                System.err.println("Error Response: " + error);
             }
         }
 
@@ -188,7 +188,7 @@ public class GLMTest {
                 while ((responseLine = br.readLine()) != null) {
                     response.append(responseLine.trim());
                 }
-                System.out.println("Response: " + response.toString());
+                System.out.println("Response: " + response);
 
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
                 if (jsonResponse.has("choices")) {
@@ -210,7 +210,7 @@ public class GLMTest {
                 while ((errorLine = br.readLine()) != null) {
                     error.append(errorLine.trim());
                 }
-                System.err.println("Error Response: " + error.toString());
+                System.err.println("Error Response: " + error);
             }
         }
 

@@ -35,6 +35,7 @@ import java.util.Collections;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -77,9 +78,7 @@ public class CreateMysqlLSinkTableIT {
             }
             try {
                 runAgainst(
-                        url = container.getJdbcUrl(),
-                        user = container.getUsername(),
-                        pw = container.getPassword());
+                        container.getJdbcUrl(), container.getUsername(), container.getPassword());
             } finally {
                 container.stop();
             }
@@ -164,7 +163,7 @@ public class CreateMysqlLSinkTableIT {
         try {
             MysqlUtil.createTable(
                     "sink_t; DROP TABLE x", new String[] {"id"}, types, Arrays.asList("id"));
-            assertTrue("expected IllegalArgumentException", false);
+            fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             // ok
         }
