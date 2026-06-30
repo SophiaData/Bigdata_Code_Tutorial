@@ -18,11 +18,13 @@
 
 package io.sophiadata.flink.paimon.mongo;
 
+import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.util.Collector;
 
 import com.mongodb.client.MongoClient;
@@ -47,7 +49,8 @@ import java.util.List;
  *   flink run -c io.sophiadata.flink.paimon.mongo.MongoToPaimonPipeline \
  *     flink-paimon-demo-1.0.0.jar \
  *     --mongo.host localhost --mongo.port 27017 --mongo.database source_db \
- *     --mongo.username root --mongo.password root
+ *     --mongo.username root --mongo.password root --paimon.path /path/to/paimon \
+ *     --mongo.collections "users,orders"
  * </pre>
  */
 public final class MongoToPaimonPipeline {
@@ -65,6 +68,7 @@ public final class MongoToPaimonPipeline {
         String mongoUsername = params.get("mongo.username", "root");
         String mongoPassword = params.get("mongo.password", "root");
         String collectionsParam = params.get("mongo.collections", "");
+        String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
 
         if (mongoDatabase == null || mongoDatabase.isEmpty()) {
             throw new IllegalArgumentException("--mongo.database is required");
@@ -86,7 +90,21 @@ public final class MongoToPaimonPipeline {
                 String.join(", ", collections));
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
+        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+
+        // Create Paimon catalog
+        tableEnv.executeSql(
+                "CREATE CATALOG paimon_catalog WITH ("
+                        + "  'type' = 'paimon',"
+                        + "  'warehouse' = '"
+                        + paimonPath
+                        + "'"
+                        + ")");
+
+        // Create target database
+        tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS paimon_catalog." + mongoDatabase);
 
         for (String collection : collections) {
             String trimmed = collection.trim();
@@ -114,6 +132,16 @@ public final class MongoToPaimonPipeline {
                             })
                     .name("process-" + trimmed)
                     .uid("process-" + trimmed);
+
+            // Register as temp view and insert into Paimon
+            tableEnv.createTemporaryView("mongo_" + trimmed, stream);
+            tableEnv.executeSql(
+                    "INSERT INTO paimon_catalog."
+                            + mongoDatabase
+                            + "."
+                            + trimmed
+                            + " SELECT * FROM mongo_"
+                            + trimmed);
         }
 
         env.execute("MongoDB to Paimon Sync - " + mongoDatabase);
