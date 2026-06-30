@@ -90,7 +90,7 @@ jobs:
             -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
 
       - name: Enforce dependency consistency
-        run: ./mvnw -pl ${{ matrix.module }} -am validate
+        run: ./mvnw -pl ${{ matrix.module }} -am validate -U
 
       - name: Collect JaCoCo coverage
         run: ./mvnw -pl ${{ matrix.module }} -am verify -Djacoco.skip=false -DskipTests
