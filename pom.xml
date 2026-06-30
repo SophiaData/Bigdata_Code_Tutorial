@@ -38,7 +38,7 @@
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
-        <lombok.version>1.18.36</lombok.version>
+        <maven-shade-plugin>3.5.1</maven-shade-plugin>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -219,12 +219,6 @@
                 <artifactId>flink-test-utils-junit</artifactId>
                 <version>${flink.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <scope>provided</scope>
             </dependency>
             <!-- Logging -->
             <dependency>

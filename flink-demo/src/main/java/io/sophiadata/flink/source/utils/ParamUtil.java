@@ -18,7 +18,8 @@
 
 package io.sophiadata.flink.source.utils;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,8 +27,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /** (@sophiadata) (@date 2023/8/2 11:15). */
-@Slf4j
 public class ParamUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(ParamUtil.class);
 
     public static Integer checkRatioNum(String rate) {
         try {

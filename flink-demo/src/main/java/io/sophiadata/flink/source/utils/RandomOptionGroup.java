@@ -18,20 +18,14 @@
 
 package io.sophiadata.flink.source.utils;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /** (@sophiadata) (@date 2023/8/2 11:19). */
-@AllArgsConstructor
-@Builder(builderClassName = "Builder")
 public class RandomOptionGroup<T> {
 
     int totalWeight = 0;
-
     List<RanOpt<T>> optList = new ArrayList<>();
 
     public static <T> Builder<T> builder() {
@@ -56,6 +50,11 @@ public class RandomOptionGroup<T> {
         public RandomOptionGroup<T> build() {
             return new RandomOptionGroup<T>(totalWeight, optList);
         }
+    }
+
+    public RandomOptionGroup(int totalWeight, List<RanOpt<T>> optList) {
+        this.totalWeight = totalWeight;
+        this.optList = optList;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

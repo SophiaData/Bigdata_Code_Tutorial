@@ -32,8 +32,9 @@ import io.sophiadata.flink.source.enums.PageId;
 import io.sophiadata.flink.source.utils.ParamUtil;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -42,10 +43,10 @@ import java.util.List;
 import java.util.Map;
 
 /** (@sophiadata) (@date 2023/8/2 11:23). */
-@Slf4j
 @SuppressWarnings("deprecation")
 public class MockSourceFunction implements ParallelSourceFunction<String> {
 
+    private static final Logger log = LoggerFactory.getLogger(MockSourceFunction.class);
     private volatile Long ts;
     private volatile int mockCount;
 
@@ -125,7 +126,7 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
             }
             pageBuilder.page(page);
             // 置入上一个页面
-            lastPageId = page.getPage_id();
+            lastPageId = page.getPageId();
 
             // 页面中的动作
             List<AppAction> appActionList = AppAction.buildList(page, ts, pageDuringTime);
