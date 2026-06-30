@@ -55,11 +55,15 @@ public abstract class BaseCode {
      * similar) so the job name and any post-DDL pipeline steps (e.g. JDBC sink auto-table-create)
      * run inside the same program.
      */
-    public void init(String[] args, String ckPathAndJobId, Boolean hashMap, Boolean localpath)
+    public void init(
+            final String[] args,
+            final String ckPathAndJobId,
+            final Boolean hashMap,
+            final Boolean localpath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         tEnv.getConfig().getConfiguration().setString("pipeline.name", ckPathAndJobId);
 
         checkpoint(env, ckPathAndJobId, hashMap, localpath);
@@ -70,7 +74,7 @@ public abstract class BaseCode {
     }
 
     /** Minimal entry point without checkpoint or restart configuration. */
-    public void init(String[] args, String ckPathAndJobId) throws Exception {
+    public void init(final String[] args, final String ckPathAndJobId) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
@@ -85,10 +89,10 @@ public abstract class BaseCode {
 
     @SuppressWarnings("deprecation")
     public void checkpoint(
-            StreamExecutionEnvironment env,
-            String ckPathAndJobId,
-            Boolean hashMap,
-            Boolean localpath) {
+            final StreamExecutionEnvironment env,
+            final String ckPathAndJobId,
+            final Boolean hashMap,
+            final Boolean localpath) {
         // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
         // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
         // also migrating the underlying state backend (HashMapStateBackend /
@@ -122,7 +126,7 @@ public abstract class BaseCode {
     }
 
     @SuppressWarnings("deprecation")
-    public void restartTask(StreamExecutionEnvironment env) {
+    public void restartTask(final StreamExecutionEnvironment env) {
         // fixedDelayRestart(int, java.time.Duration) replaces fixedDelayRestart(int, Time).
         // Flink 1.18+ uses java.time.Duration throughout the public API.
         //

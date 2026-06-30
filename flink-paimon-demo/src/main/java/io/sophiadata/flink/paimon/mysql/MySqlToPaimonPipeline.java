@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.paimon;
+package io.sophiadata.flink.paimon.mysql;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -45,21 +45,21 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 @SuppressWarnings("PMD.UseUtilityClass")
 public class MySqlToPaimonPipeline {
 
-    public static void main(String[] args) throws Exception {
-        ParameterTool params = ParameterTool.fromArgs(args);
+    public static void main(final String[] args) throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String mysqlHost = params.get("mysql.host", "localhost");
-        int mysqlPort = params.getInt("mysql.port", 3306);
-        String mysqlDatabase = params.get("mysql.database", "source_db");
-        String mysqlUsername = params.get("mysql.username", "root");
-        String mysqlPassword = params.get("mysql.password", "root");
-        String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
+        final String mysqlHost = params.get("mysql.host", "localhost");
+        final int mysqlPort = params.getInt("mysql.port", 3306);
+        final String mysqlDatabase = params.get("mysql.database", "source_db");
+        final String mysqlUsername = params.get("mysql.username", "root");
+        final String mysqlPassword = params.get("mysql.password", "root");
+        final String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
 
-        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // 1. Create MySQL CDC catalog
         tableEnv.executeSql(
@@ -95,8 +95,8 @@ public class MySqlToPaimonPipeline {
         tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS paimon_catalog." + mysqlDatabase);
 
         // 4. Sync each table
-        String[] tables = {"users", "orders", "products"};
-        for (String table : tables) {
+        final String[] tables = {"users", "orders", "products"};
+        for (final String table : tables) {
             // Create target table schema in Paimon
             tableEnv.executeSql(
                     "CREATE TABLE IF NOT EXISTS paimon_catalog."

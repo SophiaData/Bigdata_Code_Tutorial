@@ -34,14 +34,14 @@ public final class PropertiesUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesUtil.class);
 
-    public static Properties load(String content) {
+    public static Properties load(final String content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
 
         try (InputStream input =
                 new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
-            Properties props = new Properties();
+            final Properties props = new Properties();
             props.load(input);
             return props;
 

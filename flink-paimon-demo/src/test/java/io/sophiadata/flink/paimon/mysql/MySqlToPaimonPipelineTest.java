@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.paimon;
+package io.sophiadata.flink.paimon.mysql;
 
 import org.junit.jupiter.api.Test;
 

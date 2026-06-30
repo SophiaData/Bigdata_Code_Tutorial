@@ -43,25 +43,25 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 @SuppressWarnings("PMD.UseUtilityClass")
 public class MongoToPaimonSqlPipeline {
 
-    public static void main(String[] args) throws Exception {
-        ParameterTool params = ParameterTool.fromArgs(args);
+    public static void main(final String[] args) throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String mongoHost = params.get("mongo.host", "localhost");
-        int mongoPort = params.getInt("mongo.port", 27017);
-        String mongoDatabase = params.get("mongo.database");
-        String mongoUsername = params.get("mongo.username", "root");
-        String mongoPassword = params.get("mongo.password", "root");
-        String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
-        String collectionsParam = params.get("mongo.collections", "");
+        final String mongoHost = params.get("mongo.host", "localhost");
+        final int mongoPort = params.getInt("mongo.port", 27017);
+        final String mongoDatabase = params.get("mongo.database");
+        final String mongoUsername = params.get("mongo.username", "root");
+        final String mongoPassword = params.get("mongo.password", "root");
+        final String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
+        final String collectionsParam = params.get("mongo.collections", "");
 
         if (mongoDatabase == null || mongoDatabase.isEmpty()) {
             throw new IllegalArgumentException("--mongo.database is required");
         }
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
-        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // 1. Create MongoDB catalog
         tableEnv.executeSql(
@@ -94,9 +94,9 @@ public class MongoToPaimonSqlPipeline {
         if (collectionsParam.isEmpty()) {
             throw new IllegalArgumentException("--mongo.collections is required for SQL mode");
         }
-        String[] collections = collectionsParam.split(",");
-        for (String collection : collections) {
-            String trimmed = collection.trim();
+        final String[] collections = collectionsParam.split(",");
+        for (final String collection : collections) {
+            final String trimmed = collection.trim();
             tableEnv.executeSql(
                     "INSERT INTO paimon_catalog."
                             + mongoDatabase

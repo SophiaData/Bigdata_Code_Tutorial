@@ -51,7 +51,8 @@ public final class MysqlUtil {
      */
     private static final String MYSQL_TIMESTAMP_DEFAULT = " default '1970-01-01 09:00:00'";
 
-    public static Connection getConnection(String sinkUrl, String sinkUsername, String sinkPassword)
+    public static Connection getConnection(
+            final String sinkUrl, final String sinkUsername, final String sinkPassword)
             throws ClassNotFoundException, SQLException {
         try {
             Class.forName(DRIVER_NAME);
@@ -65,7 +66,8 @@ public final class MysqlUtil {
         }
     }
 
-    public static void executeSql(Connection connection, String createTable) throws SQLException {
+    public static void executeSql(final Connection connection, final String createTable)
+            throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(createTable)) {
             ps.execute();
         } catch (SQLException e) {
@@ -80,7 +82,10 @@ public final class MysqlUtil {
      * connection.
      */
     public static void executeSqlAndClose(
-            String url, String username, String password, String createTable)
+            final String url,
+            final String username,
+            final String password,
+            final String createTable)
             throws SQLException, ClassNotFoundException {
         try (Connection connection = getConnection(url, username, password)) {
             executeSql(connection, createTable);
@@ -88,10 +93,36 @@ public final class MysqlUtil {
     }
 
     public static String createTable(
-            String sinkTableName,
-            String[] fieldNames,
-            DataType[] fieldDataTypes,
-            List<String> primaryKeys) {
+            final String sinkTableName,
+            final String[] fieldNames,
+            final DataType[] fieldDataTypes,
+            final List<String> primaryKeys) {
+        validateCreateTableArgs(sinkTableName, fieldNames, fieldDataTypes, primaryKeys);
+
+        final StringBuilder stmt = new StringBuilder();
+        stmt.append("create table if not exists `").append(sinkTableName).append("` (\n");
+        for (int i = 0; i < fieldNames.length; i++) {
+            stmt.append("  `")
+                    .append(fieldNames[i])
+                    .append("` ")
+                    .append(fieldDataTypes[i].toString());
+            if (needsTimestampDefault(fieldDataTypes[i])) {
+                stmt.append(MYSQL_TIMESTAMP_DEFAULT);
+            }
+            stmt.append(",\n");
+        }
+        stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
+
+        final String createSql = stmt.toString();
+        LOG.debug("Generated SQL: {}", createSql);
+        return createSql;
+    }
+
+    private static void validateCreateTableArgs(
+            final String sinkTableName,
+            final String[] fieldNames,
+            final DataType[] fieldDataTypes,
+            final List<String> primaryKeys) {
         if (!isValidIdentifier(sinkTableName)) {
             throw new IllegalArgumentException("Invalid table name: " + sinkTableName);
         }
@@ -102,46 +133,31 @@ public final class MysqlUtil {
                             + " vs "
                             + fieldDataTypes.length);
         }
-
-        StringBuilder stmt = new StringBuilder();
-        stmt.append("create table if not exists `").append(sinkTableName).append("` (\n");
-        for (int i = 0; i < fieldNames.length; i++) {
-            String column = fieldNames[i];
-            if (!isValidIdentifier(column)) {
-                throw new IllegalArgumentException("Invalid column name: " + column);
+        for (final String field : fieldNames) {
+            if (!isValidIdentifier(field)) {
+                throw new IllegalArgumentException("Invalid column name: " + field);
             }
-            DataType dataType = fieldDataTypes[i];
-            stmt.append("  `").append(column).append("` ").append(dataType.toString());
-            if (needsTimestampDefault(dataType)) {
-                stmt.append(MYSQL_TIMESTAMP_DEFAULT);
-            }
-            stmt.append(",\n");
         }
         if (primaryKeys == null || primaryKeys.isEmpty()) {
             throw new IllegalArgumentException(
                     "primaryKeys must be non-empty (CDC requires a primary key)");
         }
-        for (String pk : primaryKeys) {
+        for (final String pk : primaryKeys) {
             if (!isValidIdentifier(pk)) {
                 throw new IllegalArgumentException("Invalid primary key: " + pk);
             }
         }
-        stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
-
-        String createSql = stmt.toString();
-        LOG.debug("Generated SQL: {}", createSql);
-        return createSql;
     }
 
-    private static boolean needsTimestampDefault(DataType dataType) {
+    private static boolean needsTimestampDefault(final DataType dataType) {
         // Only TIMESTAMP without time zone needs the 1970 default; binary / lob types never do.
         return dataType.getLogicalType() instanceof TimestampType
                 && !(dataType.getLogicalType() instanceof VarBinaryType);
     }
 
-    public static MySqlCatalog useMysqlCatalog(ParameterTool params) {
-        String username = ParameterUtil.username(params);
-        String password = ParameterUtil.password(params);
+    public static MySqlCatalog useMysqlCatalog(final ParameterTool params) {
+        final String username = ParameterUtil.username(params);
+        final String password = ParameterUtil.password(params);
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException(
                     "username is required (set --username or env MYSQL_USERNAME)");
@@ -161,7 +177,7 @@ public final class MysqlUtil {
                         ParameterUtil.hostname(params), ParameterUtil.port(params)));
     }
 
-    private static boolean isValidIdentifier(String identifier) {
+    private static boolean isValidIdentifier(final String identifier) {
         if (identifier == null || identifier.isEmpty()) {
             return false;
         }
@@ -171,7 +187,7 @@ public final class MysqlUtil {
     /** SQL 标识符正则：字母或下划线开头，只含字母、数字、下划线。用于防 SQL 注入。 */
     private static final Pattern VALID_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
-    public static String validateIdentifier(String identifier) {
+    public static String validateIdentifier(final String identifier) {
         if (identifier == null || !VALID_IDENTIFIER.matcher(identifier).matches()) {
             throw new IllegalArgumentException("Invalid SQL identifier: " + identifier);
         }
@@ -183,22 +199,22 @@ public final class MysqlUtil {
      * {@code sink_<原始表名>}，带反引号防止关键字冲突。
      */
     public static void createSinkTableIfNotExists(
-            String jdbcUrl,
-            String user,
-            String pass,
-            String table,
-            Map<String, String> cols,
-            String pk) {
-        StringBuilder cl = new StringBuilder();
+            final String jdbcUrl,
+            final String user,
+            final String pass,
+            final String table,
+            final Map<String, String> cols,
+            final String pk) {
+        final StringBuilder cl = new StringBuilder();
         int i = 0;
-        for (Map.Entry<String, String> e : cols.entrySet()) {
+        for (final Map.Entry<String, String> e : cols.entrySet()) {
             if (i > 0) {
                 cl.append(", ");
             }
             cl.append("`").append(e.getKey()).append("` ").append(mapType(e.getValue()));
             i++;
         }
-        String sql =
+        final String sql =
                 String.format(
                         "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))", table, cl, pk);
         try (Connection c = DriverManager.getConnection(jdbcUrl, user, pass);
@@ -210,41 +226,48 @@ public final class MysqlUtil {
         }
     }
 
+    /** CDC 类型 → MySQL 列类型的映射表 */
+    private static final java.util.Map<String, String> CDC_TO_MYSQL;
+
+    static {
+        final java.util.Map<String, String> m = new java.util.HashMap<>();
+        m.put("BOOLEAN", "TINYINT(1)");
+        m.put("BOOL", "TINYINT(1)");
+        m.put("BIGINT", "BIGINT");
+        m.put("INT", "INT");
+        m.put("INTEGER", "INT");
+        m.put("TINYINT", "INT");
+        m.put("SMALLINT", "INT");
+        m.put("TEXT", "VARCHAR(1024)");
+        m.put("LONGTEXT", "VARCHAR(1024)");
+        m.put("TIMESTAMP", "TIMESTAMP(6)");
+        m.put("DATETIME", "DATETIME(6)");
+        m.put("DATE", "DATE");
+        m.put("TIME", "TIME");
+        m.put("DOUBLE", "DOUBLE");
+        m.put("FLOAT", "FLOAT");
+        m.put("BLOB", "BLOB");
+        m.put("BINARY", "BLOB");
+        m.put("VARBINARY", "BLOB");
+        CDC_TO_MYSQL = java.util.Collections.unmodifiableMap(m);
+    }
+
     /**
      * 将 CDC / Debezium 报告的类型字符串映射为 MySQL 列类型。 例如 "TEXT" → "VARCHAR(1024)"，"BOOLEAN" → "TINYINT(1)"。
      * 带精度的类型（如 "DECIMAL(10,2)"）会保留原始精度。
      */
-    public static String mapType(String cdcType) {
-        String upper = cdcType.toUpperCase();
-        if (upper.contains("BOOLEAN") || upper.contains("BOOL")) {
-            return "TINYINT(1)";
-        }
-        if (upper.contains("BIGINT")) {
-            return "BIGINT";
-        }
-        if (upper.contains("INT")) {
-            return "INT";
-        }
+    public static String mapType(final String cdcType) {
+        final String upper = cdcType.toUpperCase();
         if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
             return cdcType;
         }
-        if (upper.contains("TEXT")) {
-            return "VARCHAR(1024)";
-        }
         if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
-            return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
+            return upper.contains("(") ? cdcType : "DECIMAL(10,2)";
         }
-        if (upper.contains("TIMESTAMP")) {
-            return "TIMESTAMP(6)";
-        }
-        if (upper.contains("DATETIME")) {
-            return "DATETIME(6)";
-        }
-        if (upper.contains("DATE")) {
-            return "DATE";
-        }
-        if (upper.contains("TIME")) {
-            return "TIME";
+        // Map 查找失败时，回退到 contains 匹配处理带后缀的类型
+        final String mapped = CDC_TO_MYSQL.get(upper);
+        if (mapped != null) {
+            return mapped;
         }
         if (upper.contains("DOUBLE")) {
             return "DOUBLE";
@@ -252,10 +275,15 @@ public final class MysqlUtil {
         if (upper.contains("FLOAT")) {
             return "FLOAT";
         }
+        if (upper.contains("TIMESTAMP")) {
+            return "TIMESTAMP(6)";
+        }
+        if (upper.contains("DATETIME")) {
+            return "DATETIME(6)";
+        }
         if (upper.contains("BLOB") || upper.contains("BINARY")) {
             return "BLOB";
         }
-        LOG.warn("Unknown CDC type '{}', mapping to VARCHAR(1024)", cdcType);
         return "VARCHAR(1024)";
     }
 }

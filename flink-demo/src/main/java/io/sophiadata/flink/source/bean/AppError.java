@@ -29,7 +29,7 @@ public class AppError {
     private Integer errorCode;
     private String msg;
 
-    public AppError(Integer errorCode, String msg) {
+    public AppError(final Integer errorCode, final String msg) {
         this.errorCode = errorCode;
         this.msg = msg;
     }
@@ -38,7 +38,7 @@ public class AppError {
         return errorCode;
     }
 
-    public void setErrorCode(Integer errorCode) {
+    public void setErrorCode(final Integer errorCode) {
         this.errorCode = errorCode;
     }
 
@@ -46,19 +46,19 @@ public class AppError {
         return msg;
     }
 
-    public void setMsg(String msg) {
+    public void setMsg(final String msg) {
         this.msg = msg;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppError that = (AppError) o;
+        final AppError that = (AppError) o;
         return Objects.equals(errorCode, that.errorCode) && Objects.equals(msg, that.msg);
     }
 
@@ -73,13 +73,13 @@ public class AppError {
     }
 
     public static AppError build() {
-        int errorCode = RandomNum.getRandInt(1001, 4001);
-        String msg =
+        final int errorCode = RandomNum.getRandInt(1001, 4001);
+        final String msg =
                 " Exception in thread \\  java.net.SocketTimeoutException\\n \\tat com.atgugu.gmall2020.mock.log.bean.AppError.main(AppError.java:xxxxxx)";
         return new AppError(errorCode, msg);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         throw new ConnectException();
     }
 }

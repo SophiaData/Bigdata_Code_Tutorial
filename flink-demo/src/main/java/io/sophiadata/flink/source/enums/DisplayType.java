@@ -27,7 +27,7 @@ public enum DisplayType {
 
     private final String desc;
 
-    DisplayType(String desc) {
+    DisplayType(final String desc) {
         this.desc = desc;
     }
 

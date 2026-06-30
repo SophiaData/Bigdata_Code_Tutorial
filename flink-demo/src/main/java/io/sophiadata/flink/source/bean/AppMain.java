@@ -38,14 +38,14 @@ public class AppMain {
     private List<AppAction> actions;
 
     public AppMain(
-            Long ts,
-            AppCommon common,
-            AppPage page,
-            AppError err,
-            AppNotice notice,
-            AppStart start,
-            List<AppDisplay> displays,
-            List<AppAction> actions) {
+            final Long ts,
+            final AppCommon common,
+            final AppPage page,
+            final AppError err,
+            final AppNotice notice,
+            final AppStart start,
+            final List<AppDisplay> displays,
+            final List<AppAction> actions) {
         this.ts = ts;
         this.common = common;
         this.page = page;
@@ -60,7 +60,7 @@ public class AppMain {
         return ts;
     }
 
-    public void setTs(Long ts) {
+    public void setTs(final Long ts) {
         this.ts = ts;
     }
 
@@ -68,7 +68,7 @@ public class AppMain {
         return common;
     }
 
-    public void setCommon(AppCommon common) {
+    public void setCommon(final AppCommon common) {
         this.common = common;
     }
 
@@ -76,7 +76,7 @@ public class AppMain {
         return page;
     }
 
-    public void setPage(AppPage page) {
+    public void setPage(final AppPage page) {
         this.page = page;
     }
 
@@ -84,7 +84,7 @@ public class AppMain {
         return err;
     }
 
-    public void setErr(AppError err) {
+    public void setErr(final AppError err) {
         this.err = err;
     }
 
@@ -92,7 +92,7 @@ public class AppMain {
         return notice;
     }
 
-    public void setNotice(AppNotice notice) {
+    public void setNotice(final AppNotice notice) {
         this.notice = notice;
     }
 
@@ -100,7 +100,7 @@ public class AppMain {
         return start;
     }
 
-    public void setStart(AppStart start) {
+    public void setStart(final AppStart start) {
         this.start = start;
     }
 
@@ -108,7 +108,7 @@ public class AppMain {
         return displays;
     }
 
-    public void setDisplays(List<AppDisplay> displays) {
+    public void setDisplays(final List<AppDisplay> displays) {
         this.displays = displays;
     }
 
@@ -116,19 +116,19 @@ public class AppMain {
         return actions;
     }
 
-    public void setActions(List<AppAction> actions) {
+    public void setActions(final List<AppAction> actions) {
         this.actions = actions;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppMain that = (AppMain) o;
+        final AppMain that = (AppMain) o;
         return Objects.equals(ts, that.ts)
                 && Objects.equals(common, that.common)
                 && Objects.equals(page, that.page)
@@ -163,56 +163,56 @@ public class AppMain {
         private List<AppDisplay> displays;
         private List<AppAction> actions;
 
-        public AppMainBuilder ts(Long ts) {
+        public AppMainBuilder ts(final Long ts) {
             this.ts = ts;
             return this;
         }
 
-        public AppMainBuilder common(AppCommon common) {
+        public AppMainBuilder common(final AppCommon common) {
             this.common = common;
             return this;
         }
 
-        public AppMainBuilder page(AppPage page) {
+        public AppMainBuilder page(final AppPage page) {
             this.page = page;
             return this;
         }
 
-        public AppMainBuilder err(AppError err) {
+        public AppMainBuilder err(final AppError err) {
             this.err = err;
             return this;
         }
 
-        public AppMainBuilder notice(AppNotice notice) {
+        public AppMainBuilder notice(final AppNotice notice) {
             this.notice = notice;
             return this;
         }
 
-        public AppMainBuilder start(AppStart start) {
+        public AppMainBuilder start(final AppStart start) {
             this.start = start;
             return this;
         }
 
-        public AppMainBuilder displays(List<AppDisplay> displays) {
+        public AppMainBuilder displays(final List<AppDisplay> displays) {
             this.displays = displays;
             return this;
         }
 
-        public AppMainBuilder actions(List<AppAction> actions) {
+        public AppMainBuilder actions(final List<AppAction> actions) {
             this.actions = actions;
             return this;
         }
 
         public void checkError() {
-            Integer errorRate = AppConfig.ERROR_RATE;
-            Boolean ifError =
+            final Integer errorRate = AppConfig.ERROR_RATE;
+            final Boolean ifError =
                     RandomOptionGroup.builder()
                             .add(true, errorRate)
                             .add(false, 100 - errorRate)
                             .build()
                             .getRandBoolValue();
             if (ifError) {
-                AppError appError = AppError.build();
+                final AppError appError = AppError.build();
                 this.err = appError;
             }
         }

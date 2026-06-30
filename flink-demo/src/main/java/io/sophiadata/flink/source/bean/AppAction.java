@@ -21,7 +21,6 @@ package io.sophiadata.flink.source.bean;
 import io.sophiadata.flink.source.config.AppConfig;
 import io.sophiadata.flink.source.enums.ActionId;
 import io.sophiadata.flink.source.enums.ItemType;
-import io.sophiadata.flink.source.enums.PageId;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
 
@@ -39,7 +38,7 @@ public class AppAction {
     private String extend2;
     private long ts;
 
-    public AppAction(ActionId actionId, ItemType itemType, String item) {
+    public AppAction(final ActionId actionId, final ItemType itemType, final String item) {
         this.actionId = actionId;
         this.itemType = itemType;
         this.item = item;
@@ -49,7 +48,7 @@ public class AppAction {
         return actionId;
     }
 
-    public void setActionId(ActionId actionId) {
+    public void setActionId(final ActionId actionId) {
         this.actionId = actionId;
     }
 
@@ -57,7 +56,7 @@ public class AppAction {
         return itemType;
     }
 
-    public void setItemType(ItemType itemType) {
+    public void setItemType(final ItemType itemType) {
         this.itemType = itemType;
     }
 
@@ -65,7 +64,7 @@ public class AppAction {
         return item;
     }
 
-    public void setItem(String item) {
+    public void setItem(final String item) {
         this.item = item;
     }
 
@@ -73,7 +72,7 @@ public class AppAction {
         return extend1;
     }
 
-    public void setExtend1(String extend1) {
+    public void setExtend1(final String extend1) {
         this.extend1 = extend1;
     }
 
@@ -81,7 +80,7 @@ public class AppAction {
         return extend2;
     }
 
-    public void setExtend2(String extend2) {
+    public void setExtend2(final String extend2) {
         this.extend2 = extend2;
     }
 
@@ -89,19 +88,19 @@ public class AppAction {
         return ts;
     }
 
-    public void setTs(long ts) {
+    public void setTs(final long ts) {
         this.ts = ts;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppAction that = (AppAction) o;
+        final AppAction that = (AppAction) o;
         return actionId == that.actionId
                 && itemType == that.itemType
                 && Objects.equals(item, that.item)
@@ -125,121 +124,93 @@ public class AppAction {
                 + "'}";
     }
 
-    public static List<AppAction> buildList(AppPage appPage, Long startTs, Integer duringTime) {
-
-        List<AppAction> actionList = new ArrayList<>();
-        Boolean ifFavor =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_FAVOR_RATE)
-                        .add(false, 100 - AppConfig.IF_FAVOR_RATE)
-                        .build()
-                        .getRandBoolValue();
-        Boolean ifCart =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_CART_RATE)
-                        .add(false, 100 - AppConfig.IF_CART_RATE)
-                        .build()
-                        .getRandBoolValue();
-        Boolean ifCartAddNum =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_CART_ADD_NUM_RATE)
-                        .add(false, 100 - AppConfig.IF_CART_ADD_NUM_RATE)
-                        .build()
-                        .getRandBoolValue();
-        Boolean ifCartMinusNum =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_CART_MINUS_NUM_RATE)
-                        .add(false, 100 - AppConfig.IF_CART_MINUS_NUM_RATE)
-                        .build()
-                        .getRandBoolValue();
-        Boolean ifCartRm =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_CART_RM_RATE)
-                        .add(false, 100 - AppConfig.IF_CART_RM_RATE)
-                        .build()
-                        .getRandBoolValue();
-        Boolean ifGetCouponRm =
-                RandomOptionGroup.builder()
-                        .add(true, AppConfig.IF_GET_COUPON)
-                        .add(false, 100 - AppConfig.IF_GET_COUPON)
-                        .build()
-                        .getRandBoolValue();
-        if (appPage.getPageId() == PageId.good_detail) {
-
-            if (ifFavor) {
-                AppAction favorAction =
-                        new AppAction(ActionId.favor_add, appPage.getItemType(), appPage.getItem());
-                actionList.add(favorAction);
-            }
-            if (ifCart) {
-                AppAction cartAction =
-                        new AppAction(ActionId.cart_add, appPage.getItemType(), appPage.getItem());
-                actionList.add(cartAction);
-            }
-            if (ifGetCouponRm) {
-                int couponId = RandomNum.getRandInt(1, AppConfig.MAX_COUPON_ID);
-                AppAction couponAction =
-                        new AppAction(
-                                ActionId.get_coupon, ItemType.coupon_id, String.valueOf(couponId));
-                actionList.add(couponAction);
-            }
-
-        } else if (appPage.getPageId() == PageId.cart) {
-
-            if (ifCartAddNum) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
-                AppAction favorAction =
-                        new AppAction(ActionId.cart_add_num, ItemType.sku_id, skuId + "");
-                actionList.add(favorAction);
-            }
-            if (ifCartMinusNum) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
-                AppAction favorAction =
-                        new AppAction(ActionId.cart_minus_num, ItemType.sku_id, skuId + "");
-                actionList.add(favorAction);
-            }
-            if (ifCartRm) {
-                int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
-                AppAction favorAction =
-                        new AppAction(ActionId.cart_remove, ItemType.sku_id, skuId + "");
-                actionList.add(favorAction);
-            }
-
-        } else if (appPage.getPageId() == PageId.trade) {
-            Boolean ifAddAddress =
-                    RandomOptionGroup.builder()
-                            .add(true, AppConfig.IF_ADD_ADDRESS)
-                            .add(false, 100 - AppConfig.IF_ADD_ADDRESS)
-                            .build()
-                            .getRandBoolValue();
-            if (ifAddAddress) {
-                AppAction appAction = new AppAction(ActionId.trade_add_address, null, null);
-                actionList.add(appAction);
-            }
-
-        } else if (appPage.getPageId() == PageId.favor) {
-            Boolean ifFavorCancel =
-                    RandomOptionGroup.builder()
-                            .add(true, AppConfig.IF_FAVOR_CANCEL_RATE)
-                            .add(false, 100 - AppConfig.IF_FAVOR_CANCEL_RATE)
-                            .build()
-                            .getRandBoolValue();
-            int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
-            for (int i = 0; i < 3; i++) {
-                if (ifFavorCancel) {
-                    AppAction appAction =
-                            new AppAction(ActionId.favor_canel, ItemType.sku_id, skuId + i + "");
-                    actionList.add(appAction);
-                }
-            }
-        }
-
-        int size = actionList.size();
-        long avgActionTime = duringTime / (size + 1);
-        for (int i = 1; i <= actionList.size(); i++) {
-            AppAction appAction = actionList.get(i - 1);
-            appAction.setTs(startTs + i * avgActionTime);
-        }
+    public static List<AppAction> buildList(
+            final AppPage appPage, final Long startTs, final Integer duringTime) {
+        final List<AppAction> actionList = new ArrayList<>();
+        buildPageActions(appPage, actionList);
+        assignTimestamps(actionList, startTs, duringTime);
         return actionList;
+    }
+
+    private static void buildPageActions(final AppPage appPage, final List<AppAction> actionList) {
+        switch (appPage.getPageId()) {
+            case good_detail:
+                appendGoodDetailActions(actionList);
+                break;
+            case cart:
+                appendCartActions(actionList);
+                break;
+            case trade:
+                appendTradeActions(actionList);
+                break;
+            case favor:
+                appendFavorActions(actionList);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void appendGoodDetailActions(final List<AppAction> actionList) {
+        if (checkProbability(AppConfig.IF_FAVOR_RATE)) {
+            actionList.add(new AppAction(ActionId.favor_add, null, null));
+        }
+        if (checkProbability(AppConfig.IF_CART_RATE)) {
+            actionList.add(new AppAction(ActionId.cart_add, null, null));
+        }
+        if (checkProbability(AppConfig.IF_GET_COUPON)) {
+            final int couponId = RandomNum.getRandInt(1, AppConfig.MAX_COUPON_ID);
+            actionList.add(
+                    new AppAction(
+                            ActionId.get_coupon, ItemType.coupon_id, String.valueOf(couponId)));
+        }
+    }
+
+    private static void appendCartActions(final List<AppAction> actionList) {
+        if (checkProbability(AppConfig.IF_CART_ADD_NUM_RATE)) {
+            final int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
+            actionList.add(new AppAction(ActionId.cart_add_num, ItemType.sku_id, skuId + ""));
+        }
+        if (checkProbability(AppConfig.IF_CART_MINUS_NUM_RATE)) {
+            final int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
+            actionList.add(new AppAction(ActionId.cart_minus_num, ItemType.sku_id, skuId + ""));
+        }
+        if (checkProbability(AppConfig.IF_CART_RM_RATE)) {
+            final int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
+            actionList.add(new AppAction(ActionId.cart_remove, ItemType.sku_id, skuId + ""));
+        }
+    }
+
+    private static void appendTradeActions(final List<AppAction> actionList) {
+        if (checkProbability(AppConfig.IF_ADD_ADDRESS)) {
+            actionList.add(new AppAction(ActionId.trade_add_address, null, null));
+        }
+    }
+
+    private static void appendFavorActions(final List<AppAction> actionList) {
+        final boolean cancel = checkProbability(AppConfig.IF_FAVOR_CANCEL_RATE);
+        final int skuId = RandomNum.getRandInt(1, AppConfig.MAX_SKU_ID);
+        for (int i = 0; i < 3; i++) {
+            if (cancel) {
+                actionList.add(
+                        new AppAction(ActionId.favor_canel, ItemType.sku_id, skuId + i + ""));
+            }
+        }
+    }
+
+    private static boolean checkProbability(final int rate) {
+        return RandomOptionGroup.builder()
+                .add(true, rate)
+                .add(false, 100 - rate)
+                .build()
+                .getRandBoolValue();
+    }
+
+    private static void assignTimestamps(
+            final List<AppAction> actionList, final Long startTs, final long duringTime) {
+        final long avgActionTime = duringTime / (actionList.size() + 1);
+        for (int i = 1; i <= actionList.size(); i++) {
+            actionList.get(i - 1).setTs(startTs + i * avgActionTime);
+        }
     }
 }

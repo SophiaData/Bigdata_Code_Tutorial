@@ -59,16 +59,16 @@ public final class MongoToPaimonPipeline {
 
     private MongoToPaimonPipeline() {}
 
-    public static void main(String[] args) throws Exception {
-        ParameterTool params = ParameterTool.fromArgs(args);
+    public static void main(final String[] args) throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String mongoHost = params.get("mongo.host", "localhost");
-        int mongoPort = params.getInt("mongo.port", 27017);
-        String mongoDatabase = params.get("mongo.database");
-        String mongoUsername = params.get("mongo.username", "root");
-        String mongoPassword = params.get("mongo.password", "root");
-        String collectionsParam = params.get("mongo.collections", "");
-        String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
+        final String mongoHost = params.get("mongo.host", "localhost");
+        final int mongoPort = params.getInt("mongo.port", 27017);
+        final String mongoDatabase = params.get("mongo.database");
+        final String mongoUsername = params.get("mongo.username", "root");
+        final String mongoPassword = params.get("mongo.password", "root");
+        final String collectionsParam = params.get("mongo.collections", "");
+        final String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
 
         if (mongoDatabase == null || mongoDatabase.isEmpty()) {
             throw new IllegalArgumentException("--mongo.database is required");
@@ -89,10 +89,10 @@ public final class MongoToPaimonPipeline {
                 mongoDatabase,
                 String.join(", ", collections));
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
-        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // Create Paimon catalog
         tableEnv.executeSql(
@@ -106,9 +106,9 @@ public final class MongoToPaimonPipeline {
         // Create target database
         tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS paimon_catalog." + mongoDatabase);
 
-        for (String collection : collections) {
-            String trimmed = collection.trim();
-            DataStream<Document> stream =
+        for (final String collection : collections) {
+            final String trimmed = collection.trim();
+            final DataStream<Document> stream =
                     env.addSource(
                                     MongoDBSource.<Document>builder()
                                             .scheme("mongodb")
@@ -126,7 +126,9 @@ public final class MongoToPaimonPipeline {
                             new ProcessFunction<Document, Document>() {
                                 @Override
                                 public void processElement(
-                                        Document doc, Context ctx, Collector<Document> out) {
+                                        final Document doc,
+                                        final Context ctx,
+                                        final Collector<Document> out) {
                                     out.collect(doc);
                                 }
                             })
@@ -148,12 +150,16 @@ public final class MongoToPaimonPipeline {
     }
 
     private static String[] listCollections(
-            String host, int port, String database, String username, String password) {
-        String connectionString =
+            final String host,
+            final int port,
+            final String database,
+            final String username,
+            final String password) {
+        final String connectionString =
                 String.format("mongodb://%s:%s@%s:%d/%s", username, password, host, port, database);
         try (MongoClient client = MongoClients.create(connectionString)) {
-            MongoDatabase db = client.getDatabase(database);
-            List<String> names = db.listCollectionNames().into(new ArrayList<>());
+            final MongoDatabase db = client.getDatabase(database);
+            final List<String> names = db.listCollectionNames().into(new ArrayList<>());
             return names.toArray(new String[0]);
         }
     }

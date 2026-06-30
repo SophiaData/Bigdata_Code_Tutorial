@@ -39,14 +39,14 @@ public class AppCommon {
     private String ba;
 
     public AppCommon(
-            String mid,
-            String uid,
-            String vc,
-            String ch,
-            String os,
-            String ar,
-            String md,
-            String ba) {
+            final String mid,
+            final String uid,
+            final String vc,
+            final String ch,
+            final String os,
+            final String ar,
+            final String md,
+            final String ba) {
         this.mid = mid;
         this.uid = uid;
         this.vc = vc;
@@ -61,7 +61,7 @@ public class AppCommon {
         return mid;
     }
 
-    public void setMid(String mid) {
+    public void setMid(final String mid) {
         this.mid = mid;
     }
 
@@ -69,7 +69,7 @@ public class AppCommon {
         return uid;
     }
 
-    public void setUid(String uid) {
+    public void setUid(final String uid) {
         this.uid = uid;
     }
 
@@ -77,7 +77,7 @@ public class AppCommon {
         return vc;
     }
 
-    public void setVc(String vc) {
+    public void setVc(final String vc) {
         this.vc = vc;
     }
 
@@ -85,7 +85,7 @@ public class AppCommon {
         return ch;
     }
 
-    public void setCh(String ch) {
+    public void setCh(final String ch) {
         this.ch = ch;
     }
 
@@ -93,7 +93,7 @@ public class AppCommon {
         return os;
     }
 
-    public void setOs(String os) {
+    public void setOs(final String os) {
         this.os = os;
     }
 
@@ -101,7 +101,7 @@ public class AppCommon {
         return ar;
     }
 
-    public void setAr(String ar) {
+    public void setAr(final String ar) {
         this.ar = ar;
     }
 
@@ -109,7 +109,7 @@ public class AppCommon {
         return md;
     }
 
-    public void setMd(String md) {
+    public void setMd(final String md) {
         this.md = md;
     }
 
@@ -117,19 +117,19 @@ public class AppCommon {
         return ba;
     }
 
-    public void setBa(String ba) {
+    public void setBa(final String ba) {
         this.ba = ba;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppCommon that = (AppCommon) o;
+        final AppCommon that = (AppCommon) o;
         return Objects.equals(mid, that.mid)
                 && Objects.equals(uid, that.uid)
                 && Objects.equals(vc, that.vc)
@@ -160,8 +160,8 @@ public class AppCommon {
         String md; // (String) 手机型号
         String ba; // (String) 手机品牌
 
-        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup isSkewRandom =
+        final Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
+        final RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
         // 设备唯一标识
         // 添加倾斜开关
@@ -252,7 +252,7 @@ public class AppCommon {
 
         uid = RandomNum.getRandInt(1, AppConfig.MAX_UID) + "";
 
-        AppCommon appBase = new AppCommon(mid, uid, vc, ch, os, ar, md, ba);
+        final AppCommon appBase = new AppCommon(mid, uid, vc, ch, os, ar, md, ba);
         return appBase;
     }
 }

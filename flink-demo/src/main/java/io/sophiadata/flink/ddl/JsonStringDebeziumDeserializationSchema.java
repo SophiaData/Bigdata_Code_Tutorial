@@ -40,50 +40,50 @@ public class JsonStringDebeziumDeserializationSchema
         implements DebeziumDeserializationSchema<Tuple2<Boolean, String>> {
 
     @Override
-    public void deserialize(SourceRecord record, Collector<Tuple2<Boolean, String>> out)
+    public void deserialize(final SourceRecord record, final Collector<Tuple2<Boolean, String>> out)
             throws Exception {
-        Envelope.Operation op = Envelope.operationFor(record);
-        Struct value = (Struct) record.value();
+        final Envelope.Operation op = Envelope.operationFor(record);
+        final Struct value = (Struct) record.value();
         //        Schema valueSchema = record.valueSchema(); // 有需要时打开
         if (op == Envelope.Operation.CREATE) {
-            String insert = extractAfterRow(value);
+            final String insert = extractAfterRow(value);
             out.collect(new Tuple2<>(true, insert));
         } else if (op == Envelope.Operation.DELETE) {
-            String delete = extractBeforeRow(value);
+            final String delete = extractBeforeRow(value);
             out.collect(new Tuple2<>(false, delete));
             // read 操作单独抽离，本地测试发现如不单独操作，getRowMap 方法在 initial 启动模式下报空指针异常
             // 原因可能是 schema change ---- 或者是其他原因
         } else if (op == Envelope.Operation.READ) {
-            Struct after = value.getStruct("after");
-            JSONObject afterJson = new JSONObject();
+            final Struct after = value.getStruct("after");
+            final JSONObject afterJson = new JSONObject();
             if (after != null) {
-                List<Field> fields = after.schema().fields();
-                for (Field field : fields) {
+                final List<Field> fields = after.schema().fields();
+                for (final Field field : fields) {
                     afterJson.put(field.name(), after.get(field));
                 }
                 out.collect(new Tuple2<>(true, afterJson.toJSONString()));
             }
         } else {
-            String after = extractAfterRow(value);
+            final String after = extractAfterRow(value);
             out.collect(new Tuple2<>(true, after));
         }
     }
 
-    private Map<String, Object> getRowMap(Struct after) {
+    private Map<String, Object> getRowMap(final Struct after) {
         return after.schema().fields().stream().collect(Collectors.toMap(Field::name, after::get));
     }
 
-    private String extractAfterRow(Struct value) throws Exception {
-        Struct after = value.getStruct(Envelope.FieldName.AFTER);
-        Map<String, Object> rowMap = getRowMap(after);
-        ObjectMapper objectMapper = new ObjectMapper();
+    private String extractAfterRow(final Struct value) throws Exception {
+        final Struct after = value.getStruct(Envelope.FieldName.AFTER);
+        final Map<String, Object> rowMap = getRowMap(after);
+        final ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(rowMap);
     }
 
-    private String extractBeforeRow(Struct value) throws Exception {
-        Struct after = value.getStruct(Envelope.FieldName.BEFORE);
-        Map<String, Object> rowMap = getRowMap(after);
-        ObjectMapper objectMapper = new ObjectMapper();
+    private String extractBeforeRow(final Struct value) throws Exception {
+        final Struct after = value.getStruct(Envelope.FieldName.BEFORE);
+        final Map<String, Object> rowMap = getRowMap(after);
+        final ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(rowMap);
     }
 
