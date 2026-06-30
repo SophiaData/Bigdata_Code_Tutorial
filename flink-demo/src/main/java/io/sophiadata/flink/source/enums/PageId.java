@@ -46,7 +46,7 @@ public enum PageId {
     login("登录"),
     register("注册");
 
-    private String desc;
+    private final String desc;
 
     PageId(String desc) {
         this.desc = desc;

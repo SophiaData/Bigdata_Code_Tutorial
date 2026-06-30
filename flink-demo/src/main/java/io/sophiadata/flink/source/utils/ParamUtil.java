@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class ParamUtil {
 
-    public static final Integer checkRatioNum(String rate) {
+    public static Integer checkRatioNum(String rate) {
         try {
             Integer rateNum = Integer.valueOf(rate);
             if (rateNum < 0 || rateNum > 100) {
@@ -45,7 +45,7 @@ public class ParamUtil {
      * Parse a {@code yyyy-MM-dd} date string and combine it with the current local time, returning
      * the result as a {@link LocalDateTime}. Replaces the previous {@code Date}-based helper.
      */
-    public static final LocalDateTime checkDateTime(String dateString) {
+    public static LocalDateTime checkDateTime(String dateString) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
@@ -58,7 +58,7 @@ public class ParamUtil {
         }
     }
 
-    public static final Boolean checkBoolean(String bool) {
+    public static Boolean checkBoolean(String bool) {
         if (bool.equals("1") || bool.equals("true")) {
             return true;
         } else if (bool.equals("0") || bool.equals("false")) {
@@ -68,7 +68,7 @@ public class ParamUtil {
         }
     }
 
-    public static final Integer[] checkRate(String rateString, int rateCount) {
+    public static Integer[] checkRate(String rateString, int rateCount) {
         try {
             String[] rateArray = rateString.split(":");
             if (rateArray.length != rateCount) {
@@ -85,7 +85,7 @@ public class ParamUtil {
         }
     }
 
-    public static final String[] checkArray(String str) {
+    public static String[] checkArray(String str) {
 
         if (str == null) {
             throw new RuntimeException("搜索词为空");
@@ -95,7 +95,7 @@ public class ParamUtil {
         return split;
     }
 
-    public static final Integer checkCount(String count) {
+    public static Integer checkCount(String count) {
         try {
             if (count == null) {
                 return 0;
@@ -109,7 +109,6 @@ public class ParamUtil {
 
     public static void main(String[] args) {
         System.out.println(ParamUtil.checkDateTime("2024-01-15"));
-        ;
         System.out.println("ok");
     }
 }

@@ -65,15 +65,29 @@ jobs:
       - name: Verify spotless format
         run: ./mvnw -pl ${{ matrix.module }} -am spotless:check
 
+      - name: Run checkstyle analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
+        continue-on-error: false
+
+      - name: Run PMD static analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
+        continue-on-error: true
+
+      - name: Upload PMD report on warnings
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pmd-${{ matrix.module }}
+          path: ${{ matrix.module }}/target/pmd.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Run unit tests (skip *IT and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
         run: |
           set +H
           ./mvnw -pl ${{ matrix.module }} -am test \
             -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
-
-      - name: Enforce dependency consistency
-        run: ./mvnw -pl ${{ matrix.module }} -am validate
 
       - name: Collect JaCoCo coverage
         run: ./mvnw -pl ${{ matrix.module }} -am verify -Djacoco.skip=false -DskipTests

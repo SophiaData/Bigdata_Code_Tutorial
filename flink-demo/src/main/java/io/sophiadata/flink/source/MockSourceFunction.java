@@ -129,12 +129,12 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
 
             // 页面中的动作
             List<AppAction> appActionList = AppAction.buildList(page, ts, pageDuringTime);
-            if (appActionList.size() > 0) {
+            if (!appActionList.isEmpty()) {
                 pageBuilder.actions(appActionList);
             }
             // 曝光
             List<AppDisplay> displayList = AppDisplay.buildList(page);
-            if (displayList.size() > 0) {
+            if (!displayList.isEmpty()) {
                 pageBuilder.displays(displayList);
             }
             pageBuilder.ts(ts);

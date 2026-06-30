@@ -45,10 +45,10 @@ public class AppStart {
 
         public Builder() {
             entry =
-                    new RandomOptionGroup<String>(
-                                    new RanOpt<String>("install", 5),
-                                    new RanOpt<String>("icon", 75),
-                                    new RanOpt<String>("notice", 20))
+                    new RandomOptionGroup<>(
+                                    new RanOpt<>("install", 5),
+                                    new RanOpt<>("icon", 75),
+                                    new RanOpt<>("notice", 20))
                             .getRandStringValue();
             open_ad_id = RandomNum.getRandInt(1, 20) + 0L;
             open_ad_ms = RandomNum.getRandInt(1000, 10000);

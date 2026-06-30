@@ -27,7 +27,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -70,15 +69,10 @@ class CDBBatchSinkIT {
 
     @Test
     void flush_insertsNewRows() throws Exception {
-        Map<String, Map<String, String>> schemas = new HashMap<>();
         Map<String, String> cols = new LinkedHashMap<>();
         cols.put("id", "BIGINT");
         cols.put("name", "VARCHAR");
         cols.put("age", "INT");
-        schemas.put("users", cols);
-
-        Map<String, String> pks = new HashMap<>();
-        pks.put("users", "id");
 
         // Create the flush method manually since CDBBatchSink is private
         // We'll test the SQL generation logic directly

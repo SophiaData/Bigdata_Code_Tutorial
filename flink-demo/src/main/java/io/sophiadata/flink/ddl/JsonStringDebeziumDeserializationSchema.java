@@ -89,6 +89,6 @@ public class JsonStringDebeziumDeserializationSchema
 
     @Override
     public TypeInformation<Tuple2<Boolean, String>> getProducedType() {
-        return TypeInformation.of(new TypeHint<Tuple2<Boolean, String>>() {});
+        return TypeInformation.of(new TypeHint<>() {});
     }
 }

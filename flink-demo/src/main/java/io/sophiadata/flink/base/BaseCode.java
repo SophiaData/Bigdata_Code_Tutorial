@@ -78,8 +78,6 @@ public abstract class BaseCode {
             env.enableCheckpointing(3000);
             // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
             // 测试任务如数据量较大请指定文件存储
-            // env.getCheckpointConfig()
-            //    .setCheckpointStorage(ckPath);
         } else {
             env.getCheckpointConfig().setCheckpointStorage(ckPath);
             // Hadoop HA 写法：

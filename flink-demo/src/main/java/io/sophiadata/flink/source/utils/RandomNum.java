@@ -22,11 +22,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /** (@sophiadata) (@date 2023/8/2 11:17). */
 public class RandomNum {
-    public static final int getRandInt(int fromNum, int toNum) {
+    public static int getRandInt(int fromNum, int toNum) {
         return fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1);
     }
 
-    public static final int getRandInt(int fromNum, int toNum, Long seed) {
+    public static int getRandInt(int fromNum, int toNum, Long seed) {
         return fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1);
     }
 }

@@ -159,7 +159,7 @@ public class SchemaEvolutionIT {
         waitForSinkRowCount("sink_t_order", 2, 60);
         assertSinkProduct("sink_t_order", 1, "laptop");
         assertSinkProduct("sink_t_order", 2, "phone");
-        LOG.info("=== Phase 1 PASSED: initial data synced ===");
+        LOG.info("=== testSyncWithAddColumn: initial data synced ===");
 
         // DDL: ADD COLUMN `discount`
         try (Connection c = getSourceConnection();
@@ -187,7 +187,7 @@ public class SchemaEvolutionIT {
         startFlinkPipeline();
 
         waitForSinkRowCount("sink_t_order", 2, 60);
-        LOG.info("=== Phase 1 PASSED: initial data synced ===");
+        LOG.info("=== testSyncWithModifyColumn: initial data synced ===");
 
         // DDL: MODIFY COLUMN `amount` to DOUBLE
         try (Connection c = getSourceConnection();
@@ -214,7 +214,7 @@ public class SchemaEvolutionIT {
         startFlinkPipeline();
 
         waitForSinkRowCount("sink_t_order", 2, 60);
-        LOG.info("=== Phase 1 PASSED: initial data synced ===");
+        LOG.info("=== testSyncWithDropAndReAdd: initial data synced ===");
 
         // Drop then re-add a column
         try (Connection c = getSourceConnection();

@@ -64,9 +64,10 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
 
     /**
      * Daemon-thread factory. Extracted as a named class so {@link SchemaEvolver} stays {@link
-     * Serializable}: lambdas passed to {@link Executors#newCachedThreadPool} capture their
-     * enclosing context and are not Serializable by default, which breaks Flink job submission when
-     * this object is captured inside a {@code ProcessFunction}.
+     * java.io.Serializable}: lambdas passed to {@link
+     * java.util.concurrent.Executors#newCachedThreadPool} capture their enclosing context and are
+     * not Serializable by default, which breaks Flink job submission when this object is captured
+     * inside a {@code ProcessFunction}.
      */
     private static final class SchemaAlterThreadFactory
             implements ThreadFactory, java.io.Serializable {
@@ -102,9 +103,10 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     private final String sinkPassword;
 
     /**
-     * {@link Transient} because {@link ThreadPoolExecutor} is technically {@link Serializable} but
-     * contains a non-Serializable {@code handler} (default {@code AbortPolicy}). We re-create it in
-     * {@link #readObject} after Flink deserializes the SchemaEvolver on the TaskManager.
+     * {@code transient} because {@link java.util.concurrent.ThreadPoolExecutor} is technically
+     * {@link java.io.Serializable} but contains a non-Serializable {@code handler} (default {@code
+     * AbortPolicy}). We re-create it in {@link #readObject} after Flink deserializes the
+     * SchemaEvolver on the TaskManager.
      */
     private transient ExecutorService alterExecutor;
 
@@ -148,8 +150,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     @Override
     public void initializeState(FunctionInitializationContext initContext) throws Exception {
         ListStateDescriptor<AlterRecord> descriptor =
-                new ListStateDescriptor<>(
-                        STATE_NAME, TypeInformation.of(new TypeHint<AlterRecord>() {}));
+                new ListStateDescriptor<>(STATE_NAME, TypeInformation.of(new TypeHint<>() {}));
 
         alterState = initContext.getOperatorStateStore().getListState(descriptor);
 

@@ -37,7 +37,7 @@ public class ConfigUtil {
                         : Thread.currentThread()
                                 .getContextClassLoader()
                                 .getResourceAsStream(fileName)) {
-            return IOUtils.toString(resourceAsStream, "utf-8");
+            return IOUtils.toString(resourceAsStream, java.nio.charset.StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException("配置文件" + fileName + "读取异常", e);
         }
@@ -61,7 +61,9 @@ public class ConfigUtil {
         String path =
                 ConfigUtil.class.getProtectionDomain().getCodeSource().getLocation().getFile();
         try {
-            path = java.net.URLDecoder.decode(path, "UTF-8"); // 转换处理中文及空格
+            path =
+                    java.net.URLDecoder.decode(
+                            path, java.nio.charset.StandardCharsets.UTF_8.name()); // 转换处理中文及空格
         } catch (java.io.UnsupportedEncodingException e) {
             return null;
         }
