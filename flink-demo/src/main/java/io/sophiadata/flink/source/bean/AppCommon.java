@@ -41,7 +41,6 @@ public class AppCommon {
     private String ar; // (String) 区域
     private String md; // (String) 手机型号
     private String ba; // (String) 手机品牌
-    private String is_new; // 是否新用户
 
     public static AppCommon build() {
         String mid; // (String) 设备唯一标识
