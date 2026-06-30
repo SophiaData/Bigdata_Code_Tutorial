@@ -15,6 +15,7 @@
 | [sync_database_mysql](sync_database_mysql/) | 整库同步核心：`flink-cdc 3.x` → MySqlCatalog → JDBC sink，含 SchemaEvolver |
 | [flink-demo](flink-demo/) | DataStream / SQL / CDC DDL / UDF 示例与 Mock 数据源 |
 | [flink-function](flink-function/) | 可复用 Flink TableFunction 示例 |
+| [flink-paimon-demo](flink-paimon-demo/) | MySQL → Apache Paimon 实时同步示例 |
 
 ## 快速开始
 
@@ -128,6 +129,7 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - [开发指南](docs/DEVELOPMENT.md) - 本地开发流程
 - [工程化文档](docs/reliability/) - CI/CD 和质量保证
 - [API 文档](docs/api/) - 核心类和接口说明
+- [Paimon 同步](flink-paimon-demo/) - MySQL → Paimon 数据湖同步示例
 
 ## 🎯 核心特性
 
