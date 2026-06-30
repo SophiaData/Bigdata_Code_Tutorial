@@ -47,6 +47,9 @@ dependency-reduced-pom.xml
 logs/
 *.log
 
+# Internal design docs (local only)
+docs/internal/
+
 # OS
 Thumbs.db
 error/
