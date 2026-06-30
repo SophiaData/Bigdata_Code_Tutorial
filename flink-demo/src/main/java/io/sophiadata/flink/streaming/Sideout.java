@@ -61,7 +61,7 @@ public class Sideout extends BaseCode {
                                             ProcessFunction<String, String>.Context ctx,
                                             Collector<String> out) {
                                         if (value.equals("hello")) {
-                                            ctx.output(new OutputTag<String>("hello") {}, value);
+                                            ctx.output(new OutputTag<>("hello") {}, value);
                                         } else {
                                             out.collect(value);
                                         }
@@ -70,7 +70,7 @@ public class Sideout extends BaseCode {
                         .name("sideout");
 
         sideout.print("stream >>>  ").name("stream");
-        sideout.getSideOutput(new OutputTag<String>("hello") {})
+        sideout.getSideOutput(new OutputTag<>("hello") {})
                 .print(" hello stream >>> ")
                 .name("hello");
     }
