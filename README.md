@@ -15,6 +15,7 @@
 | [sync_database_mysql](sync_database_mysql/) | 整库同步核心：`flink-cdc 3.x` → MySqlCatalog → JDBC sink，含 SchemaEvolver |
 | [flink-demo](flink-demo/) | DataStream / SQL / CDC DDL / UDF 示例与 Mock 数据源 |
 | [flink-function](flink-function/) | 可复用 Flink TableFunction 示例 |
+| [flink-paimon-demo](flink-paimon-demo/) | MySQL → Apache Paimon 实时同步示例 |
 
 ## 快速开始
 
@@ -128,6 +129,7 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - [开发指南](docs/DEVELOPMENT.md) - 本地开发流程
 - [工程化文档](docs/reliability/) - CI/CD 和质量保证
 - [API 文档](docs/api/) - 核心类和接口说明
+- [Paimon 同步](flink-paimon-demo/) - MySQL → Paimon 数据湖同步示例
 
 ## 🎯 核心特性
 
@@ -151,6 +153,8 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - **自动化测试**：DDL 变更和性能测试
 - **实时监控**：Flink Web UI 可视化监控
 
-Blog: https://sophiadata.github.io/Bigdata_Blog_Website/
+## 📚 大数据资料合集
 
-![img](https://user-images.githubusercontent.com/34996528/202855293-c3a35d5b-242b-4e26-848f-a88741cd3afc.png)
+扫码订阅 ima 知识库，获取大数据学习资料：
+
+![大数据资料合集](docs/images/bigdata-qrcode.png)

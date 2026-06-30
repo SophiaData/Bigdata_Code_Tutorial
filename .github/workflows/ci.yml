@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [flink-demo, sync_database_mysql, flink-function]
+        module: [flink-demo, sync_database_mysql, flink-function, flink-paimon-demo]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
