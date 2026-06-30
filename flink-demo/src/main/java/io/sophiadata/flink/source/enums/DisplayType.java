@@ -18,15 +18,20 @@
 
 package io.sophiadata.flink.source.enums;
 
-import lombok.AllArgsConstructor;
-
 /** (@sophiadata) (@date 2023/8/2 11:22). */
-@AllArgsConstructor
 public enum DisplayType {
     promotion("商品推广"),
     recommend("算法推荐商品"),
     query("查询结果商品"),
     activity("促销活动");
 
-    private String desc;
+    private final String desc;
+
+    DisplayType(String desc) {
+        this.desc = desc;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
 }

@@ -23,24 +23,128 @@ import io.sophiadata.flink.source.utils.ParamUtil;
 import io.sophiadata.flink.source.utils.RanOpt;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+
+import java.util.Objects;
 
 /** (@sophiadata) (@date 2023/8/2 11:06). */
-@Data
-@AllArgsConstructor
-@Builder(builderClassName = "Builder")
 public class AppCommon {
 
-    private String mid; // (String) 设备唯一标识
-    private String uid; // (String) 用户uid
-    private String vc; // (String) versionCode，程序版本号
-    private String ch; // (String) 渠道号，应用从哪个渠道来的。
-    private String os; // (String) 系统版本
-    private String ar; // (String) 区域
-    private String md; // (String) 手机型号
-    private String ba; // (String) 手机品牌
+    private String mid;
+    private String uid;
+    private String vc;
+    private String ch;
+    private String os;
+    private String ar;
+    private String md;
+    private String ba;
+
+    public AppCommon(
+            String mid,
+            String uid,
+            String vc,
+            String ch,
+            String os,
+            String ar,
+            String md,
+            String ba) {
+        this.mid = mid;
+        this.uid = uid;
+        this.vc = vc;
+        this.ch = ch;
+        this.os = os;
+        this.ar = ar;
+        this.md = md;
+        this.ba = ba;
+    }
+
+    public String getMid() {
+        return mid;
+    }
+
+    public void setMid(String mid) {
+        this.mid = mid;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getVc() {
+        return vc;
+    }
+
+    public void setVc(String vc) {
+        this.vc = vc;
+    }
+
+    public String getCh() {
+        return ch;
+    }
+
+    public void setCh(String ch) {
+        this.ch = ch;
+    }
+
+    public String getOs() {
+        return os;
+    }
+
+    public void setOs(String os) {
+        this.os = os;
+    }
+
+    public String getAr() {
+        return ar;
+    }
+
+    public void setAr(String ar) {
+        this.ar = ar;
+    }
+
+    public String getMd() {
+        return md;
+    }
+
+    public void setMd(String md) {
+        this.md = md;
+    }
+
+    public String getBa() {
+        return ba;
+    }
+
+    public void setBa(String ba) {
+        this.ba = ba;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppCommon that = (AppCommon) o;
+        return Objects.equals(mid, that.mid)
+                && Objects.equals(uid, that.uid)
+                && Objects.equals(vc, that.vc)
+                && Objects.equals(ch, that.ch)
+                && Objects.equals(os, that.os)
+                && Objects.equals(ar, that.ar)
+                && Objects.equals(md, that.md)
+                && Objects.equals(ba, that.ba);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mid, uid, vc, ch, os, ar, md, ba);
+    }
+
+    @Override
+    public String toString() {
+        return "AppCommon{mid='" + mid + "', uid='" + uid + "', vc='" + vc + "'}";
+    }
 
     public static AppCommon build() {
         String mid; // (String) 设备唯一标识

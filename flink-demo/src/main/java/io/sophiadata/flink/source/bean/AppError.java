@@ -19,19 +19,54 @@
 package io.sophiadata.flink.source.bean;
 
 import io.sophiadata.flink.source.utils.RandomNum;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 import java.net.ConnectException;
+import java.util.Objects;
 
 /** (@sophiadata) (@date 2023/8/2 11:08). */
-@Data
-@AllArgsConstructor
 public class AppError {
 
-    Integer error_code;
+    private Integer errorCode;
+    private String msg;
 
-    String msg;
+    public AppError(Integer errorCode, String msg) {
+        this.errorCode = errorCode;
+        this.msg = msg;
+    }
+
+    public Integer getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(Integer errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppError that = (AppError) o;
+        return Objects.equals(errorCode, that.errorCode) && Objects.equals(msg, that.msg);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(errorCode, msg);
+    }
+
+    @Override
+    public String toString() {
+        return "AppError{errorCode=" + errorCode + ", msg='" + msg + "'}";
+    }
 
     public static AppError build() {
         int errorCode = RandomNum.getRandInt(1001, 4001);
@@ -43,7 +78,4 @@ public class AppError {
     public static void main(String[] args) throws Exception {
         throw new ConnectException();
     }
-
-    //
-
 }

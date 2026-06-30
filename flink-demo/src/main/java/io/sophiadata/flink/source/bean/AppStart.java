@@ -21,27 +21,90 @@ package io.sophiadata.flink.source.bean;
 import io.sophiadata.flink.source.utils.RanOpt;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
+import java.util.Objects;
 
 /** (@sophiadata) (@date 2023/8/2 11:12). */
-@Data
-@AllArgsConstructor
 public class AppStart {
 
-    private String entry; // 入口：  安装后进入=install，  点击图标= icon，  点击通知= notice
-    private Long open_ad_id; // 开屏广告Id
-    private Integer open_ad_ms; // 开屏广告持续时间
-    private Integer open_ad_skip_ms; // 开屏广告点击掉过的时间  未点击为0
-    private Integer loading_time; // 加载时长：计算下拉开始到接口返回数据的时间，（开始加载报0，加载成功或加载失败才上报时间）
+    private final String entry;
+    private final Long openAdId;
+    private final Integer openAdMs;
+    private final Integer openAdSkipMs;
+    private final Integer loadingTime;
+
+    public AppStart(
+            String entry,
+            Long openAdId,
+            Integer openAdMs,
+            Integer openAdSkipMs,
+            Integer loadingTime) {
+        this.entry = entry;
+        this.openAdId = openAdId;
+        this.openAdMs = openAdMs;
+        this.openAdSkipMs = openAdSkipMs;
+        this.loadingTime = loadingTime;
+    }
+
+    public String getEntry() {
+        return entry;
+    }
+
+    public Long getOpenAdId() {
+        return openAdId;
+    }
+
+    public Integer getOpenAdMs() {
+        return openAdMs;
+    }
+
+    public Integer getOpenAdSkipMs() {
+        return openAdSkipMs;
+    }
+
+    public Integer getLoadingTime() {
+        return loadingTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppStart that = (AppStart) o;
+        return Objects.equals(entry, that.entry)
+                && Objects.equals(openAdId, that.openAdId)
+                && Objects.equals(openAdMs, that.openAdMs)
+                && Objects.equals(openAdSkipMs, that.openAdSkipMs)
+                && Objects.equals(loadingTime, that.loadingTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(entry, openAdId, openAdMs, openAdSkipMs, loadingTime);
+    }
+
+    @Override
+    public String toString() {
+        return "AppStart{entry='"
+                + entry
+                + "', openAdId="
+                + openAdId
+                + ", openAdMs="
+                + openAdMs
+                + ", openAdSkipMs="
+                + openAdSkipMs
+                + ", loadingTime="
+                + loadingTime
+                + '}';
+    }
 
     public static class Builder {
-        private String entry; // 入口： 安装后进入=install，  点击图标= icon，  点击通知= notice
-        private Long open_ad_id; // 开屏广告Id
-        private Integer open_ad_ms; // 开屏广告持续时间
-        private Integer open_ad_skip_ms; // 开屏广告持续多长时间，点击跳过 未点击为0
-        private Integer loading_time; // 加载时长：计算下拉开始到接口返回数据的时间，（开始加载报0，加载成功或加载失败才上报时间）
-        private Integer first_open;
+        private String entry;
+        private Long openAdId;
+        private Integer openAdMs;
+        private Integer openAdSkipMs;
+        private Integer loadingTime;
+        private Integer firstOpen;
 
         public Builder() {
             entry =
@@ -50,20 +113,20 @@ public class AppStart {
                                     new RanOpt<>("icon", 75),
                                     new RanOpt<>("notice", 20))
                             .getRandStringValue();
-            open_ad_id = RandomNum.getRandInt(1, 20) + 0L;
-            open_ad_ms = RandomNum.getRandInt(1000, 10000);
-            open_ad_skip_ms =
+            openAdId = RandomNum.getRandInt(1, 20) + 0L;
+            openAdMs = RandomNum.getRandInt(1000, 10000);
+            openAdSkipMs =
                     RandomOptionGroup.builder()
                             .add(0, 50)
-                            .add(RandomNum.getRandInt(1000, open_ad_ms), 50)
+                            .add(RandomNum.getRandInt(1000, openAdMs), 50)
                             .build()
                             .getRandIntValue();
-            loading_time = RandomNum.getRandInt(1000, 20000);
-            first_open = RandomNum.getRandInt(0, 1);
+            loadingTime = RandomNum.getRandInt(1000, 20000);
+            firstOpen = RandomNum.getRandInt(0, 1);
         }
 
         public AppStart build() {
-            return new AppStart(entry, open_ad_id, open_ad_ms, open_ad_skip_ms, loading_time);
+            return new AppStart(entry, openAdId, openAdMs, openAdSkipMs, loadingTime);
         }
     }
 }

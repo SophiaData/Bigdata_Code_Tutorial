@@ -25,29 +25,103 @@ import io.sophiadata.flink.source.enums.PageId;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomNumString;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
+import java.util.Objects;
 
 /** (@sophiadata) (@date 2023/8/2 11:11). */
-@Data
-@AllArgsConstructor
 public class AppPage {
 
-    PageId last_page_id;
+    private PageId lastPageId;
+    private PageId pageId;
+    private ItemType itemType;
+    private String item;
+    private Integer duringTime;
+    private String extend1;
+    private String extend2;
+    private DisplayType sourceType;
 
-    PageId page_id;
+    public AppPage(
+            PageId lastPageId,
+            PageId pageId,
+            ItemType itemType,
+            String item,
+            Integer duringTime,
+            String extend1,
+            String extend2,
+            DisplayType sourceType) {
+        this.lastPageId = lastPageId;
+        this.pageId = pageId;
+        this.itemType = itemType;
+        this.item = item;
+        this.duringTime = duringTime;
+        this.extend1 = extend1;
+        this.extend2 = extend2;
+        this.sourceType = sourceType;
+    }
 
-    ItemType item_type;
+    public PageId getLastPageId() {
+        return lastPageId;
+    }
 
-    String item;
+    public void setLastPageId(PageId lastPageId) {
+        this.lastPageId = lastPageId;
+    }
 
-    Integer during_time;
+    public PageId getPageId() {
+        return pageId;
+    }
 
-    String extend1;
+    public void setPageId(PageId pageId) {
+        this.pageId = pageId;
+    }
 
-    String extend2;
+    public ItemType getItemType() {
+        return itemType;
+    }
 
-    DisplayType source_type;
+    public void setItemType(ItemType itemType) {
+        this.itemType = itemType;
+    }
+
+    public String getItem() {
+        return item;
+    }
+
+    public void setItem(String item) {
+        this.item = item;
+    }
+
+    public Integer getDuringTime() {
+        return duringTime;
+    }
+
+    public void setDuringTime(Integer duringTime) {
+        this.duringTime = duringTime;
+    }
+
+    public String getExtend1() {
+        return extend1;
+    }
+
+    public void setExtend1(String extend1) {
+        this.extend1 = extend1;
+    }
+
+    public String getExtend2() {
+        return extend2;
+    }
+
+    public void setExtend2(String extend2) {
+        this.extend2 = extend2;
+    }
+
+    public DisplayType getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(DisplayType sourceType) {
+        this.sourceType = sourceType;
+    }
 
     public static AppPage build(PageId pageId, PageId lastPageId, Integer duringTime) {
 
@@ -87,5 +161,41 @@ public class AppPage {
         }
         return new AppPage(
                 lastPageId, pageId, itemType, item, duringTime, extend1, extend2, sourceType);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppPage that = (AppPage) o;
+        return lastPageId == that.lastPageId
+                && pageId == that.pageId
+                && itemType == that.itemType
+                && Objects.equals(item, that.item)
+                && Objects.equals(duringTime, that.duringTime)
+                && Objects.equals(extend1, that.extend1)
+                && Objects.equals(extend2, that.extend2)
+                && sourceType == that.sourceType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                lastPageId, pageId, itemType, item, duringTime, extend1, extend2, sourceType);
+    }
+
+    @Override
+    public String toString() {
+        return "AppPage{lastPageId="
+                + lastPageId
+                + ", pageId="
+                + pageId
+                + ", itemType="
+                + itemType
+                + ", item='"
+                + item
+                + "', duringTime="
+                + duringTime
+                + '}';
     }
 }
