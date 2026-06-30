@@ -18,71 +18,72 @@
 
 package io.sophiadata.flink.sync;
 
+import io.sophiadata.flink.sync.util.MysqlUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Unit tests for {@link FlinkSqlWDS}. */
+/** Unit tests for {@link MysqlUtil#mapType}. */
 class FlinkSqlWDSTest {
 
     @Test
     void mapType_integerTypes() {
-        assertEquals("BIGINT", FlinkSqlWDS.mapType("BIGINT"));
-        assertEquals("BIGINT", FlinkSqlWDS.mapType("bigint"));
-        assertEquals("INT", FlinkSqlWDS.mapType("INT"));
-        assertEquals("INT", FlinkSqlWDS.mapType("INTEGER"));
-        assertEquals("INT", FlinkSqlWDS.mapType("TINYINT"));
-        assertEquals("INT", FlinkSqlWDS.mapType("SMALLINT"));
+        assertEquals("BIGINT", MysqlUtil.mapType("BIGINT"));
+        assertEquals("BIGINT", MysqlUtil.mapType("bigint"));
+        assertEquals("INT", MysqlUtil.mapType("INT"));
+        assertEquals("INT", MysqlUtil.mapType("INTEGER"));
+        assertEquals("INT", MysqlUtil.mapType("TINYINT"));
+        assertEquals("INT", MysqlUtil.mapType("SMALLINT"));
     }
 
     @Test
     void mapType_stringTypes() {
-        assertEquals("VARCHAR(255)", FlinkSqlWDS.mapType("VARCHAR(255)"));
-        assertEquals("CHAR(10)", FlinkSqlWDS.mapType("CHAR(10)"));
-        assertEquals("VARCHAR(1024)", FlinkSqlWDS.mapType("TEXT"));
-        assertEquals("VARCHAR(1024)", FlinkSqlWDS.mapType("LONGTEXT"));
+        assertEquals("VARCHAR(255)", MysqlUtil.mapType("VARCHAR(255)"));
+        assertEquals("CHAR(10)", MysqlUtil.mapType("CHAR(10)"));
+        assertEquals("VARCHAR(1024)", MysqlUtil.mapType("TEXT"));
+        assertEquals("VARCHAR(1024)", MysqlUtil.mapType("LONGTEXT"));
     }
 
     @Test
     void mapType_decimalTypes() {
-        assertEquals("DECIMAL(10,2)", FlinkSqlWDS.mapType("DECIMAL(10,2)"));
-        assertEquals("DECIMAL(10,2)", FlinkSqlWDS.mapType("DECIMAL"));
-        assertEquals("DECIMAL(10,2)", FlinkSqlWDS.mapType("NUMERIC"));
+        assertEquals("DECIMAL(10,2)", MysqlUtil.mapType("DECIMAL(10,2)"));
+        assertEquals("DECIMAL(10,2)", MysqlUtil.mapType("DECIMAL"));
+        assertEquals("DECIMAL(10,2)", MysqlUtil.mapType("NUMERIC"));
     }
 
     @Test
     void mapType_dateTimeTypes() {
-        assertEquals("TIMESTAMP(6)", FlinkSqlWDS.mapType("TIMESTAMP"));
-        assertEquals("TIMESTAMP(6)", FlinkSqlWDS.mapType("TIMESTAMP(3)"));
-        assertEquals("DATETIME(6)", FlinkSqlWDS.mapType("DATETIME"));
-        assertEquals("DATE", FlinkSqlWDS.mapType("DATE"));
-        assertEquals("TIME", FlinkSqlWDS.mapType("TIME"));
+        assertEquals("TIMESTAMP(6)", MysqlUtil.mapType("TIMESTAMP"));
+        assertEquals("TIMESTAMP(6)", MysqlUtil.mapType("TIMESTAMP(3)"));
+        assertEquals("DATETIME(6)", MysqlUtil.mapType("DATETIME"));
+        assertEquals("DATE", MysqlUtil.mapType("DATE"));
+        assertEquals("TIME", MysqlUtil.mapType("TIME"));
     }
 
     @Test
     void mapType_floatingPointTypes() {
-        assertEquals("DOUBLE", FlinkSqlWDS.mapType("DOUBLE"));
-        assertEquals("DOUBLE", FlinkSqlWDS.mapType("DOUBLE PRECISION"));
-        assertEquals("FLOAT", FlinkSqlWDS.mapType("FLOAT"));
+        assertEquals("DOUBLE", MysqlUtil.mapType("DOUBLE"));
+        assertEquals("DOUBLE", MysqlUtil.mapType("DOUBLE PRECISION"));
+        assertEquals("FLOAT", MysqlUtil.mapType("FLOAT"));
     }
 
     @Test
     void mapType_booleanType() {
-        assertEquals("TINYINT(1)", FlinkSqlWDS.mapType("BOOLEAN"));
-        assertEquals("TINYINT(1)", FlinkSqlWDS.mapType("BOOL"));
+        assertEquals("TINYINT(1)", MysqlUtil.mapType("BOOLEAN"));
+        assertEquals("TINYINT(1)", MysqlUtil.mapType("BOOL"));
     }
 
     @Test
     void mapType_binaryTypes() {
-        assertEquals("BLOB", FlinkSqlWDS.mapType("BLOB"));
-        assertEquals("BLOB", FlinkSqlWDS.mapType("BINARY(16)"));
-        assertEquals("BLOB", FlinkSqlWDS.mapType("VARBINARY"));
+        assertEquals("BLOB", MysqlUtil.mapType("BLOB"));
+        assertEquals("BLOB", MysqlUtil.mapType("BINARY(16)"));
+        assertEquals("BLOB", MysqlUtil.mapType("VARBINARY"));
     }
 
     @Test
     void mapType_unknownType_defaultsToVarchar() {
-        assertEquals("VARCHAR(1024)", FlinkSqlWDS.mapType("JSON"));
-        assertEquals("VARCHAR(1024)", FlinkSqlWDS.mapType("ENUM"));
-        assertEquals("VARCHAR(1024)", FlinkSqlWDS.mapType("UNKNOWN_TYPE"));
+        assertEquals("VARCHAR(1024)", MysqlUtil.mapType("JSON"));
+        assertEquals("VARCHAR(1024)", MysqlUtil.mapType("ENUM"));
+        assertEquals("VARCHAR(1024)", MysqlUtil.mapType("UNKNOWN_TYPE"));
     }
 }

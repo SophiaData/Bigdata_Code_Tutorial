@@ -31,7 +31,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /** (@SophiaData) (@date 2023/5/31 19:02). */
 public class MysqlUtil {
@@ -161,5 +164,96 @@ public class MysqlUtil {
             return false;
         }
         return identifier.matches("[a-zA-Z0-9_]+");
+    }
+
+    /** SQL 标识符正则：字母或下划线开头，只含字母、数字、下划线。用于防 SQL 注入。 */
+    private static final Pattern VALID_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+    public static String validateIdentifier(String identifier) {
+        if (identifier == null || !VALID_IDENTIFIER.matcher(identifier).matches()) {
+            throw new IllegalArgumentException("Invalid SQL identifier: " + identifier);
+        }
+        return identifier;
+    }
+
+    /**
+     * 根据 CDC 捕获的列信息在 sink 端建表（IF NOT EXISTS）。 列类型通过 {@link #mapType} 从 CDC 类型映射为 MySQL 类型。 表名格式为
+     * {@code sink_<原始表名>}，带反引号防止关键字冲突。
+     */
+    public static void createSinkTableIfNotExists(
+            String jdbcUrl,
+            String user,
+            String pass,
+            String table,
+            Map<String, String> cols,
+            String pk) {
+        StringBuilder cl = new StringBuilder();
+        int i = 0;
+        for (Map.Entry<String, String> e : cols.entrySet()) {
+            if (i > 0) {
+                cl.append(", ");
+            }
+            cl.append("`").append(e.getKey()).append("` ").append(mapType(e.getValue()));
+            i++;
+        }
+        String sql =
+                String.format(
+                        "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))", table, cl, pk);
+        try (Connection c = DriverManager.getConnection(jdbcUrl, user, pass);
+                Statement s = c.createStatement()) {
+            s.executeUpdate(sql);
+            LOG.info("Sink table '{}' ready", table);
+        } catch (SQLException e) {
+            LOG.warn("Sink table create error (may already exist): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 将 CDC / Debezium 报告的类型字符串映射为 MySQL 列类型。 例如 "TEXT" → "VARCHAR(1024)"，"BOOLEAN" → "TINYINT(1)"。
+     * 带精度的类型（如 "DECIMAL(10,2)"）会保留原始精度。
+     */
+    public static String mapType(String cdcType) {
+        String upper = cdcType.toUpperCase();
+        if (upper.contains("BOOLEAN") || upper.contains("BOOL")) {
+            return "TINYINT(1)";
+        }
+        if (upper.contains("BIGINT")) {
+            return "BIGINT";
+        }
+        if (upper.contains("INT")) {
+            return "INT";
+        }
+        if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
+            return cdcType;
+        }
+        if (upper.contains("TEXT")) {
+            return "VARCHAR(1024)";
+        }
+        if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
+            return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
+        }
+        if (upper.contains("TIMESTAMP")) {
+            return "TIMESTAMP(6)";
+        }
+        if (upper.contains("DATETIME")) {
+            return "DATETIME(6)";
+        }
+        if (upper.contains("DATE")) {
+            return "DATE";
+        }
+        if (upper.contains("TIME")) {
+            return "TIME";
+        }
+        if (upper.contains("DOUBLE")) {
+            return "DOUBLE";
+        }
+        if (upper.contains("FLOAT")) {
+            return "FLOAT";
+        }
+        if (upper.contains("BLOB") || upper.contains("BINARY")) {
+            return "BLOB";
+        }
+        LOG.warn("Unknown CDC type '{}', mapping to VARCHAR(1024)", cdcType);
+        return "VARCHAR(1024)";
     }
 }
