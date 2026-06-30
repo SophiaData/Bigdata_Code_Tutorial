@@ -1,0 +1,132 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.sophiadata.flink.paimon.mongo;
+
+import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.util.Collector;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * MongoDB CDC to Apache Paimon sync pipeline using DataStream API.
+ *
+ * <p>Reads change events from MongoDB via CDC connector and produces {@link Document} streams that
+ * can be consumed by downstream Paimon sinks.
+ *
+ * <p>Usage:
+ *
+ * <pre>
+ *   flink run -c io.sophiadata.flink.paimon.mongo.MongoToPaimonPipeline \
+ *     flink-paimon-demo-1.0.0.jar \
+ *     --mongo.host localhost --mongo.port 27017 --mongo.database source_db \
+ *     --mongo.username root --mongo.password root
+ * </pre>
+ */
+public final class MongoToPaimonPipeline {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MongoToPaimonPipeline.class);
+
+    private MongoToPaimonPipeline() {}
+
+    public static void main(String[] args) throws Exception {
+        ParameterTool params = ParameterTool.fromArgs(args);
+
+        String mongoHost = params.get("mongo.host", "localhost");
+        int mongoPort = params.getInt("mongo.port", 27017);
+        String mongoDatabase = params.get("mongo.database");
+        String mongoUsername = params.get("mongo.username", "root");
+        String mongoPassword = params.get("mongo.password", "root");
+        String collectionsParam = params.get("mongo.collections", "");
+
+        if (mongoDatabase == null || mongoDatabase.isEmpty()) {
+            throw new IllegalArgumentException("--mongo.database is required");
+        }
+
+        String[] collections;
+        if (collectionsParam.isEmpty()) {
+            collections =
+                    listCollections(
+                            mongoHost, mongoPort, mongoDatabase, mongoUsername, mongoPassword);
+        } else {
+            collections = collectionsParam.split(",");
+        }
+
+        LOG.info(
+                "Syncing {} collections from {}: {}",
+                collections.length,
+                mongoDatabase,
+                String.join(", ", collections));
+
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
+        for (String collection : collections) {
+            String trimmed = collection.trim();
+            DataStream<Document> stream =
+                    env.addSource(
+                                    MongoDBSource.<Document>builder()
+                                            .scheme("mongodb")
+                                            .hosts(mongoHost + ":" + mongoPort)
+                                            .username(mongoUsername)
+                                            .password(mongoPassword)
+                                            .databaseList(mongoDatabase)
+                                            .collectionList(trimmed)
+                                            .deserializer(new MongoDBDebeziumDeserializer())
+                                            .build(),
+                                    "mongo-" + trimmed)
+                            .uid("mongo-" + trimmed);
+
+            stream.process(
+                            new ProcessFunction<Document, Document>() {
+                                @Override
+                                public void processElement(
+                                        Document doc, Context ctx, Collector<Document> out) {
+                                    out.collect(doc);
+                                }
+                            })
+                    .name("process-" + trimmed)
+                    .uid("process-" + trimmed);
+        }
+
+        env.execute("MongoDB to Paimon Sync - " + mongoDatabase);
+    }
+
+    private static String[] listCollections(
+            String host, int port, String database, String username, String password) {
+        String connectionString =
+                String.format("mongodb://%s:%s@%s:%d/%s", username, password, host, port, database);
+        try (MongoClient client = MongoClients.create(connectionString)) {
+            MongoDatabase db = client.getDatabase(database);
+            List<String> names = db.listCollectionNames().into(new ArrayList<>());
+            return names.toArray(new String[0]);
+        }
+    }
+}
