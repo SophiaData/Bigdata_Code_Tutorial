@@ -68,5 +68,13 @@
         <exclude name="LinguisticNaming"/>
         <exclude name="UselessParentheses"/>
         <exclude name="UnnecessaryFullyQualifiedName"/>
+
+        <!-- ====== Flink 特定误报排除 ====== -->
+
+        <!-- StreamExecutionEnvironment 由 Flink 运行时管理，无需手动关闭 -->
+        <exclude name="CloseResource"/>
+
+        <!-- SLF4J 参数化日志不需要 if(log.isXxxEnabled()) 守卫 -->
+        <exclude name="GuardLogStatement"/>
     </rule>
 </ruleset>
