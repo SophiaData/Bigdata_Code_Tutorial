@@ -54,7 +54,7 @@ public class AppCommon {
         String isnew;
 
         Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup isSkewRandom =
+        RandomOptionGroup<Boolean> isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
         // 设备唯一标识
         // 添加倾斜开关
