@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -68,8 +69,9 @@ class MysqlUtilTest {
 
         // Two TIMESTAMP columns each get the 1970 default; BIGINT must not.
         int timestampDefaultOccurrences = countOccurrences(sql, "1970-01-01 09:00:00");
-        assertTrue(
-                timestampDefaultOccurrences == 2,
+        assertEquals(
+                2,
+                timestampDefaultOccurrences,
                 "expected exactly two 1970 defaults, got "
                         + timestampDefaultOccurrences
                         + ": "
