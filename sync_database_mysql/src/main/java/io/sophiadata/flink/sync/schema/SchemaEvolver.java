@@ -258,6 +258,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         return null;
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private Void onAlterTableComment(AlterTableCommentEvent event) {
         return null;
     }

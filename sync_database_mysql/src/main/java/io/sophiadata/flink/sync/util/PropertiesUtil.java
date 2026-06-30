@@ -28,7 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /** (@SophiaData) (@date 2023/7/20 09:52). */
-public class PropertiesUtil {
+public final class PropertiesUtil {
+
+    private PropertiesUtil() {}
+
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesUtil.class);
 
     public static Properties load(String content) {

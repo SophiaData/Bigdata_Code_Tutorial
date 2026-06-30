@@ -25,7 +25,9 @@ import java.util.HashSet;
 import java.util.Random;
 
 /** (@sophiadata) (@date 2023/8/2 11:18). */
-public class RandomNumString {
+public final class RandomNumString {
+
+    private RandomNumString() {}
 
     public static String getRandNumString(
             int fromNum, int toNum, int count, String delimiter, boolean canRepeat) {

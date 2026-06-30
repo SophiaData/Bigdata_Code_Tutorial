@@ -63,6 +63,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  * SELECT * FROM mysql_catalog.source_db.users;
  * </pre>
  */
+@SuppressWarnings("PMD.UseUtilityClass")
 public class MySqlToPaimonSqlPipeline {
 
     public static void main(String[] args) throws Exception {

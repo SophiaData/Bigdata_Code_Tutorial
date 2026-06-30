@@ -69,9 +69,11 @@ jobs:
         run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
         continue-on-error: false
 
+      - name: Install local modules for PMD dependency resolution
+        run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
+
       - name: Run PMD static analysis
-        run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
-        continue-on-error: true
+        run: ./mvnw -pl ${{ matrix.module }} pmd:check
 
       - name: Upload PMD report on warnings
         if: always()

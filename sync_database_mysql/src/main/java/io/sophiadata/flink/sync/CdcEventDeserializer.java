@@ -52,6 +52,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
 
     @Override
+    @SuppressWarnings("PMD.ImplicitSwitchFallThrough")
     public void deserialize(
             org.apache.kafka.connect.source.SourceRecord record, Collector<Event> out) {
         if (record == null) {
@@ -86,6 +87,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         switch (op) {
             case "c":
             case "r":
+                // fall through — both map to insertEvent
                 out.collect(DataChangeEvent.insertEvent(tid, GenericRecordData.of(afterVals)));
                 break;
             case "u":
@@ -107,6 +109,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     }
 
     /** 从 Kafka Connect Struct 中提取所有字段值为 Object 数组。 */
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     static Object[] extractValues(org.apache.kafka.connect.data.Struct row) {
         if (row == null) {
             return null;

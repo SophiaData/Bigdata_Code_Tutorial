@@ -238,6 +238,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         }
     }
 
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     static class Record {
         final String tableName;
         final OperationType op;

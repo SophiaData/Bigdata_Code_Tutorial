@@ -33,7 +33,9 @@ import java.util.Map;
 import java.util.Properties;
 
 /** (@SophiaData) (@date 2023/7/20 09:45). */
-public class NacosUtil {
+public final class NacosUtil {
+
+    private NacosUtil() {}
 
     private static final Logger LOG = LoggerFactory.getLogger(NacosUtil.class);
     public static final String DEFAULT_GROUP = "DEFAULT_GROUP";

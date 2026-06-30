@@ -27,6 +27,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import io.sophiadata.flink.function.SplitFunction;
 
 /** (@sophiadata) (@date 2023/9/21 15:57). */
+@SuppressWarnings("PMD.UseUtilityClass")
 public class SQLTest1 {
 
     @SuppressWarnings("deprecation")

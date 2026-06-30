@@ -95,8 +95,12 @@ public class AppAction {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppAction that = (AppAction) o;
         return actionId == that.actionId
                 && itemType == that.itemType

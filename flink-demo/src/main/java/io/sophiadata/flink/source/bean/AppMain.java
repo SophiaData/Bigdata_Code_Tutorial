@@ -122,8 +122,12 @@ public class AppMain {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppMain that = (AppMain) o;
         return Objects.equals(ts, that.ts)
                 && Objects.equals(common, that.common)
