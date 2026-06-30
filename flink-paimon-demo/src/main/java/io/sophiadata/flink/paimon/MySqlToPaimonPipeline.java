@@ -42,6 +42,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  *     --paimon.path /path/to/paimon/catalog
  * </pre>
  */
+@SuppressWarnings("PMD.UseUtilityClass")
 public class MySqlToPaimonPipeline {
 
     public static void main(String[] args) throws Exception {

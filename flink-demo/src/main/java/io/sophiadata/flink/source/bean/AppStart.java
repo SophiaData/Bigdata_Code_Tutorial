@@ -68,8 +68,12 @@ public class AppStart {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppStart that = (AppStart) o;
         return Objects.equals(entry, that.entry)
                 && Objects.equals(openAdId, that.openAdId)

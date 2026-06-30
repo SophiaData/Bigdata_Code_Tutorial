@@ -96,8 +96,12 @@ public class AppDisplay {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppDisplay that = (AppDisplay) o;
         return Objects.equals(itemType, that.itemType)
                 && Objects.equals(item, that.item)

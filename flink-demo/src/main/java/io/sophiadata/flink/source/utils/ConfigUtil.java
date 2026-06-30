@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /** (@sophiadata) (@date 2023/8/2 11:14). */
-public class ConfigUtil {
+public final class ConfigUtil {
+
+    private ConfigUtil() {}
 
     public static String loadJsonFile(String fileName) {
         String filePath = getJarDir() + "/" + fileName;

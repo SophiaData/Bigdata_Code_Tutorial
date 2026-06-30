@@ -21,7 +21,10 @@ package io.sophiadata.flink.source.utils;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** (@sophiadata) (@date 2023/8/2 11:17). */
-public class RandomNum {
+public final class RandomNum {
+
+    private RandomNum() {}
+
     public static int getRandInt(int fromNum, int toNum) {
         return fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1);
     }

@@ -27,7 +27,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /** (@sophiadata) (@date 2023/8/2 11:15). */
-public class ParamUtil {
+public final class ParamUtil {
+
+    private ParamUtil() {}
 
     private static final Logger log = LoggerFactory.getLogger(ParamUtil.class);
 
@@ -39,7 +41,7 @@ public class ParamUtil {
             }
             return rateNum;
         } catch (Exception e) {
-            throw new RuntimeException("输入的比率必须为0 - 100 的数字");
+            throw new RuntimeException("输入的比率必须为0 - 100 的数字", e);
         }
     }
 
@@ -56,7 +58,7 @@ public class ParamUtil {
             log.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
             return combined;
         } catch (Exception e) {
-            throw new RuntimeException("必须为日期型格式 例如： 2020-02-02");
+            throw new RuntimeException("必须为日期型格式 例如： 2020-02-02", e);
         }
     }
 
@@ -83,7 +85,7 @@ public class ParamUtil {
             }
             return rateNumArr;
         } catch (Exception e) {
-            throw new RuntimeException("请按比例填写 如   75:10:15");
+            throw new RuntimeException("请按比例填写 如   75:10:15", e);
         }
     }
 
@@ -105,7 +107,7 @@ public class ParamUtil {
             Integer rateNum = Integer.valueOf(count.trim());
             return rateNum;
         } catch (Exception e) {
-            throw new RuntimeException("输入的数据必须为数字");
+            throw new RuntimeException("输入的数据必须为数字", e);
         }
     }
 

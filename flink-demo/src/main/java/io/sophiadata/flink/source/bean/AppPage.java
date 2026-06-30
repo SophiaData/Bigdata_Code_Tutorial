@@ -165,8 +165,12 @@ public class AppPage {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppPage that = (AppPage) o;
         return lastPageId == that.lastPageId
                 && pageId == that.pageId

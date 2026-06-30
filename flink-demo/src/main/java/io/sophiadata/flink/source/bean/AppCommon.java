@@ -123,8 +123,12 @@ public class AppCommon {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppCommon that = (AppCommon) o;
         return Objects.equals(mid, that.mid)
                 && Objects.equals(uid, that.uid)
@@ -155,7 +159,6 @@ public class AppCommon {
         String ar; // (String) 区域
         String md; // (String) 手机型号
         String ba; // (String) 手机品牌
-        String isnew;
 
         Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
         RandomOptionGroup isSkewRandom =

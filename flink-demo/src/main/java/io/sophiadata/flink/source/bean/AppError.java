@@ -52,8 +52,12 @@ public class AppError {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppError that = (AppError) o;
         return Objects.equals(errorCode, that.errorCode) && Objects.equals(msg, that.msg);
     }

@@ -33,6 +33,7 @@ import java.time.Duration;
 
 /** (@SophiaData) (@date 2022/10/27 13:26). */
 public abstract class BaseCode {
+    @SuppressWarnings("PMD.UnusedPrivateField")
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
     public void init(
