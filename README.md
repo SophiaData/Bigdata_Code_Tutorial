@@ -153,6 +153,8 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - **自动化测试**：DDL 变更和性能测试
 - **实时监控**：Flink Web UI 可视化监控
 
-Blog: https://sophiadata.github.io/Bigdata_Blog_Website/
+## 📚 大数据资料合集
+
+扫码订阅 ima 知识库，获取大数据学习资料：
 
 ![大数据资料合集](docs/images/bigdata-qrcode.png)
