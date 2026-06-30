@@ -16,55 +16,34 @@
  * limitations under the License.
  */
 
-package io.sophiadata.flink.paimon;
+package io.sophiadata.flink.paimon.mysql;
 
+import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * MySQL to Paimon sync using pure SQL (Flink SQL Client compatible).
+ * MySQL to Paimon whole-database sync example using Flink CDC Pipeline API.
  *
- * <p>This example shows the SQL-only approach, which can be executed directly in Flink SQL Client
- * without writing Java code.
+ * <p>This example demonstrates how to sync all tables from a MySQL database to Apache Paimon data
+ * lake.
  *
- * <p>Example SQL statements:
+ * <p>Usage:
  *
  * <pre>
- * -- 1. Create MySQL catalog
- * CREATE CATALOG mysql_catalog WITH (
- *   'type' = 'mysql-cdc',
- *   'hostname' = 'localhost',
- *   'port' = '3306',
- *   'username' = 'root',
- *   'password' = 'root',
- *   'database-name' = 'source_db'
- * );
- *
- * -- 2. Create Paimon catalog
- * CREATE CATALOG paimon_catalog WITH (
- *   'type' = 'paimon',
- *   'warehouse' = 'file:///tmp/paimon/catalog'
- * );
- *
- * -- 3. Create Paimon table
- * CREATE TABLE paimon_catalog.target_db.users (
- *   id BIGINT,
- *   name STRING,
- *   age INT,
- *   PRIMARY KEY (id) NOT ENFORCED
- * ) WITH (
- *   'connector' = 'paimon',
- *   'path' = 'file:///tmp/paimon/catalog/target_db/users'
- * );
- *
- * -- 4. Sync data
- * INSERT INTO paimon_catalog.target_db.users
- * SELECT * FROM mysql_catalog.source_db.users;
+ *   flink run -c io.sophiadata.flink.paimon.MySqlToPaimonPipeline \
+ *     flink-paimon-demo-1.0.0.jar \
+ *     --mysql.host localhost \
+ *     --mysql.port 3306 \
+ *     --mysql.database source_db \
+ *     --mysql.username root \
+ *     --mysql.password root \
+ *     --paimon.path /path/to/paimon/catalog
  * </pre>
  */
 @SuppressWarnings("PMD.UseUtilityClass")
-public class MySqlToPaimonSqlPipeline {
+public class MySqlToPaimonPipeline {
 
     public static void main(String[] args) throws Exception {
         ParameterTool params = ParameterTool.fromArgs(args);
@@ -77,9 +56,12 @@ public class MySqlToPaimonSqlPipeline {
         String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
+        env.setParallelism(1);
+
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
-        // Create MySQL CDC catalog
+        // 1. Create MySQL CDC catalog
         tableEnv.executeSql(
                 "CREATE CATALOG mysql_catalog WITH ("
                         + "  'type' = 'mysql-cdc',"
@@ -100,7 +82,7 @@ public class MySqlToPaimonSqlPipeline {
                         + "'"
                         + ")");
 
-        // Create Paimon catalog
+        // 2. Create Paimon catalog
         tableEnv.executeSql(
                 "CREATE CATALOG paimon_catalog WITH ("
                         + "  'type' = 'paimon',"
@@ -109,35 +91,47 @@ public class MySqlToPaimonSqlPipeline {
                         + "'"
                         + ")");
 
-        // Example: Sync users table
-        // Create target table in Paimon
-        tableEnv.executeSql(
-                "CREATE TABLE paimon_catalog."
-                        + mysqlDatabase
-                        + ".users ("
-                        + "  id BIGINT,"
-                        + "  name STRING,"
-                        + "  age INT,"
-                        + "  create_time TIMESTAMP(3),"
-                        + "  PRIMARY KEY (id) NOT ENFORCED"
-                        + ") WITH ("
-                        + "  'connector' = 'paimon',"
-                        + "  'path' = '"
-                        + paimonPath
-                        + "/"
-                        + mysqlDatabase
-                        + "/users'"
-                        + ")");
+        // 3. Create target database in Paimon
+        tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS paimon_catalog." + mysqlDatabase);
 
-        // Sync data from MySQL to Paimon
-        tableEnv.executeSql(
-                "INSERT INTO paimon_catalog."
-                        + mysqlDatabase
-                        + ".users"
-                        + " SELECT * FROM mysql_catalog."
-                        + mysqlDatabase
-                        + ".users");
+        // 4. Sync each table
+        String[] tables = {"users", "orders", "products"};
+        for (String table : tables) {
+            // Create target table schema in Paimon
+            tableEnv.executeSql(
+                    "CREATE TABLE IF NOT EXISTS paimon_catalog."
+                            + mysqlDatabase
+                            + "."
+                            + table
+                            + " ("
+                            + "  id BIGINT,"
+                            + "  name STRING,"
+                            + "  age INT,"
+                            + "  create_time TIMESTAMP(3),"
+                            + "  PRIMARY KEY (id) NOT ENFORCED"
+                            + ") WITH ("
+                            + "  'connector' = 'paimon',"
+                            + "  'path' = '"
+                            + paimonPath
+                            + "/"
+                            + mysqlDatabase
+                            + "/"
+                            + table
+                            + "'"
+                            + ")");
 
-        env.execute("MySQL to Paimon SQL Sync");
+            // Sync data from MySQL to Paimon
+            tableEnv.executeSql(
+                    "INSERT INTO paimon_catalog."
+                            + mysqlDatabase
+                            + "."
+                            + table
+                            + " SELECT * FROM mysql_catalog."
+                            + mysqlDatabase
+                            + "."
+                            + table);
+        }
+
+        env.execute("MySQL to Paimon Sync - " + mysqlDatabase);
     }
 }
