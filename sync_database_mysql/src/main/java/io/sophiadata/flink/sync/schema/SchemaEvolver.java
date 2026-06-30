@@ -74,6 +74,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         private static final long serialVersionUID = 1L;
 
         @Override
+        @SuppressWarnings("PMD.NullableProblems")
         public Thread newThread(Runnable r) {
             Thread t = new Thread(r, "schema-alter");
             t.setDaemon(true);
@@ -265,7 +266,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     private String fullTableName(TableId tid) {
         String schema = tid.getSchemaName();
         String table = tid.getTableName();
-        return schema.isEmpty() ? table : schema + "." + table;
+        return schema == null || schema.isEmpty() ? table : schema + "." + table;
     }
 
     private void alterAddColumn(String fullTable, String columnName, String columnType) {

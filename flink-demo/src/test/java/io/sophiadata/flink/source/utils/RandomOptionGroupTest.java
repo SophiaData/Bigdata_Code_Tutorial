@@ -103,8 +103,12 @@ class RandomOptionGroupTest {
 
     @RepeatedTest(10)
     void getValueReturnsOneOfTheOptions() {
+        @SuppressWarnings("unchecked")
         RanOpt<String>[] opts =
-                new RanOpt[] {new RanOpt<>("x", 1), new RanOpt<>("y", 1), new RanOpt<>("z", 1)};
+                (RanOpt<String>[])
+                        new RanOpt<?>[] {
+                            new RanOpt<>("x", 1), new RanOpt<>("y", 1), new RanOpt<>("z", 1)
+                        };
         RandomOptionGroup<String> group = new RandomOptionGroup<>(opts);
         Set<String> seen = new HashSet<>();
         for (int i = 0; i < 100; i++) {

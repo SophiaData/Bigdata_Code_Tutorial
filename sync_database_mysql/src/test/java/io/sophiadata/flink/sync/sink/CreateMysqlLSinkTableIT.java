@@ -77,9 +77,7 @@ public class CreateMysqlLSinkTableIT {
             }
             try {
                 runAgainst(
-                        url = container.getJdbcUrl(),
-                        user = container.getUsername(),
-                        pw = container.getPassword());
+                        container.getJdbcUrl(), container.getUsername(), container.getPassword());
             } finally {
                 container.stop();
             }
