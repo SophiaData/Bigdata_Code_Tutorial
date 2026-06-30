@@ -56,7 +56,7 @@ public class AppDisplay {
 
         List<AppDisplay> displayList = new ArrayList<>();
         Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup<Boolean> isSkewRandom =
+        RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
 
         // 促销活动：首页、发现页、分类页

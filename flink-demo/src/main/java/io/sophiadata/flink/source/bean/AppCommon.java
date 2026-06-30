@@ -54,7 +54,7 @@ public class AppCommon {
         String isnew;
 
         Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup<Boolean> isSkewRandom =
+        RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
         // 设备唯一标识
         // 添加倾斜开关
@@ -145,9 +145,7 @@ public class AppCommon {
 
         uid = RandomNum.getRandInt(1, AppConfig.MAX_UID) + "";
 
-        isnew = RandomNum.getRandInt(0, 1) + "";
-
-        AppCommon appBase = new AppCommon(mid, uid, vc, ch, os, ar, md, ba, isnew);
+        AppCommon appBase = new AppCommon(mid, uid, vc, ch, os, ar, md, ba);
         return appBase;
     }
 }
