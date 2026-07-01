@@ -26,6 +26,8 @@ import org.apache.flink.types.Row;
 /** (@sophiadata) (@date 2023/9/22 09:07). */
 @FunctionHint(output = @DataTypeHint("ROW<word STRING>"))
 public class SplitFunction extends TableFunction<Row> {
+    private static final long serialVersionUID = 1L;
+
     public void eval(String str, String separator) {
         if (str != null) {
             for (String s : str.split(separator)) {

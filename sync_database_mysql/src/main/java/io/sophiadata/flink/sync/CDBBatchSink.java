@@ -215,6 +215,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     }
 
     @Override
+    @SuppressWarnings("PMD.UseTryWithResources")
     public void close() {
         try {
             if (batch != null && !batch.isEmpty()) {
