@@ -203,13 +203,20 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                        <!-- Pipeline CDC connector's DebeziumDeserializationSchema uses
-                                             shaded SourceRecord and would override the non-shaded version
-                                             in flink-connector-debezium when this uber jar is used as a
-                                             library dependency (e.g. from e2e-tests). -->
-                                        <exclude>org/apache/flink/cdc/debezium/DebeziumDeserializationSchema.class</exclude>
-                                        <exclude>org/apache/flink/cdc/debezium/StringDebeziumDeserializationSchema.class</exclude>
-                                        <exclude>org/apache/flink/cdc/debezium/JsonDebeziumDeserializationSchema.class</exclude>
+                                        <!-- Exclude ALL CDC connector internals from the uber jar. These
+                                             classes (DebeziumDeserializationSchema, MySqlRecordEmitter,
+                                             JdbcConnectionPools, shaded Kafka Connect types, etc.) come
+                                             from multiple CDC artifacts that may have inconsistent
+                                             versions. When this uber jar is consumed as a library
+                                             (e.g. by e2e-tests), the bundled copies can override the
+                                             classes that downstream modules already pull in transitively,
+                                             causing AbstractMethodError / NoSuchMethodError at runtime.
+
+                                             FlinkSqlWDS (in sync_database_mysql) declares its own
+                                             flink-connector-mysql-cdc dependency directly, so all CDC
+                                             classes needed at runtime come from there. -->
+                                        <exclude>org/apache/flink/cdc/**</exclude>
+                                        <exclude>io/debezium/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
