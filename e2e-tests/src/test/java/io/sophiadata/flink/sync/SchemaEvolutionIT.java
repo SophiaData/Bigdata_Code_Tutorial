@@ -272,6 +272,7 @@ public class SchemaEvolutionIT {
         args.put("sinkUrl", sinkUrl);
         args.put("sinkUsername", "root");
         args.put("sinkPassword", "root");
+        args.put("serverTimeZone", "UTC");
         args.put("setParallelism", "1");
         args.put("cdcSourceName", "mysql-cdc-sit");
 
