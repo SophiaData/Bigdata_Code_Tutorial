@@ -162,6 +162,19 @@ public class SchemaEvolutionIT {
                             + "(1, 'laptop', 5999.00, NOW()),"
                             + "(2, 'phone', 2999.00, NOW())");
         }
+
+        // Pre-create sink table to avoid race condition
+        try (Connection c = getSinkConnection();
+                Statement st = c.createStatement()) {
+            st.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS sink_t_order ("
+                            + "  id BIGINT NOT NULL, "
+                            + "  product VARCHAR(255), "
+                            + "  amount DECIMAL(10,2), "
+                            + "  create_time TIMESTAMP(0) NOT NULL DEFAULT '1970-01-01 09:00:00', "
+                            + "  PRIMARY KEY (id))");
+            LOG.info("Sink table sink_t_order pre-created");
+        }
     }
 
     @After
