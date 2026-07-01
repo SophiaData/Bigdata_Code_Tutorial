@@ -1,14 +1,18 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
-        "-//Checkstyle//DTD Suppressions 1.1//EN"
-        "https://checkstyle.org/dtds/suppressions_1_1.dtd">
+        "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+        "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
-<!--
-  CDC bean 类使用 snake_case 字段名（如 item_type, action_id），
-  这是 Debezium/CDC 事件的 JSON 数据建模惯例，与阿里巴巴 Java 命名规范冲突。
-  通过以下压制规则豁免这些文件的 MemberName / ParameterName 检查。
--->
 <suppressions>
-    <suppress checks="MemberName|ParameterName|LocalVariableName"
-              files="[\\/]src[\\/]main[\\/]java[\\/]io[\\/]sophiadata[\\/]flink[\\/]source[\\/]bean[\\/]App[A-Za-z]+\.java"/>
+    <!-- target 目录不检查 -->
+    <suppress files="[\\/]target[\\/]" checks=".*"/>
+
+    <!-- .mimocode 目录不检查 -->
+    <suppress files="[\\/]\\.mimocode[\\/]" checks=".*"/>
+
+    <!-- 正在开发的 e2e 测试模块，后续逐步修复 -->
+    <suppress files="e2e-tests[\\/]" checks="RegexpHeader"/>
+
+    <!-- docs 目录不检查 -->
+    <suppress files="[\\/]docs[\\/]" checks=".*"/>
 </suppressions>

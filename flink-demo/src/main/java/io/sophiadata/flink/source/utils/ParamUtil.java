@@ -31,7 +31,7 @@ public final class ParamUtil {
 
     private ParamUtil() {}
 
-    private static final Logger log = LoggerFactory.getLogger(ParamUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ParamUtil.class);
 
     public static Integer checkRatioNum(String rate) {
         try {
@@ -55,7 +55,7 @@ public final class ParamUtil {
         try {
             LocalDate date = LocalDate.parse(dateString, dateFormatter);
             LocalDateTime combined = LocalDateTime.of(date, LocalTime.now());
-            log.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
+            LOG.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
             return combined;
         } catch (Exception e) {
             throw new RuntimeException("必须为日期型格式 例如： 2020-02-02", e);

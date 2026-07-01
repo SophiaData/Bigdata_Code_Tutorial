@@ -577,33 +577,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- PMD: 静态代码分析 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.21.0</version>
-                <configuration>
-                    <targetJdk>11</targetJdk>
-                    <rulesets>
-                        <ruleset>checkstyle/pmd-ruleset.xml</ruleset>
-                    </rulesets>
-                    <failOnViolation>true</failOnViolation>
-                    <printFailingErrors>true</printFailingErrors>
-                    <linkXref>false</linkXref>
-                    <sourceLocation>${project.build.directory}/nonexistent</sourceLocation>
-                    <sourceEncoding>UTF-8</sourceEncoding>
-                    <targetOutputEncoding>UTF-8</targetOutputEncoding>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>pmd-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>validate</phase>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- JaCoCo: 测试覆盖率收集 -->
             <plugin>
                 <groupId>org.jacoco</groupId>

@@ -46,7 +46,7 @@ import java.util.Map;
 @SuppressWarnings("deprecation")
 public class MockSourceFunction implements ParallelSourceFunction<String> {
 
-    private static final Logger log = LoggerFactory.getLogger(MockSourceFunction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MockSourceFunction.class);
     private volatile Long ts;
     private volatile int mockCount;
 
@@ -122,7 +122,7 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
             PageId pageId = EnumUtils.getEnum(PageId.class, path);
             AppPage page = AppPage.build(pageId, lastPageId, pageDuringTime);
             if (pageId == null) {
-                log.warn("Unknown page id: {}", path);
+                LOG.warn("Unknown page id: {}", path);
             }
             pageBuilder.page(page);
             // 置入上一个页面

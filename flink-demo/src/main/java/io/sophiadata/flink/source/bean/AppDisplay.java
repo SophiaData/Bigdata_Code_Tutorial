@@ -142,12 +142,12 @@ public class AppDisplay {
                 || appPage.getPageId() == PageId.discovery
                 || appPage.getPageId() == PageId.category) {
             int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
-            int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
+            int posId = RandomNum.getRandInt(1, MAX_POS_ID);
             for (int i = 1; i <= displayCount; i++) {
                 int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
                 AppDisplay appDisplay =
                         new AppDisplay(
-                                ItemType.activity_id, actId + "", DisplayType.activity, i, pos_id);
+                                ItemType.activity_id, actId + "", DisplayType.activity, i, posId);
                 displayList.add(appDisplay);
             }
         }
@@ -174,7 +174,7 @@ public class AppDisplay {
                     skuId = RandomNum.getRandInt(1, MAX_SKU_ID);
                 }
 
-                int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
+                int posId = RandomNum.getRandInt(1, MAX_POS_ID);
                 // 商品推广：查询结果：算法推荐 = 30：60：10
                 RandomOptionGroup<DisplayType> dispTypeGroup =
                         RandomOptionGroup.<DisplayType>builder()
@@ -185,7 +185,7 @@ public class AppDisplay {
                 DisplayType displayType = dispTypeGroup.getValue();
 
                 AppDisplay appDisplay =
-                        new AppDisplay(ItemType.sku_id, skuId + "", displayType, i, pos_id);
+                        new AppDisplay(ItemType.sku_id, skuId + "", displayType, i, posId);
                 displayList.add(appDisplay);
             }
         }
