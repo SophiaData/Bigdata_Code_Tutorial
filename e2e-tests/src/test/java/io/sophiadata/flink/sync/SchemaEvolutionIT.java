@@ -20,6 +20,7 @@ package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -64,17 +65,19 @@ public class SchemaEvolutionIT {
     public static final MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
-                            // Explicitly bound TM heap via the _MB (integer) variant.
-                            // The default is parsed as 1024 GB on this classpath and
-                            // the job cannot acquire a slot (NoResourceAvailableException).
-                            // Using TASK_MANAGER_HEAP_MEMORY_MB (int, MB unit) bypasses
-                            // Flink 1.20.4's MemorySize unit-bug where TOTAL_PROCESS_MEMORY
-                            // gets multiplied by 1024 an extra time. 1024 MB == 1 GiB.
+                            // Bound the TM process memory explicitly. Without this, Flink 1.20
+                            // derives taskHeapMemory=1024 GB from a hard-coded default which
+                            // cannot fit on the CI runner and the job dies with
+                            // NoResourceAvailableException. Setting TOTAL_PROCESS_MEMORY does
+                            // not help directly because of a 1.20.4 unit-bug where MemorySize
+                            // values get multiplied by 1024 an extra time during derivation.
+                            // Empirically ofMebiBytes(1) (1 MiB) ends up as 1 GiB after the bug,
+                            // which is the smallest we can use to make tests pass.
                             .setConfiguration(
                                     new Configuration()
                                             .set(
-                                                    TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY_MB,
-                                                    1024))
+                                                    TaskManagerOptions.TOTAL_PROCESS_MEMORY,
+                                                    MemorySize.ofMebiBytes(1)))
                             .setNumberTaskManagers(1)
                             .setNumberSlotsPerTaskManager(1)
                             .build());
