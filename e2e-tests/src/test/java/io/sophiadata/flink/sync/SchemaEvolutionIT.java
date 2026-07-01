@@ -254,7 +254,7 @@ public class SchemaEvolutionIT {
 
     private void startFlinkPipeline() {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setRuntimeMode(RuntimeExecutionMode.BATCH);
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
         env.enableCheckpointing(2000);
         tEnv = StreamTableEnvironment.create(env);
