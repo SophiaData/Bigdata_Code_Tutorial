@@ -66,17 +66,17 @@ class CdcEventDeserializerTest {
     @Test
     void shouldExtractColumnsFromCreateTableEvent() {
         // given: a CDC CreateTableEvent with known columns
-        Schema schema = Schema.newBuilder()
+        final Schema schema = Schema.newBuilder()
                 .column("id", io.sophiadata.flink.cdc.common.schema.Schema.ColumnDataType.BIGINT)
                 .column("name", io.sophiadata.flink.cdc.common.schema.Schema.ColumnDataType.STRING)
                 .primaryKey("id")
                 .build();
-        CreateTableEvent event = new CreateTableEvent(
+        final CreateTableEvent event = new CreateTableEvent(
                 io.sophiadata.flink.cdc.common.event.TableId.tableId("mydb", "t_user"),
                 schema);
 
         // when: deserialize extracts column metadata
-        var columns = extractColumnNames(event);
+        final var columns = extractColumnNames(event);
 
         // then: primary key first, then others
         assertThat(columns).containsExactly("id", "name");
@@ -96,7 +96,7 @@ class MysqlUtilTest {
     @Test
     void shouldConnectWithValidCredentials() {
         // given: use faker to generate a unique suffix for test isolation
-        String testDb = "test_" + faker.number().randomNumber(6, false);
+        final String testDb = "test_" + faker.number().randomNumber(6, false);
 
         // when/then
         assertThatCode(() -> DriverManager.getConnection(
@@ -146,7 +146,7 @@ class CreateMysqlLSinkTableIT {
 
     @Test
     void shouldCreateSinkTable() {
-        String jdbcUrl = MYSQL.getJdbcUrl();
+        final String jdbcUrl = MYSQL.getJdbcUrl();
         // use jdbcUrl to test DDL execution
     }
 }
@@ -165,7 +165,7 @@ class SchemaEvolutionIT {
 
     @Test
     void testSchemaEvolution() {
-        String dbName = new UniqueDatabase(mysql, "schema_test").createNewDatabase();
+        final String dbName = new UniqueDatabase(mysql, "schema_test").createNewDatabase();
         // 所有表都创建在 dbName 下，互不干扰
     }
 }
@@ -195,8 +195,8 @@ class SchemaEvolutionIT {
 @Test
 void testFullCdcPipeline() {
     // 守卫条件：MySQL secrets 未配置则跳过
-    String sourceUrl = System.getProperty("mysql.it.source.url");
-    String sinkUrl = System.getProperty("mysql.it.sink.url");
+    final String sourceUrl = System.getProperty("mysql.it.source.url");
+    final String sinkUrl = System.getProperty("mysql.it.sink.url");
     Assume.assumeTrue(
             sourceUrl != null && sinkUrl != null
                     && !sourceUrl.isEmpty()
@@ -245,9 +245,9 @@ src/test/resources/
 ```java
 @Test
 void shouldLoadConfigFromResources() {
-    URL url = getClass().getClassLoader().getResource("test-config.properties");
+    final URL url = getClass().getClassLoader().getResource("test-config.properties");
     assertThat(url).isNotNull();
-    Properties props = new Properties();
+    final Properties props = new Properties();
     props.load(url.openStream());
     assertThat(props.getProperty("flink.checkpoint.interval")).isEqualTo("60000");
 }

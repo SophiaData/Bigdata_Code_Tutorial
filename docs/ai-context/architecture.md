@@ -96,7 +96,7 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
        this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
    }
 
-   private void readObject(ObjectInputStream in) throws ... {
+    private void readObject(final ObjectInputStream in) throws ... {
        in.defaultReadObject();
        this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
    }
