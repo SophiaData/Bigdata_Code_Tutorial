@@ -65,18 +65,14 @@ public class SchemaEvolutionIT {
     public static final MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
-                            // Bound the TM process memory explicitly. Without this, Flink 1.20
-                            // derives taskHeapMemory=1024 GB from a hard-coded default which
-                            // cannot fit on the CI runner and the job dies with
-                            // NoResourceAvailableException. Setting TOTAL_PROCESS_MEMORY does
-                            // not help directly because of a 1.20.4 unit-bug where MemorySize
-                            // values get multiplied by 1024 an extra time during derivation.
-                            // Empirically ofMebiBytes(1) (1 MiB) ends up as 1 GiB after the bug,
-                            // which is the smallest we can use to make tests pass.
+                            // Flink 1.20.4 derives ResourceProfile.taskHeapMemory=1024 GB
+                            // from a hard-coded default; without overriding here, the IT
+                            // dies with NoResourceAvailableException. Empirical workaround
+                            // for the 1.20.4 unit-bug: TASK_HEAP_MEMORY=1 MiB lands at 1 GiB.
                             .setConfiguration(
                                     new Configuration()
                                             .set(
-                                                    TaskManagerOptions.TOTAL_PROCESS_MEMORY,
+                                                    TaskManagerOptions.TASK_HEAP_MEMORY,
                                                     MemorySize.ofMebiBytes(1)))
                             .setNumberTaskManagers(1)
                             .setNumberSlotsPerTaskManager(1)
