@@ -19,9 +19,6 @@
 package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.MemorySize;
-import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -65,25 +62,6 @@ public class SchemaEvolutionIT {
     public static final MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
-                            // Flink 1.20.4 hard-codes ResourceProfile.taskOffHeapMemory=1024 GB
-                            // (and a similar default for taskHeapMemory); both must be
-                            // pinned explicitly or the IT dies with NoResourceAvailableException
-                            // on the 16 GB CI runner. Heap: 1 GiB. Off-heap: 1 MiB (small,
-                            // direct memory is allocated lazily by Netty/etc.).
-                            .setConfiguration(
-                                    new Configuration()
-                                            .set(
-                                                    TaskManagerOptions.TASK_HEAP_MEMORY,
-                                                    MemorySize.ofMebiBytes(1024))
-                                            .set(
-                                                    TaskManagerOptions.TASK_OFF_HEAP_MEMORY,
-                                                    MemorySize.ofMebiBytes(1))
-                                            .set(
-                                                    TaskManagerOptions.FRAMEWORK_HEAP_MEMORY,
-                                                    MemorySize.ofMebiBytes(256))
-                                            .set(
-                                                    TaskManagerOptions.FRAMEWORK_OFF_HEAP_MEMORY,
-                                                    MemorySize.ofMebiBytes(128)))
                             .setNumberTaskManagers(1)
                             .setNumberSlotsPerTaskManager(1)
                             .build());
