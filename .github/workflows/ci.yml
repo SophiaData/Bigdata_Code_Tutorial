@@ -62,6 +62,9 @@ jobs:
           restore-keys: |
             m2-${{ runner.os }}-jdk11-
 
+      - name: Install local modules
+        run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+
       - name: Verify spotless format
         run: ./mvnw -pl ${{ matrix.module }} -am spotless:check
 
