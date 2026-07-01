@@ -75,8 +75,8 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
 
         @Override
         @SuppressWarnings("PMD.NullableProblems")
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "schema-alter");
+        public final Thread newThread(final Runnable r) {
+            final Thread t = new Thread(r, "schema-alter");
             t.setDaemon(true);
             return t;
         }
@@ -88,7 +88,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         final String sqlStatement;
         final long checkpointTime;
 
-        AlterRecord(String sqlStatement, long checkpointTime) {
+        AlterRecord(final String sqlStatement, final long checkpointTime) {
             this.sqlStatement = sqlStatement;
             this.checkpointTime = checkpointTime;
         }
@@ -121,7 +121,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     /** Singleton JDBC connection for ALTER operations. Lazily initialized. */
     private transient volatile Connection alterConnection;
 
-    public SchemaEvolver(String sinkUrl, String sinkUser, String sinkPassword) {
+    public SchemaEvolver(final String sinkUrl, final String sinkUser, final String sinkPassword) {
         this.sinkUrl = sinkUrl;
         this.sinkUser = sinkUser;
         this.sinkPassword = sinkPassword;
@@ -129,7 +129,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         this.executedAlters = new HashSet<>();
     }
 
-    private void readObject(java.io.ObjectInputStream in)
+    private void readObject(final java.io.ObjectInputStream in)
             throws java.io.IOException, ClassNotFoundException {
         in.defaultReadObject();
         this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
@@ -141,16 +141,16 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     // ------------------------------------------------------------------------
 
     @Override
-    public void snapshotState(FunctionSnapshotContext snapshotContext) throws Exception {
+    public void snapshotState(final FunctionSnapshotContext snapshotContext) throws Exception {
         alterState.clear();
-        for (String sqlStatement : executedAlters) {
+        for (final String sqlStatement : executedAlters) {
             alterState.add(new AlterRecord(sqlStatement, snapshotContext.getCheckpointTimestamp()));
         }
     }
 
     @Override
-    public void initializeState(FunctionInitializationContext initContext) throws Exception {
-        ListStateDescriptor<AlterRecord> descriptor =
+    public void initializeState(final FunctionInitializationContext initContext) throws Exception {
+        final ListStateDescriptor<AlterRecord> descriptor =
                 new ListStateDescriptor<>(STATE_NAME, TypeInformation.of(new TypeHint<>() {}));
 
         alterState = initContext.getOperatorStateStore().getListState(descriptor);
@@ -159,7 +159,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         if (initContext.isRestored()) {
             executedAlters = new HashSet<>();
             int restoredCount = 0;
-            for (AlterRecord record : alterState.get()) {
+            for (final AlterRecord record : alterState.get()) {
                 executedAlters.add(record.sqlStatement);
                 restoredCount++;
             }
@@ -170,14 +170,14 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         }
     }
 
-    public void processEvent(Event event) {
+    public void processEvent(final Event event) {
         if (event instanceof SchemaChangeEvent) {
-            SchemaChangeEvent sce = (SchemaChangeEvent) event;
+            final SchemaChangeEvent sce = (SchemaChangeEvent) event;
             dispatch(sce);
         }
     }
 
-    private <T, E extends Throwable> void dispatch(SchemaChangeEvent event) throws E {
+    private final <T, E extends Throwable> void dispatch(final SchemaChangeEvent event) throws E {
         SchemaChangeEventVisitor.visit(
                 event,
                 this::onAddColumn,
@@ -190,18 +190,18 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
                 this::onAlterTableComment);
     }
 
-    private Void onCreateTable(CreateTableEvent event) {
-        TableId tid = event.tableId();
+    private final Void onCreateTable(final CreateTableEvent event) {
+        final TableId tid = event.tableId();
         LOG.info("CreateTable: {}.{}", tid.getSchemaName(), tid.getTableName());
         return null;
     }
 
-    private Void onAddColumn(AddColumnEvent event) {
-        for (AddColumnEvent.ColumnWithPosition addedColumn : event.getAddedColumns()) {
-            Column column = addedColumn.getAddColumn();
-            String columnName = column.getName();
-            String columnType = column.getType().toString();
-            String fullTable = fullTableName(event.tableId());
+    private final Void onAddColumn(final AddColumnEvent event) {
+        for (final AddColumnEvent.ColumnWithPosition addedColumn : event.getAddedColumns()) {
+            final Column column = addedColumn.getAddColumn();
+            final String columnName = column.getName();
+            final String columnType = column.getType().toString();
+            final String fullTable = fullTableName(event.tableId());
             LOG.info(
                     "AddColumn: {}.{} {} {}",
                     fullTable,
@@ -213,31 +213,31 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         return null;
     }
 
-    private Void onDropColumn(DropColumnEvent event) {
-        for (String droppedColumnName : event.getDroppedColumnNames()) {
-            String fullTable = fullTableName(event.tableId());
+    private final Void onDropColumn(final DropColumnEvent event) {
+        for (final String droppedColumnName : event.getDroppedColumnNames()) {
+            final String fullTable = fullTableName(event.tableId());
             LOG.info("DropColumn: {}.{}", fullTable, droppedColumnName);
             alterExecutor.execute(() -> alterDropColumn(fullTable, droppedColumnName));
         }
         return null;
     }
 
-    private Void onAlterColumnType(AlterColumnTypeEvent event) {
-        Map<String, DataType> typeMapping = event.getTypeMapping();
-        String fullTable = fullTableName(event.tableId());
-        for (Map.Entry<String, DataType> typeEntry : typeMapping.entrySet()) {
-            String columnName = typeEntry.getKey();
-            String newColumnType = typeEntry.getValue().toString();
+    private final Void onAlterColumnType(final AlterColumnTypeEvent event) {
+        final Map<String, DataType> typeMapping = event.getTypeMapping();
+        final String fullTable = fullTableName(event.tableId());
+        for (final Map.Entry<String, DataType> typeEntry : typeMapping.entrySet()) {
+            final String columnName = typeEntry.getKey();
+            final String newColumnType = typeEntry.getValue().toString();
             LOG.info("AlterColumnType: {}.{} -> {}", fullTable, columnName, newColumnType);
             alterExecutor.execute(() -> alterColumnType(fullTable, columnName, newColumnType));
         }
         return null;
     }
 
-    private Void onRenameColumn(RenameColumnEvent event) {
-        Map<String, String> nameMapping = event.getNameMapping();
-        String fullTable = fullTableName(event.tableId());
-        for (Map.Entry<String, String> nameEntry : nameMapping.entrySet()) {
+    private final Void onRenameColumn(final RenameColumnEvent event) {
+        final Map<String, String> nameMapping = event.getNameMapping();
+        final String fullTable = fullTableName(event.tableId());
+        for (final Map.Entry<String, String> nameEntry : nameMapping.entrySet()) {
             LOG.info(
                     "RenameColumn: {}.{} -> {}",
                     fullTable,
@@ -249,57 +249,60 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         return null;
     }
 
-    private Void onDropTable(DropTableEvent event) {
+    private final Void onDropTable(final DropTableEvent event) {
         LOG.info("DropTable: {}", fullTableName(event.tableId()));
         return null;
     }
 
-    private Void onTruncateTable(TruncateTableEvent event) {
+    private final Void onTruncateTable(final TruncateTableEvent event) {
         LOG.info("TruncateTable: {}", fullTableName(event.tableId()));
         return null;
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
-    private Void onAlterTableComment(AlterTableCommentEvent event) {
+    private final Void onAlterTableComment(final AlterTableCommentEvent event) {
         return null;
     }
 
-    private String fullTableName(TableId tid) {
-        String schema = tid.getSchemaName();
-        String table = tid.getTableName();
+    private final String fullTableName(final TableId tid) {
+        final String schema = tid.getSchemaName();
+        final String table = tid.getTableName();
         return schema == null || schema.isEmpty() ? table : schema + "." + table;
     }
 
-    private void alterAddColumn(String fullTable, String columnName, String columnType) {
-        String sql =
+    private void alterAddColumn(
+            final String fullTable, final String columnName, final String columnType) {
+        final String sql =
                 String.format(
                         "ALTER TABLE %s ADD COLUMN `%s` %s",
                         fullTable, columnName, mapToMysqlType(columnType));
         executeAlter(sql);
     }
 
-    private void alterDropColumn(String fullTable, String columnName) {
-        String sql = String.format("ALTER TABLE %s DROP COLUMN `%s`", fullTable, columnName);
+    private void alterDropColumn(final String fullTable, final String columnName) {
+        final String sql = String.format("ALTER TABLE %s DROP COLUMN `%s`", fullTable, columnName);
         executeAlter(sql);
     }
 
-    private void alterColumnType(String fullTable, String columnName, String newColumnType) {
-        String sql =
+    private void alterColumnType(
+            final String fullTable, final String columnName, final String newColumnType) {
+        final String sql =
                 String.format(
                         "ALTER TABLE %s MODIFY COLUMN `%s` %s",
                         fullTable, columnName, mapToMysqlType(newColumnType));
         executeAlter(sql);
     }
 
-    private void alterRenameColumn(String fullTable, String oldColumnName, String newColumnName) {
-        String sql =
+    private void alterRenameColumn(
+            final String fullTable, final String oldColumnName, final String newColumnName) {
+        final String sql =
                 String.format(
                         "ALTER TABLE %s CHANGE COLUMN `%s` `%s`",
                         fullTable, oldColumnName, newColumnName);
         executeAlter(sql);
     }
 
-    private void executeAlter(String sqlStatement) {
+    private void executeAlter(final String sqlStatement) {
         // Skip if already executed (idempotent on restart)
         if (executedAlters.contains(sqlStatement)) {
             LOG.debug("Already executed, skipping: {}", sqlStatement);
@@ -360,8 +363,8 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         MYSQL_TYPE_MAP.put("VARBINARY", "BLOB");
     }
 
-    private String mapToMysqlType(String cdcType) {
-        String u = cdcType.toUpperCase();
+    private String mapToMysqlType(final String cdcType) {
+        final String u = cdcType.toUpperCase();
         if (u.contains("VARCHAR") || u.contains("CHAR")) {
             return cdcType;
         }

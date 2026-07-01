@@ -33,9 +33,9 @@ public final class ParamUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParamUtil.class);
 
-    public static Integer checkRatioNum(String rate) {
+    public static Integer checkRatioNum(final String rate) {
         try {
-            Integer rateNum = Integer.valueOf(rate);
+            final Integer rateNum = Integer.valueOf(rate);
             if (rateNum < 0 || rateNum > 100) {
                 throw new RuntimeException("输入的比率必须为0 - 100 的数字");
             }
@@ -49,12 +49,13 @@ public final class ParamUtil {
      * Parse a {@code yyyy-MM-dd} date string and combine it with the current local time, returning
      * the result as a {@link LocalDateTime}. Replaces the previous {@code Date}-based helper.
      */
-    public static LocalDateTime checkDateTime(String dateString) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static LocalDateTime checkDateTime(final String dateString) {
+        final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        final DateTimeFormatter datetimeFormatter =
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
-            LocalDate date = LocalDate.parse(dateString, dateFormatter);
-            LocalDateTime combined = LocalDateTime.of(date, LocalTime.now());
+            final LocalDate date = LocalDate.parse(dateString, dateFormatter);
+            final LocalDateTime combined = LocalDateTime.of(date, LocalTime.now());
             LOG.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
             return combined;
         } catch (Exception e) {
@@ -62,7 +63,7 @@ public final class ParamUtil {
         }
     }
 
-    public static Boolean checkBoolean(String bool) {
+    public static Boolean checkBoolean(final String bool) {
         if (bool.equals("1") || bool.equals("true")) {
             return true;
         } else if (bool.equals("0") || bool.equals("false")) {
@@ -72,15 +73,15 @@ public final class ParamUtil {
         }
     }
 
-    public static Integer[] checkRate(String rateString, int rateCount) {
+    public static Integer[] checkRate(final String rateString, final int rateCount) {
         try {
-            String[] rateArray = rateString.split(":");
+            final String[] rateArray = rateString.split(":");
             if (rateArray.length != rateCount) {
                 throw new RuntimeException("请按比例个数不足 ");
             }
             Integer[] rateNumArr = new Integer[rateArray.length];
             for (int i = 0; i < rateArray.length; i++) {
-                Integer rate = checkRatioNum(rateArray[i]);
+                final Integer rate = checkRatioNum(rateArray[i]);
                 rateNumArr[i] = rate;
             }
             return rateNumArr;
@@ -89,29 +90,29 @@ public final class ParamUtil {
         }
     }
 
-    public static String[] checkArray(String str) {
+    public static String[] checkArray(final String str) {
 
         if (str == null) {
             throw new RuntimeException("搜索词为空");
         }
 
-        String[] split = str.split(",");
+        final String[] split = str.split(",");
         return split;
     }
 
-    public static Integer checkCount(String count) {
+    public static Integer checkCount(final String count) {
         try {
             if (count == null) {
                 return 0;
             }
-            Integer rateNum = Integer.valueOf(count.trim());
+            final Integer rateNum = Integer.valueOf(count.trim());
             return rateNum;
         } catch (Exception e) {
             throw new RuntimeException("输入的数据必须为数字", e);
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println(ParamUtil.checkDateTime("2024-01-15"));
         System.out.println("ok");
     }

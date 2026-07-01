@@ -38,8 +38,8 @@ public class RandomOptionGroup<T> {
 
         int totalWeight = 0;
 
-        public Builder<T> add(T value, int weight) {
-            RanOpt<T> ranOpt = new RanOpt<>(value, weight);
+        public Builder<T> add(final T value, final int weight) {
+            final RanOpt<T> ranOpt = new RanOpt<>(value, weight);
             totalWeight += weight;
             for (int i = 0; i < weight; i++) {
                 optList.add(ranOpt);
@@ -52,22 +52,22 @@ public class RandomOptionGroup<T> {
         }
     }
 
-    public RandomOptionGroup(int totalWeight, List<RanOpt<T>> optList) {
+    public RandomOptionGroup(final int totalWeight, final List<RanOpt<T>> optList) {
         this.totalWeight = totalWeight;
         this.optList = optList;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public RandomOptionGroup(String... values) {
-        for (String value : values) {
+    public RandomOptionGroup(final String... values) {
+        for (final String value : values) {
             totalWeight += 1;
             optList.add((RanOpt<T>) (RanOpt) new RanOpt<String>(value, 1));
         }
     }
 
     @SafeVarargs
-    public RandomOptionGroup(RanOpt<T>... opts) {
-        for (RanOpt<T> opt : opts) {
+    public RandomOptionGroup(final RanOpt<T>... opts) {
+        for (final RanOpt<T> opt : opts) {
             totalWeight += opt.getWeight();
             for (int i = 0; i < opt.getWeight(); i++) {
                 optList.add(opt);
@@ -75,48 +75,48 @@ public class RandomOptionGroup<T> {
         }
     }
 
-    public RandomOptionGroup(int trueWeight, int falseWeight) {
+    public RandomOptionGroup(final int trueWeight, final int falseWeight) {
         this(
                 new RanOpt<>((T) Boolean.TRUE, trueWeight),
                 new RanOpt<>((T) Boolean.FALSE, falseWeight));
     }
 
-    public RandomOptionGroup(String trueRate) {
+    public RandomOptionGroup(final String trueRate) {
         this(ParamUtil.checkRatioNum(trueRate), 100 - ParamUtil.checkRatioNum(trueRate));
     }
 
     public T getValue() {
-        int i = new Random().nextInt(totalWeight);
+        final int i = new Random().nextInt(totalWeight);
         return optList.get(i).getValue();
     }
 
     public RanOpt<T> getRandomOpt() {
-        int i = new Random().nextInt(totalWeight);
+        final int i = new Random().nextInt(totalWeight);
         return optList.get(i);
     }
 
     public String getRandStringValue() {
-        int i = new Random().nextInt(totalWeight);
+        final int i = new Random().nextInt(totalWeight);
         return (String) optList.get(i).getValue();
     }
 
     public Integer getRandIntValue() {
-        int i = new Random().nextInt(totalWeight);
+        final int i = new Random().nextInt(totalWeight);
         return (Integer) optList.get(i).getValue();
     }
 
     public Boolean getRandBoolValue() {
 
-        int i = new Random().nextInt(totalWeight);
+        final int i = new Random().nextInt(totalWeight);
         return (Boolean) optList.get(i).getValue();
     }
 
-    public static void main(String[] args) {
-        RanOpt<String>[] opts =
+    public static void main(final String[] args) {
+        final RanOpt<String>[] opts =
                 new RanOpt[] {
                     new RanOpt<>("zhang3", 20), new RanOpt<>("li4", 30), new RanOpt<>("wang5", 50)
                 };
-        RandomOptionGroup<String> randomOptionGroup = new RandomOptionGroup<>(opts);
+        final RandomOptionGroup<String> randomOptionGroup = new RandomOptionGroup<>(opts);
         for (int i = 0; i < 10; i++) {
             System.out.println(randomOptionGroup.getRandomOpt().getValue());
         }

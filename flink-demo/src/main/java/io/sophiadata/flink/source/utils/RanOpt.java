@@ -23,7 +23,7 @@ public class RanOpt<T> {
     T value;
     int weight;
 
-    public RanOpt(T value, int weight) {
+    public RanOpt(final T value, final int weight) {
         this.value = value;
         this.weight = weight;
     }

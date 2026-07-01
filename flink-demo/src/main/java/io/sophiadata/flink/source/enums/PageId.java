@@ -48,7 +48,7 @@ public enum PageId {
 
     private final String desc;
 
-    PageId(String desc) {
+    PageId(final String desc) {
         this.desc = desc;
     }
 }

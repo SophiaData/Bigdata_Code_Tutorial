@@ -28,9 +28,9 @@ import org.apache.flink.types.Row;
 public class SplitFunction extends TableFunction<Row> {
     private static final long serialVersionUID = 1L;
 
-    public void eval(String str, String separator) {
+    public void eval(final String str, final String separator) {
         if (str != null) {
-            for (String s : str.split(separator)) {
+            for (final String s : str.split(separator)) {
                 // use collect(...) to emit a row
                 collect(Row.of(s));
             }

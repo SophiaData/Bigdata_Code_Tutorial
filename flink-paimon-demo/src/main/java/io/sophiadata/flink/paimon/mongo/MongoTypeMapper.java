@@ -27,7 +27,7 @@ import org.bson.BsonType;
 public final class MongoTypeMapper {
     private MongoTypeMapper() {}
 
-    public static DataType mapType(BsonType bsonType) {
+    public static DataType mapType(final BsonType bsonType) {
         switch (bsonType) {
             case STRING:
                 return DataTypes.STRING();

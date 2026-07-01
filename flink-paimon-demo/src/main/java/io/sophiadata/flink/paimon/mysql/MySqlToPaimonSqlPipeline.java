@@ -66,18 +66,18 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 @SuppressWarnings("PMD.UseUtilityClass")
 public class MySqlToPaimonSqlPipeline {
 
-    public static void main(String[] args) throws Exception {
-        ParameterTool params = ParameterTool.fromArgs(args);
+    public static void main(final String[] args) throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String mysqlHost = params.get("mysql.host", "localhost");
-        int mysqlPort = params.getInt("mysql.port", 3306);
-        String mysqlDatabase = params.get("mysql.database", "source_db");
-        String mysqlUsername = params.get("mysql.username", "root");
-        String mysqlPassword = params.get("mysql.password", "root");
-        String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
+        final String mysqlHost = params.get("mysql.host", "localhost");
+        final int mysqlPort = params.getInt("mysql.port", 3306);
+        final String mysqlDatabase = params.get("mysql.database", "source_db");
+        final String mysqlUsername = params.get("mysql.username", "root");
+        final String mysqlPassword = params.get("mysql.password", "root");
+        final String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // Create MySQL CDC catalog
         tableEnv.executeSql(

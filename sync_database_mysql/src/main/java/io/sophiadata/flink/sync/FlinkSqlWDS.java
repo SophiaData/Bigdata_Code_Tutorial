@@ -70,10 +70,10 @@ public class FlinkSqlWDS extends BaseCode {
     private static final int BATCH_SIZE = 200;
     private static final long BATCH_INTERVAL_MS = 1000;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
-        String[] effectiveArgs = (args.length == 0) ? findDefaultArgs() : args;
-        String[] mergedArgs =
+        final String[] effectiveArgs = (args.length == 0) ? findDefaultArgs() : args;
+        final String[] mergedArgs =
                 NacosUtil.mergeInto(ParameterTool.fromArgs(effectiveArgs))
                         .toMap()
                         .entrySet()
@@ -84,7 +84,7 @@ public class FlinkSqlWDS extends BaseCode {
     }
 
     private static String[] findDefaultArgs() {
-        String configPath = findDefaultConfig();
+        final String configPath = findDefaultConfig();
         return (configPath != null) ? new String[] {"--config", configPath} : new String[0];
     }
 
@@ -96,11 +96,12 @@ public class FlinkSqlWDS extends BaseCode {
         } catch (Exception e) {
             LOG.debug("config.properties not on classpath, trying file paths");
         }
-        java.nio.file.Path l = java.nio.file.Paths.get("config.properties");
+        final java.nio.file.Path l = java.nio.file.Paths.get("config.properties");
         if (java.nio.file.Files.exists(l)) {
             return l.toAbsolutePath().toString();
         }
-        java.nio.file.Path m = java.nio.file.Paths.get("sync_database_mysql", "config.properties");
+        final java.nio.file.Path m =
+                java.nio.file.Paths.get("sync_database_mysql", "config.properties");
         if (java.nio.file.Files.exists(m)) {
             return m.toAbsolutePath().toString();
         }
@@ -113,36 +114,36 @@ public class FlinkSqlWDS extends BaseCode {
      */
     @Override
     public void handle(
-            String[] args,
-            StreamExecutionEnvironment env,
-            org.apache.flink.table.api.bridge.java.StreamTableEnvironment tEnv)
+            final String[] args,
+            final StreamExecutionEnvironment env,
+            final org.apache.flink.table.api.bridge.java.StreamTableEnvironment tEnv)
             throws Exception {
 
         // 1. 解析连接参数（host / port / username / password / database / sinkUrl 等）
-        ParameterTool p = ParameterTool.fromArgs(args);
-        String h = ParameterUtil.hostname(p);
-        int port = ParameterUtil.port(p);
-        String u = ParameterUtil.username(p);
-        String pw = ParameterUtil.password(p);
-        String db = ParameterUtil.databaseName(p);
-        String tz = p.get("serverTimeZone", "Asia/Shanghai");
-        String su = ParameterUtil.sinkUrl(p);
-        String sku = ParameterUtil.sinkUsername(p);
-        String skp = ParameterUtil.sinkPassword(p);
+        final ParameterTool p = ParameterTool.fromArgs(args);
+        final String h = ParameterUtil.hostname(p);
+        final int port = ParameterUtil.port(p);
+        final String u = ParameterUtil.username(p);
+        final String pw = ParameterUtil.password(p);
+        final String db = ParameterUtil.databaseName(p);
+        final String tz = p.get("serverTimeZone", "Asia/Shanghai");
+        final String su = ParameterUtil.sinkUrl(p);
+        final String sku = ParameterUtil.sinkUsername(p);
+        final String skp = ParameterUtil.sinkPassword(p);
 
-        String sinkJdbcUrl = extractSinkJdbcUrl(su);
+        final String sinkJdbcUrl = extractSinkJdbcUrl(su);
 
         // schemas: tableName → {columnName → cdcType}，用于动态建表和生成 INSERT SQL
         // pks:      tableName → 主键列名，用于生成 DELETE SQL 和 ON DUPLICATE KEY
-        Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
-        Map<String, String> pks = new ConcurrentHashMap<>();
+        final Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
+        final Map<String, String> pks = new ConcurrentHashMap<>();
 
-        SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
+        final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
         LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
 
         // 构建 CDC Source：监听整个数据库（db + ".*" 匹配所有表）
         // includeSchemaChanges(true) 让 DDL 事件（建表、加列）也能流入管道
-        MySqlSource<Event> source =
+        final MySqlSource<Event> source =
                 MySqlSource.<Event>builder()
                         .hostname(h)
                         .port(port)
@@ -156,7 +157,7 @@ public class FlinkSqlWDS extends BaseCode {
                         .build();
 
         // 并行度 = 1：binlog 是全局有序的，多并行度会导致事件乱序
-        DataStream<Event> cdcStream =
+        final DataStream<Event> cdcStream =
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "mysql-cdc-all")
                         .setParallelism(1);
 
@@ -172,7 +173,9 @@ public class FlinkSqlWDS extends BaseCode {
                         new ProcessFunction<Event, Event>() {
                             @Override
                             public void processElement(
-                                    Event event, Context ctx, Collector<Event> out) {
+                                    final Event event,
+                                    final Context ctx,
+                                    final Collector<Event> out) {
                                 handleSchemaEvent(
                                         event,
                                         finalEvolver,
@@ -200,20 +203,20 @@ public class FlinkSqlWDS extends BaseCode {
 
         // Bootstrap：在 CDC 追赶之前，先通过 JDBC 读取源端元数据，
         // 为已有的表在 sink 端建好对应的 sink_<table> 表
-        SourceConfig srcConfig = new SourceConfig(h, port, u, pw, db);
+        final SourceConfig srcConfig = new SourceConfig(h, port, u, pw, db);
         bootstrapSinkTables(srcConfig, finalSinkJdbcUrl, finalSku, finalSkp, schemas, pks);
 
         env.execute("flink-cdc-wds-" + db);
     }
 
     private static void handleSchemaEvent(
-            Event event,
-            SchemaEvolver evolver,
-            String sinkJdbcUrl,
-            String sinkUser,
-            String sinkPassword,
-            Map<String, Map<String, String>> schemas,
-            Map<String, String> pks) {
+            final Event event,
+            final SchemaEvolver evolver,
+            final String sinkJdbcUrl,
+            final String sinkUser,
+            final String sinkPassword,
+            final Map<String, Map<String, String>> schemas,
+            final Map<String, String> pks) {
         if (!(event instanceof SchemaChangeEvent)) {
             return;
         }
@@ -231,19 +234,19 @@ public class FlinkSqlWDS extends BaseCode {
     }
 
     private static void handleCreateTable(
-            CreateTableEvent cte,
-            String sinkJdbcUrl,
-            String sinkUser,
-            String sinkPassword,
-            Map<String, Map<String, String>> schemas,
-            Map<String, String> pks) {
-        String tableName = cte.tableId().getTableName();
-        Map<String, String> colMap = new LinkedHashMap<>();
-        for (Column col : cte.getSchema().getColumns()) {
+            final CreateTableEvent cte,
+            final String sinkJdbcUrl,
+            final String sinkUser,
+            final String sinkPassword,
+            final Map<String, Map<String, String>> schemas,
+            final Map<String, String> pks) {
+        final String tableName = cte.tableId().getTableName();
+        final Map<String, String> colMap = new LinkedHashMap<>();
+        for (final Column col : cte.getSchema().getColumns()) {
             colMap.put(col.getName(), col.getType().toString());
         }
         schemas.put(tableName, colMap);
-        String pk =
+        final String pk =
                 cte.getSchema().primaryKeys().isEmpty()
                         ? "id"
                         : cte.getSchema().primaryKeys().get(0);
@@ -254,13 +257,13 @@ public class FlinkSqlWDS extends BaseCode {
     }
 
     private static void handleAddColumn(
-            AddColumnEvent ace, Map<String, Map<String, String>> schemas) {
-        String tableName = ace.tableId().getTableName();
-        Map<String, String> colMap = schemas.get(tableName);
+            final AddColumnEvent ace, final Map<String, Map<String, String>> schemas) {
+        final String tableName = ace.tableId().getTableName();
+        final Map<String, String> colMap = schemas.get(tableName);
         if (colMap == null) {
             return;
         }
-        for (AddColumnEvent.ColumnWithPosition cp : ace.getAddedColumns()) {
+        for (final AddColumnEvent.ColumnWithPosition cp : ace.getAddedColumns()) {
             colMap.put(cp.getAddColumn().getName(), cp.getAddColumn().getType().toString());
         }
         LOG.info("AddColumn schema updated for {}", tableName);
@@ -271,24 +274,24 @@ public class FlinkSqlWDS extends BaseCode {
      * 表，并将元数据写入 schemas / pks 缓存。 这样 CDC 流启动后，即使还没有收到 CreateTableEvent，sink 表也已经就绪。
      */
     private static void bootstrapSinkTables(
-            SourceConfig source,
-            String sinkJdbcUrl,
-            String sinkUser,
-            String sinkPw,
-            Map<String, Map<String, String>> schemas,
-            Map<String, String> pks)
+            final SourceConfig source,
+            final String sinkJdbcUrl,
+            final String sinkUser,
+            final String sinkPw,
+            final Map<String, Map<String, String>> schemas,
+            final Map<String, String> pks)
             throws SQLException, ClassNotFoundException {
-        String sourceUrl =
+        final String sourceUrl =
                 String.format(
                         "jdbc:mysql://%s:%d?useSSL=false&allowPublicKeyRetrieval=true",
                         source.host, source.port);
         try (Connection conn = MysqlUtil.getConnection(sourceUrl, source.user, source.password)) {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String validatedDb = MysqlUtil.validateIdentifier(source.database);
+            final String validatedDb = MysqlUtil.validateIdentifier(source.database);
             String[] tables;
             try (Statement st = conn.createStatement();
                     ResultSet rs = st.executeQuery("SHOW TABLES FROM `" + validatedDb + "`")) {
-                List<String> list = new ArrayList<>();
+                final List<String> list = new ArrayList<>();
                 while (rs.next()) {
                     list.add(rs.getString(1));
                 }
@@ -300,8 +303,8 @@ public class FlinkSqlWDS extends BaseCode {
                     source.database,
                     tables);
 
-            for (String table : tables) {
-                Map<String, String> cols = new LinkedHashMap<>();
+            for (final String table : tables) {
+                final Map<String, String> cols = new LinkedHashMap<>();
                 String pk = "id";
                 try (PreparedStatement psCol =
                         conn.prepareStatement(
@@ -329,7 +332,7 @@ public class FlinkSqlWDS extends BaseCode {
                     LOG.warn("Skipping empty schema for {}.{}", source.database, table);
                     continue;
                 }
-                String sinkTable = "sink_" + table;
+                final String sinkTable = "sink_" + table;
                 schemas.put(table, cols);
                 pks.put(table, pk);
                 MysqlUtil.createSinkTableIfNotExists(
@@ -351,7 +354,12 @@ public class FlinkSqlWDS extends BaseCode {
         final String password;
         final String database;
 
-        SourceConfig(String host, int port, String user, String password, String database) {
+        SourceConfig(
+                final String host,
+                final int port,
+                final String user,
+                final String password,
+                final String database) {
             this.host = host;
             this.port = port;
             this.user = user;
@@ -360,12 +368,12 @@ public class FlinkSqlWDS extends BaseCode {
         }
     }
 
-    private static String extractSinkJdbcUrl(String su) {
-        int dbStart = su.indexOf("//") + 2;
-        int dbEnd = su.indexOf("/", dbStart);
-        String hostPort = su.substring(dbStart, dbEnd);
-        int paramStart = su.indexOf("?");
-        String database = su.substring(dbEnd + 1, paramStart > 0 ? paramStart : su.length());
+    private static String extractSinkJdbcUrl(final String su) {
+        final int dbStart = su.indexOf("//") + 2;
+        final int dbEnd = su.indexOf("/", dbStart);
+        final String hostPort = su.substring(dbStart, dbEnd);
+        final int paramStart = su.indexOf("?");
+        final String database = su.substring(dbEnd + 1, paramStart > 0 ? paramStart : su.length());
         return "jdbc:mysql://" + hostPort + "/" + database;
     }
 }

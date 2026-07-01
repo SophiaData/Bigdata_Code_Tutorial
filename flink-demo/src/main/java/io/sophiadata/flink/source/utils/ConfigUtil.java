@@ -30,9 +30,9 @@ public final class ConfigUtil {
 
     private ConfigUtil() {}
 
-    public static String loadJsonFile(String fileName) {
-        String filePath = getJarDir() + "/" + fileName;
-        File file = new File(filePath);
+    public static String loadJsonFile(final String fileName) {
+        final String filePath = getJarDir() + "/" + fileName;
+        final File file = new File(filePath);
         try (InputStream resourceAsStream =
                 file.exists()
                         ? new FileInputStream(file)
@@ -46,7 +46,7 @@ public final class ConfigUtil {
     }
 
     public static String getJarDir() {
-        File file = getJarFile();
+        final File file = getJarFile();
         if (file == null) {
             return null;
         }

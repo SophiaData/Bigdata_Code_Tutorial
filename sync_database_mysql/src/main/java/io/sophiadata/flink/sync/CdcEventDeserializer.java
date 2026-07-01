@@ -54,35 +54,35 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     @Override
     @SuppressWarnings("PMD.ImplicitSwitchFallThrough")
     public void deserialize(
-            org.apache.kafka.connect.source.SourceRecord record, Collector<Event> out) {
+            final org.apache.kafka.connect.source.SourceRecord record, final Collector<Event> out) {
         if (record == null) {
             return;
         }
-        org.apache.kafka.connect.data.Struct valueStruct =
+        final org.apache.kafka.connect.data.Struct valueStruct =
                 (org.apache.kafka.connect.data.Struct) record.value();
         if (valueStruct == null) {
             return;
         }
 
-        String op = valueStruct.getString("op");
+        final String op = valueStruct.getString("op");
         if (op == null) {
             return;
         }
 
-        org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
+        final org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
         if (source == null) {
             LOG.warn("Missing source info, skipping event");
             return;
         }
-        String dbName = source.getString("db");
-        String tableName = source.getString("table");
+        final String dbName = source.getString("db");
+        final String tableName = source.getString("table");
 
-        org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
-        org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
+        final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
+        final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
 
-        Object[] beforeVals = extractValues(before);
-        Object[] afterVals = extractValues(after);
-        TableId tid = TableId.tableId(dbName, tableName);
+        final Object[] beforeVals = extractValues(before);
+        final Object[] afterVals = extractValues(after);
+        final TableId tid = TableId.tableId(dbName, tableName);
 
         switch (op) {
             case "c":
@@ -110,13 +110,13 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
 
     /** 从 Kafka Connect Struct 中提取所有字段值为 Object 数组。 */
     @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-    static Object[] extractValues(org.apache.kafka.connect.data.Struct row) {
+    static Object[] extractValues(final org.apache.kafka.connect.data.Struct row) {
         if (row == null) {
             return null;
         }
         Object[] values = new Object[row.schema().fields().size()];
         int i = 0;
-        for (org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+        for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
             values[i++] = convertValue(row.get(f.name()));
         }
         return values;
@@ -126,7 +126,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      * Debezium 可能返回多种时间类型（OffsetDateTime、ZonedDateTime、Instant 等）， 统一转为 java.sql.Timestamp，确保 JDBC
      * PreparedStatement.setObject() 能正确绑定。 含 "T" 的字符串会尝试解析为 Instant 后再转换。
      */
-    static Object convertValue(Object value) {
+    static final Object convertValue(final Object value) {
         if (value == null) {
             return null;
         }
@@ -146,7 +146,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return new java.sql.Timestamp(((java.util.Date) value).getTime());
         }
         if (value instanceof String) {
-            String s = (String) value;
+            final String s = (String) value;
             if (s.contains("T")) {
                 try {
                     return java.sql.Timestamp.from(java.time.Instant.parse(s));

@@ -30,30 +30,36 @@ public final class RandomNumString {
     private RandomNumString() {}
 
     public static String getRandNumString(
-            int fromNum, int toNum, int count, String delimiter, boolean canRepeat) {
+            final int fromNum,
+            final int toNum,
+            final int count,
+            final String delimiter,
+            final boolean canRepeat) {
         if (canRepeat) {
             return buildWithRepeat(fromNum, toNum, count, delimiter);
         }
         return buildWithoutRepeat(fromNum, toNum, count, delimiter);
     }
 
-    private static String buildWithRepeat(int fromNum, int toNum, int count, String delimiter) {
-        ArrayList<Integer> numList = new ArrayList<>();
+    private static String buildWithRepeat(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
+        final ArrayList<Integer> numList = new ArrayList<>();
         while (numList.size() < count) {
             numList.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
         }
         return StringUtils.join(numList, delimiter);
     }
 
-    private static String buildWithoutRepeat(int fromNum, int toNum, int count, String delimiter) {
-        int range = toNum - fromNum + 1;
-        HashSet<Integer> numSet = new HashSet<>();
+    private static String buildWithoutRepeat(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
+        final int range = toNum - fromNum + 1;
+        final HashSet<Integer> numSet = new HashSet<>();
         if (count <= range / 2) {
             while (numSet.size() < count) {
                 numSet.add(fromNum + new Random().nextInt(range));
             }
         } else {
-            HashSet<Integer> exNumSet = new HashSet<>();
+            final HashSet<Integer> exNumSet = new HashSet<>();
             while (exNumSet.size() < (range - count)) {
                 exNumSet.add(fromNum + new Random().nextInt(range));
             }
@@ -66,11 +72,12 @@ public final class RandomNumString {
         return StringUtils.join(numSet, delimiter);
     }
 
-    public static String getRandNumString(int fromNum, int toNum, int count, String delimiter) {
+    public static String getRandNumString(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
         return getRandNumString(fromNum, toNum, count, delimiter, true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println(getRandNumString(1, 3, 4, ",", false));
     }
 }

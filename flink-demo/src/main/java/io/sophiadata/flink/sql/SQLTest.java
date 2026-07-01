@@ -26,15 +26,18 @@ import io.sophiadata.flink.base.BaseSql;
 
 /** (@gtk) (@date 2022/12/22 18:35). */
 public class SQLTest extends BaseSql {
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         new SQLTest().init(args, "SQLTest");
     }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
+    public void handle(
+            final String[] args,
+            final StreamExecutionEnvironment env,
+            final StreamTableEnvironment tEnv)
             throws Exception {
-        String username = System.getenv("MYSQL_USERNAME");
-        String password = System.getenv("MYSQL_PASSWORD");
+        final String username = System.getenv("MYSQL_USERNAME");
+        final String password = System.getenv("MYSQL_PASSWORD");
         tEnv.executeSql(
                 "CREATE TABLE test2 (\n"
                         + "  id STRING,\n"
@@ -53,7 +56,7 @@ public class SQLTest extends BaseSql {
                         + "'"
                         + ");");
 
-        Table table = tEnv.sqlQuery("select * from test2");
+        final Table table = tEnv.sqlQuery("select * from test2");
 
         table.execute().print();
     }

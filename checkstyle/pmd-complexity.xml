@@ -20,4 +20,8 @@
 
     <!-- 方法/类行数 -->
     <rule ref="category/java/design.xml/NcssCount"/>
+
+    <!-- 变量 final 修饰符检查 -->
+    <rule ref="category/java/codestyle.xml/MethodArgumentCouldBeFinal"/>
+    <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal"/>
 </ruleset>

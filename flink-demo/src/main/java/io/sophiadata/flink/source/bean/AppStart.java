@@ -34,11 +34,11 @@ public class AppStart {
     private final Integer loadingTime;
 
     public AppStart(
-            String entry,
-            Long openAdId,
-            Integer openAdMs,
-            Integer openAdSkipMs,
-            Integer loadingTime) {
+            final String entry,
+            final Long openAdId,
+            final Integer openAdMs,
+            final Integer openAdSkipMs,
+            final Integer loadingTime) {
         this.entry = entry;
         this.openAdId = openAdId;
         this.openAdMs = openAdMs;
@@ -67,14 +67,14 @@ public class AppStart {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppStart that = (AppStart) o;
+        final AppStart that = (AppStart) o;
         return Objects.equals(entry, that.entry)
                 && Objects.equals(openAdId, that.openAdId)
                 && Objects.equals(openAdMs, that.openAdMs)
@@ -103,12 +103,12 @@ public class AppStart {
     }
 
     public static class Builder {
-        private String entry;
-        private Long openAdId;
-        private Integer openAdMs;
-        private Integer openAdSkipMs;
-        private Integer loadingTime;
-        private Integer firstOpen;
+        private final String entry;
+        private final Long openAdId;
+        private final Integer openAdMs;
+        private final Integer openAdSkipMs;
+        private final Integer loadingTime;
+        private final Integer firstOpen;
 
         public Builder() {
             entry =
