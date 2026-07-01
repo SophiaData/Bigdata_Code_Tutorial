@@ -19,6 +19,9 @@
 package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -64,7 +67,18 @@ public class SchemaEvolutionIT {
                     new MiniClusterResourceConfiguration.Builder()
                             .setNumberTaskManagers(1)
                             .setNumberSlotsPerTaskManager(1)
+                            .setConfiguration(createMiniClusterConfig())
                             .build());
+
+    private static Configuration createMiniClusterConfig() {
+        Configuration config = new Configuration();
+        // Limit TaskManager memory to fit within CI runner (16 GB)
+        config.set(TaskManagerOptions.TASK_HEAP_MEMORY, MemorySize.ofMebiBytes(512));
+        config.set(TaskManagerOptions.TASK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(128));
+        config.set(TaskManagerOptions.FRAMEWORK_HEAP_MEMORY, MemorySize.ofMebiBytes(256));
+        config.set(TaskManagerOptions.FRAMEWORK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(64));
+        return config;
+    }
 
     private JdbcDatabaseContainer<?> sourceContainer;
     private JdbcDatabaseContainer<?> sinkContainer;
