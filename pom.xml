@@ -15,6 +15,7 @@
         <module>sync_database_mysql</module>
         <module>flink-function</module>
         <module>flink-paimon-demo</module>
+        <module>e2e-tests</module>
     </modules>
     
     <properties>
