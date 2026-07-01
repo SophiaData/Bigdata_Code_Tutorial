@@ -25,11 +25,11 @@ public final class RandomNum {
 
     private RandomNum() {}
 
-    public static int getRandInt(int fromNum, int toNum) {
+    public static int getRandInt(final int fromNum, final int toNum) {
         return fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1);
     }
 
-    public static int getRandInt(int fromNum, int toNum, Long seed) {
+    public static int getRandInt(final int fromNum, final int toNum, final Long seed) {
         return fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1);
     }
 }

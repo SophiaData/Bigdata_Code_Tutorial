@@ -31,11 +31,15 @@ import java.time.Duration;
 /** (@SophiaData) (@date 2022/10/25 10:58). */
 public abstract class BaseSql {
     public void init(
-            String[] args, String jobName, Boolean hashMap, Boolean localpath, String ckPath)
+            final String[] args,
+            final String jobName,
+            final Boolean hashMap,
+            final Boolean localpath,
+            final String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", jobName);
 
@@ -46,7 +50,7 @@ public abstract class BaseSql {
         handle(args, env, tEnv);
     }
 
-    public void init(String[] args, String jobName) throws Exception {
+    public void init(final String[] args, final String jobName) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
@@ -57,12 +61,17 @@ public abstract class BaseSql {
     }
 
     public abstract void handle(
-            String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
+            final String[] args,
+            final StreamExecutionEnvironment env,
+            final StreamTableEnvironment tEnv)
             throws Exception;
 
     @SuppressWarnings("deprecation")
     public void checkpoint(
-            StreamExecutionEnvironment env, String ckPath, Boolean hashMap, Boolean localpath) {
+            final StreamExecutionEnvironment env,
+            final String ckPath,
+            final Boolean hashMap,
+            final Boolean localpath) {
         // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
         // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
         // also migrating the underlying state backend (HashMapStateBackend /
@@ -97,7 +106,7 @@ public abstract class BaseSql {
     }
 
     @SuppressWarnings("deprecation")
-    public void restartTask(StreamExecutionEnvironment env) {
+    public void restartTask(final StreamExecutionEnvironment env) {
         // RestartStrategies + setRestartStrategy() are deprecated in Flink 1.20; the new way is
         // Configuration-driven restart via PipelineOptions.RESTART_STRATEGY. Kept as-is for now.
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Duration.ofSeconds(10)));

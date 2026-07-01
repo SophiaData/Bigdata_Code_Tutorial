@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ruleset name="PMD Complexity Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>Minimal PMD rules for code complexity detection - complements Checkstyle</description>
+
+    <!-- 圈复杂度：阈值 15 -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="15"/>
+        </properties>
+    </rule>
+
+    <!-- 认知复杂度 -->
+    <rule ref="category/java/design.xml/CognitiveComplexity"/>
+
+    <!-- 方法参数数量 -->
+    <rule ref="category/java/design.xml/ExcessiveParameterList"/>
+
+    <!-- 方法/类行数 -->
+    <rule ref="category/java/design.xml/NcssCount"/>
+
+    <!-- 变量 final 修饰符检查 -->
+    <rule ref="category/java/codestyle.xml/MethodArgumentCouldBeFinal"/>
+    <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal"/>
+</ruleset>

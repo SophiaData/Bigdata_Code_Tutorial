@@ -37,7 +37,7 @@ public class FlinkCDCDDL extends BaseCode {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkCDCDDL.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         // 测试解析 mysql schema change
         // true 为 更新，插入语句 false 为删除语句
         new FlinkCDCDDL().init(args, "flink_cdc_ddl_job_test", true, true, "hdfs://");
@@ -45,23 +45,23 @@ public class FlinkCDCDDL extends BaseCode {
     }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env) {
+    public void handle(final String[] args, final StreamExecutionEnvironment env) {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
         env.getConfig().setGlobalJobParameters(params);
 
-        String hostname = params.get("hostname", "localhost");
-        int port = params.getInt("port", 3306);
-        String username = params.getRequired("username");
-        String password = params.getRequired("password");
-        String databaseList = params.get("databaseList", "test");
-        String tableList = params.get("tableList", "test.test2");
+        final String hostname = params.get("hostname", "localhost");
+        final int port = params.getInt("port", 3306);
+        final String username = params.getRequired("username");
+        final String password = params.getRequired("password");
+        final String databaseList = params.get("databaseList", "test");
+        final String tableList = params.get("tableList", "test.test2");
 
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         // decimal 设置为 string 避免转换异常
         properties.put("decimal.handling.mode", "string");
 
-        MySqlSource<Tuple2<Boolean, String>> sourceFunction =
+        final MySqlSource<Tuple2<Boolean, String>> sourceFunction =
                 MySqlSource.<Tuple2<Boolean, String>>builder()
                         .hostname(hostname)
                         .port(port)
@@ -77,7 +77,7 @@ public class FlinkCDCDDL extends BaseCode {
                         .debeziumProperties(properties)
                         .build();
 
-        DataStreamSource<Tuple2<Boolean, String>> mysql =
+        final DataStreamSource<Tuple2<Boolean, String>> mysql =
                 env.fromSource(sourceFunction, WatermarkStrategy.noWatermarks(), "mysql")
                         .setParallelism(1);
 

@@ -46,15 +46,15 @@ import java.util.Map;
 @SuppressWarnings("deprecation")
 public class MockSourceFunction implements ParallelSourceFunction<String> {
 
-    private static final Logger log = LoggerFactory.getLogger(MockSourceFunction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MockSourceFunction.class);
     private volatile Long ts;
     private volatile int mockCount;
 
     @Override
-    public void run(SourceContext<String> ctx) throws Exception {
+    public void run(final SourceContext<String> ctx) throws Exception {
         for (; mockCount < AppConfig.MOCK_COUNT; mockCount++) {
-            List<AppMain> appMainList = doAppMock();
-            for (AppMain appMain : appMainList) {
+            final List<AppMain> appMainList = doAppMock();
+            for (final AppMain appMain : appMainList) {
                 ctx.collect(appMain.toString());
                 Thread.sleep(AppConfig.LOG_SLEEP);
             }
@@ -67,24 +67,24 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
     }
 
     public List<AppMain> doAppMock() {
-        List<AppMain> logList = new ArrayList<>();
+        final List<AppMain> logList = new ArrayList<>();
 
-        LocalDateTime curDate = ParamUtil.checkDateTime(AppConfig.MOCK_DATE);
+        final LocalDateTime curDate = ParamUtil.checkDateTime(AppConfig.MOCK_DATE);
         ts = curDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
-        AppMain.AppMainBuilder appMainBuilder = AppMain.builder();
+        final AppMain.AppMainBuilder appMainBuilder = AppMain.builder();
 
         // 启动 数据
-        AppCommon appCommon = AppCommon.build();
+        final AppCommon appCommon = AppCommon.build();
         appMainBuilder.common(appCommon);
         appMainBuilder.checkError();
-        AppStart appStart = new AppStart.Builder().build();
+        final AppStart appStart = new AppStart.Builder().build();
         appMainBuilder.start(appStart);
         appMainBuilder.ts(ts);
 
         logList.add(appMainBuilder.build());
 
-        String jsonFile =
+        final String jsonFile =
                 "[\n"
                         + "  {\"path\":[\"home\",\"good_list\",\"good_detail\",\"cart\",\"trade\",\"payment\"],\"rate\":20 },\n"
                         + "  {\"path\":[\"home\",\"search\",\"good_list\",\"good_detail\",\"login\",\"good_detail\",\"cart\",\"trade\",\"payment\"],\"rate\":50 },\n"
@@ -95,46 +95,46 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
                         + "  {\"path\":[\"home\"  ],\"rate\":10 }\n"
                         + "]";
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> pathList =
+        final List<Map<String, Object>> pathList =
                 (List<Map<String, Object>>) (List<?>) JSON.parseArray(jsonFile);
-        RandomOptionGroup.Builder<List<String>> builder = RandomOptionGroup.builder();
+        final RandomOptionGroup.Builder<List<String>> builder = RandomOptionGroup.builder();
 
         // 抽取一个访问路径
-        for (Map<String, Object> map : pathList) {
-            List<String> path = (List<String>) map.get("path");
-            Integer rate = (Integer) map.get("rate");
+        for (final Map<String, Object> map : pathList) {
+            final List<String> path = (List<String>) map.get("path");
+            final Integer rate = (Integer) map.get("rate");
             builder.add(path, rate);
         }
-        List<String> chosenPath = builder.build().getRandomOpt().getValue();
+        final List<String> chosenPath = builder.build().getRandomOpt().getValue();
         // ts+=appStart.getLoading_time() ;
 
         // 逐个输入日志
         // 每条日志  1 主行为  2 曝光  3 错误
         PageId lastPageId = null;
-        for (Object o : chosenPath) {
+        for (final Object o : chosenPath) {
             // common字段
-            AppMain.AppMainBuilder pageBuilder = AppMain.builder().common(appCommon);
+            final AppMain.AppMainBuilder pageBuilder = AppMain.builder().common(appCommon);
 
-            String path = (String) o;
+            final String path = (String) o;
 
-            int pageDuringTime = RandomNum.getRandInt(1000, AppConfig.PAGE_DURING_MAX_MS);
+            final int pageDuringTime = RandomNum.getRandInt(1000, AppConfig.PAGE_DURING_MAX_MS);
             // 添加页面
-            PageId pageId = EnumUtils.getEnum(PageId.class, path);
-            AppPage page = AppPage.build(pageId, lastPageId, pageDuringTime);
+            final PageId pageId = EnumUtils.getEnum(PageId.class, path);
+            final AppPage page = AppPage.build(pageId, lastPageId, pageDuringTime);
             if (pageId == null) {
-                log.warn("Unknown page id: {}", path);
+                LOG.warn("Unknown page id: {}", path);
             }
             pageBuilder.page(page);
             // 置入上一个页面
             lastPageId = page.getPageId();
 
             // 页面中的动作
-            List<AppAction> appActionList = AppAction.buildList(page, ts, pageDuringTime);
+            final List<AppAction> appActionList = AppAction.buildList(page, ts, pageDuringTime);
             if (!appActionList.isEmpty()) {
                 pageBuilder.actions(appActionList);
             }
             // 曝光
-            List<AppDisplay> displayList = AppDisplay.buildList(page);
+            final List<AppDisplay> displayList = AppDisplay.buildList(page);
             if (!displayList.isEmpty()) {
                 pageBuilder.displays(displayList);
             }
@@ -150,7 +150,7 @@ public class MockSourceFunction implements ParallelSourceFunction<String> {
         return logList;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(final String[] args) throws InterruptedException {
         // System.out.println(RandomStringUtils.random(16,true,true));
         new MockSourceFunction().doAppMock();
     }

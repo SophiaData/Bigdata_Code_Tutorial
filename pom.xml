@@ -15,6 +15,7 @@
         <module>sync_database_mysql</module>
         <module>flink-function</module>
         <module>flink-paimon-demo</module>
+        <module>e2e-tests</module>
     </modules>
     
     <properties>
@@ -38,7 +39,8 @@
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
-        <maven-shade-plugin>3.5.1</maven-shade-plugin>
+        <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -46,7 +48,8 @@
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jackson-annotations.version>2.21</jackson-annotations.version>
-        <maven-shade-plugin>3.5.1</maven-shade-plugin>
+        <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <confluent.version>7.2.0</confluent.version>
         <docker.host />
         <jackson-databind.version>2.21.4</jackson-databind.version>
@@ -77,15 +80,11 @@
         <fastjson.version>2.0.52</fastjson.version>
         <kafka.version>4.1.2</kafka.version>
         <zookeeper.version>3.9.5</zookeeper.version>
-        <!-- CVE 修复版本 -->
-        <commons-beanutils.version>1.11.0</commons-beanutils.version>
+        <!-- CVE 修复版本（仅保留与上方不同的升级值） -->
         <httpclient.version>4.5.14</httpclient.version>
         <httpcore.version>4.4.16</httpcore.version>
-        <protobuf-java.version>3.25.5</protobuf-java.version>
-        <json-smart.version>2.5.2</json-smart.version>
         <commons-net.version>3.10.0</commons-net.version>
         <okhttp.version>4.12.0</okhttp.version>
-        <okio.version>3.4.0</okio.version>
         <commons-cli.version>1.5.0</commons-cli.version>
         <dnsjava.version>3.6.0</dnsjava.version>
         <plexus-utils.version>3.6.1</plexus-utils.version>
@@ -578,7 +577,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- PMD: 静态代码分析 -->
+            <!-- PMD: 仅检查复杂度（与 Checkstyle 互补） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -586,13 +585,13 @@
                 <configuration>
                     <targetJdk>11</targetJdk>
                     <rulesets>
-                        <ruleset>checkstyle/pmd-ruleset.xml</ruleset>
+                        <ruleset>checkstyle/pmd-complexity.xml</ruleset>
                     </rulesets>
                     <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
-                    <linkXref>true</linkXref>
+                    <generateReport>false</generateReport>
+                    <linkXref>false</linkXref>
                     <sourceEncoding>UTF-8</sourceEncoding>
-                    <targetOutputEncoding>UTF-8</targetOutputEncoding>
                 </configuration>
                 <executions>
                     <execution>

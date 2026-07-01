@@ -31,7 +31,7 @@ public enum ActionId {
 
     private final String desc;
 
-    ActionId(String desc) {
+    ActionId(final String desc) {
         this.desc = desc;
     }
 }

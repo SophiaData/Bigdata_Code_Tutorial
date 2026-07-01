@@ -68,13 +68,13 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     private transient long lastFlush;
 
     CDBBatchSink(
-            String sinkJdbcUrl,
-            String sinkUser,
-            String sinkPassword,
-            int batchSize,
-            long batchIntervalMs,
-            Map<String, Map<String, String>> schemas,
-            Map<String, String> pks) {
+            final String sinkJdbcUrl,
+            final String sinkUser,
+            final String sinkPassword,
+            final int batchSize,
+            final long batchIntervalMs,
+            final Map<String, Map<String, String>> schemas,
+            final Map<String, String> pks) {
         this.sinkJdbcUrl = sinkJdbcUrl;
         this.sinkUser = sinkUser;
         this.sinkPassword = sinkPassword;
@@ -86,7 +86,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
 
     /** 初始化 JDBC 连接，关闭自动提交以支持批量事务。 */
     @Override
-    public void open(Configuration parameters) throws Exception {
+    public void open(final Configuration parameters) throws Exception {
         super.open(parameters);
         Class.forName("com.mysql.cj.jdbc.Driver");
         conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
@@ -97,7 +97,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     }
 
     @Override
-    public void invoke(Event event, Context context) throws Exception {
+    public void invoke(final Event event, final Context context) throws Exception {
         if (!(event instanceof DataChangeEvent)) {
             return;
         }
@@ -116,105 +116,131 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         if (batch.isEmpty()) {
             return;
         }
-        List<Record> currentBatch = new ArrayList<>(batch);
+        final List<Record> currentBatch = new ArrayList<>(batch);
         batch.clear();
         lastFlush = System.currentTimeMillis();
 
-        Map<String, List<Record>> byTable = new LinkedHashMap<>();
-        for (Record r : currentBatch) {
-            byTable.computeIfAbsent(r.tableName, k -> new ArrayList<>()).add(r);
-        }
+        final Map<String, List<Record>> byTable = groupByTable(currentBatch);
 
-        for (Map.Entry<String, List<Record>> e : byTable.entrySet()) {
-            String table = e.getKey();
-            Map<String, String> cols = schemas.get(table);
+        for (final Map.Entry<String, List<Record>> e : byTable.entrySet()) {
+            final String table = e.getKey();
+            final Map<String, String> cols = schemas.get(table);
             if (cols == null || cols.isEmpty()) {
                 continue;
             }
-            String fullTable = "`sink_" + table + "`";
-            List<String> columnNames = new ArrayList<>(cols.keySet());
+            final String fullTable = "`sink_" + table + "`";
+            final List<String> columnNames = new ArrayList<>(cols.keySet());
 
-            List<Record> upserts = new ArrayList<>();
-            List<Record> deletes = new ArrayList<>();
-            for (Record r : e.getValue()) {
-                if (r.op == OperationType.DELETE) {
-                    deletes.add(r);
-                } else {
-                    upserts.add(r);
-                }
-            }
+            final List<Record> upserts = new ArrayList<>();
+            final List<Record> deletes = new ArrayList<>();
+            splitByOperation(e.getValue(), upserts, deletes);
 
-            if (!upserts.isEmpty()) {
-                // 生成 INSERT INTO sink_xxx (col1,col2) VALUES (?,?) ON DUPLICATE KEY UPDATE
-                // col1=?,col2=?
-                // VALUES 和 UPDATE 绑定相同的值，MySQL 会根据主键自动判断是 insert 还是 update
-                String colList = "`" + String.join("`,`", columnNames) + "`";
-                String placeholders =
-                        String.join(",", Collections.nCopies(columnNames.size(), "?"));
-                String updateClause =
-                        columnNames.stream()
-                                .map(c -> "`" + c + "`=?")
-                                .collect(Collectors.joining(","));
-                String sql =
-                        String.format(
-                                "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
-                                fullTable, colList, placeholders, updateClause);
-
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    for (Record r : upserts) {
-                        Object[] row = r.after;
-                        if (row == null) {
-                            continue;
-                        }
-                        for (int i = 0; i < columnNames.size(); i++) {
-                            Object val = i < row.length ? row[i] : null;
-                            ps.setObject(i + 1, val);
-                            ps.setObject(i + 1 + columnNames.size(), val);
-                        }
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                } catch (SQLException ex) {
-                    LOG.error("Batch upsert failed for table {}: {}", table, ex.getMessage());
-                    conn.rollback();
-                    throw ex;
-                }
-            }
-
-            if (!deletes.isEmpty()) {
-                String pk = pks.getOrDefault(table, "id");
-                String deleteSql = String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
-
-                try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-                    for (Record r : deletes) {
-                        Object[] row = r.before;
-                        if (row == null) {
-                            continue;
-                        }
-                        int pkIdx = columnNames.indexOf(pk);
-                        if (pkIdx < 0) {
-                            LOG.warn(
-                                    "PK '{}' not found in columns for table {}, skipping delete",
-                                    pk,
-                                    table);
-                            continue;
-                        }
-                        Object val = pkIdx < row.length ? row[pkIdx] : null;
-                        ps.setObject(1, val);
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                } catch (SQLException ex) {
-                    LOG.error("Batch delete failed for table {}: {}", table, ex.getMessage());
-                    conn.rollback();
-                    throw ex;
-                }
-            }
+            flushUpserts(table, fullTable, columnNames, upserts);
+            flushDeletes(table, fullTable, columnNames, deletes);
         }
         conn.commit();
     }
 
+    private final Map<String, List<Record>> groupByTable(final List<Record> records) {
+        final Map<String, List<Record>> byTable = new LinkedHashMap<>();
+        for (final Record r : records) {
+            byTable.computeIfAbsent(r.tableName, k -> new ArrayList<>()).add(r);
+        }
+        return byTable;
+    }
+
+    private void splitByOperation(
+            final List<Record> records, final List<Record> upserts, final List<Record> deletes) {
+        for (final Record r : records) {
+            if (r.op == OperationType.DELETE) {
+                deletes.add(r);
+            } else {
+                upserts.add(r);
+            }
+        }
+    }
+
+    private void flushUpserts(
+            final String table,
+            final String fullTable,
+            final List<String> columnNames,
+            final List<Record> upserts)
+            throws SQLException {
+        if (upserts.isEmpty()) {
+            return;
+        }
+        final String colList = "`" + String.join("`,`", columnNames) + "`";
+        final String placeholders = String.join(",", Collections.nCopies(columnNames.size(), "?"));
+        final String updateClause =
+                columnNames.stream().map(c -> "`" + c + "`=?").collect(Collectors.joining(","));
+        final String sql =
+                String.format(
+                        "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
+                        fullTable, colList, placeholders, updateClause);
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (final Record r : upserts) {
+                if (r.after == null) {
+                    continue;
+                }
+                bindRow(ps, r.after, columnNames.size());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException ex) {
+            LOG.error("Batch upsert failed for table {}: {}", table, ex.getMessage());
+            conn.rollback();
+            throw ex;
+        }
+    }
+
+    private void flushDeletes(
+            final String table,
+            final String fullTable,
+            final List<String> columnNames,
+            final List<Record> deletes)
+            throws SQLException {
+        if (deletes.isEmpty()) {
+            return;
+        }
+        final String pk = pks.getOrDefault(table, "id");
+        final String deleteSql = String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
+
+        try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+            for (final Record r : deletes) {
+                if (r.before == null) {
+                    continue;
+                }
+                final int pkIdx = columnNames.indexOf(pk);
+                if (pkIdx < 0) {
+                    LOG.warn(
+                            "PK '{}' not found in columns for table {}, skipping delete",
+                            pk,
+                            table);
+                    continue;
+                }
+                ps.setObject(1, pkIdx < r.before.length ? r.before[pkIdx] : null);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException ex) {
+            LOG.error("Batch delete failed for table {}: {}", table, ex.getMessage());
+            conn.rollback();
+            throw ex;
+        }
+    }
+
+    private void bindRow(final PreparedStatement ps, final Object[] row, final int columnCount)
+            throws SQLException {
+        for (int i = 0; i < columnCount; i++) {
+            final Object val = i < row.length ? row[i] : null;
+            ps.setObject(i + 1, val);
+            ps.setObject(i + 1 + columnCount, val);
+        }
+    }
+
     @Override
+    @SuppressWarnings("PMD.UseTryWithResources")
     public void close() {
         try {
             if (batch != null && !batch.isEmpty()) {
@@ -245,14 +271,15 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         final Object[] before;
         final Object[] after;
 
-        Record(DataChangeEvent event) {
+        Record(final DataChangeEvent event) {
             this.tableName = event.tableId().getTableName();
             this.op = event.op();
             this.before = extractValues(event.before());
             this.after = extractValues(event.after());
         }
 
-        private static Object[] extractValues(org.apache.flink.cdc.common.data.RecordData row) {
+        private static Object[] extractValues(
+                final org.apache.flink.cdc.common.data.RecordData row) {
             if (row == null) {
                 return null;
             }

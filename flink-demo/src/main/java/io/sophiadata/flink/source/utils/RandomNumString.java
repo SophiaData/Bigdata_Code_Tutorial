@@ -30,42 +30,54 @@ public final class RandomNumString {
     private RandomNumString() {}
 
     public static String getRandNumString(
-            int fromNum, int toNum, int count, String delimiter, boolean canRepeat) {
-        String numString;
+            final int fromNum,
+            final int toNum,
+            final int count,
+            final String delimiter,
+            final boolean canRepeat) {
         if (canRepeat) {
-            ArrayList<Integer> numList = new ArrayList<>();
-            while (numList.size() < count) {
-                numList.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
-            }
-            numString = StringUtils.join(numList, delimiter);
-        } else {
-            HashSet<Integer> numSet = new HashSet<>();
-            if (count <= (toNum - fromNum + 1) / 2) {
-                while (numSet.size() < count) {
-                    numSet.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
-                }
-            } else {
-                HashSet<Integer> exNumSet = new HashSet<>();
-                while (exNumSet.size() < ((toNum - fromNum + 1) - count)) {
-                    exNumSet.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
-                }
-
-                for (int i = fromNum; i <= toNum; i++) {
-                    if (!exNumSet.contains(i)) {
-                        numSet.add(i);
-                    }
-                }
-            }
-            numString = StringUtils.join(numSet, delimiter);
+            return buildWithRepeat(fromNum, toNum, count, delimiter);
         }
-        return numString;
+        return buildWithoutRepeat(fromNum, toNum, count, delimiter);
     }
 
-    public static String getRandNumString(int fromNum, int toNum, int count, String delimiter) {
+    private static String buildWithRepeat(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
+        final ArrayList<Integer> numList = new ArrayList<>();
+        while (numList.size() < count) {
+            numList.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
+        }
+        return StringUtils.join(numList, delimiter);
+    }
+
+    private static String buildWithoutRepeat(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
+        final int range = toNum - fromNum + 1;
+        final HashSet<Integer> numSet = new HashSet<>();
+        if (count <= range / 2) {
+            while (numSet.size() < count) {
+                numSet.add(fromNum + new Random().nextInt(range));
+            }
+        } else {
+            final HashSet<Integer> exNumSet = new HashSet<>();
+            while (exNumSet.size() < (range - count)) {
+                exNumSet.add(fromNum + new Random().nextInt(range));
+            }
+            for (int i = fromNum; i <= toNum; i++) {
+                if (!exNumSet.contains(i)) {
+                    numSet.add(i);
+                }
+            }
+        }
+        return StringUtils.join(numSet, delimiter);
+    }
+
+    public static String getRandNumString(
+            final int fromNum, final int toNum, final int count, final String delimiter) {
         return getRandNumString(fromNum, toNum, count, delimiter, true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println(getRandNumString(1, 3, 4, ",", false));
     }
 }

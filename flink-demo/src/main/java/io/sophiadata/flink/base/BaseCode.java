@@ -37,7 +37,11 @@ public abstract class BaseCode {
     private static final Logger LOG = LoggerFactory.getLogger(BaseCode.class);
 
     public void init(
-            String[] args, String jobName, Boolean hashMap, Boolean localpath, String ckPath)
+            final String[] args,
+            final String jobName,
+            final Boolean hashMap,
+            final Boolean localpath,
+            final String ckPath)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         checkpoint(env, ckPath, hashMap, localpath);
@@ -48,7 +52,7 @@ public abstract class BaseCode {
         env.execute(jobName); // 传入一个job的名字
     }
 
-    public void init(String[] args, String jobName) throws Exception {
+    public void init(final String[] args, final String jobName) throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // Force STREAMING mode so bounded sources (fromCollection / fromElements) don't trigger
@@ -59,11 +63,15 @@ public abstract class BaseCode {
         env.execute(jobName); // 传入一个job的名字
     }
 
-    public abstract void handle(String[] args, StreamExecutionEnvironment env) throws Exception;
+    public abstract void handle(final String[] args, final StreamExecutionEnvironment env)
+            throws Exception;
 
     @SuppressWarnings("deprecation")
     public void checkpoint(
-            StreamExecutionEnvironment env, String ckPath, Boolean hashMap, Boolean localpath) {
+            final StreamExecutionEnvironment env,
+            final String ckPath,
+            final Boolean hashMap,
+            final Boolean localpath) {
         // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
         // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
         // also migrating the underlying state backend (HashMapStateBackend /
@@ -96,7 +104,7 @@ public abstract class BaseCode {
     }
 
     @SuppressWarnings("deprecation")
-    public void restartTask(StreamExecutionEnvironment env) {
+    public void restartTask(final StreamExecutionEnvironment env) {
         // RestartStrategies + setRestartStrategy() are deprecated in Flink 1.20; the new way is
         // Configuration-driven restart via PipelineOptions.RESTART_STRATEGY. Kept as-is for now.
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Duration.ofSeconds(10)));

@@ -21,5 +21,5 @@ package io.sophiadata.flink.source.bean;
 /** (@sophiadata) (@date 2023/8/2 11:10). */
 public class AppNotice {
 
-    Long notice_id;
+    Long noticeId;
 }

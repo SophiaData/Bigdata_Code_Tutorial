@@ -49,9 +49,9 @@ public enum Status {
 
 ```java
 // ✅ 正确：try-with-resources
-try (Connection conn = DriverManager.getConnection(url);
-     Statement stmt = conn.createStatement();
-     ResultSet rs = stmt.executeQuery(sql)) {
+try (final Connection conn = DriverManager.getConnection(url);
+     final Statement stmt = conn.createStatement();
+     final ResultSet rs = stmt.executeQuery(sql)) {
     // 处理结果
 }
 
@@ -95,7 +95,7 @@ try {
 
 ```java
 // ✅ StreamExecutionEnvironment 不需要手动关闭
-StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 env.execute("Job Name"); // Flink 运行时管理生命周期
 
 // ✅ 使用参数化日志（SLF4J）

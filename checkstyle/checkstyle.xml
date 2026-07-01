@@ -3,57 +3,193 @@
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
-<!-- 阿里巴巴 Java 开发规范 Checkstyle 配置 -->
+<!--
+  Code quality rules for Bigdata_Code_Tutorial.
+  Adapted from Apache Flink CDC checkstyle configuration.
+  Focus on naming, imports, whitespace, and coding best practices.
+-->
 <module name="Checker">
+
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="warning"/>
 
+    <!-- 文件末尾必须有换行符 -->
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <!-- 禁止行尾空白 -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Trailing whitespace"/>
+        <property name="severity" value="error"/>
+    </module>
+
+    <!-- 文件最大行数 -->
+    <module name="FileLength">
+        <property name="max" value="4000"/>
+    </module>
+
+    <!-- License header 检查 -->
+    <module name="RegexpHeader">
+        <property name="header" value="\/\*\n \* Licensed to the Apache Software Foundation"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+
+    <!-- 抑制规则 -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkstyle.suppressions.file}" default="checkstyle/suppressions.xml"/>
+    </module>
+
     <module name="TreeWalker">
-        <!-- 命名规范检查 -->
+
+        <!-- 支持 CHECKSTYLE.OFF / CHECKSTYLE.ON 注释抑制 -->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+            <property name="checkFormat" value="$1"/>
+        </module>
+
+        <!-- ========== Import 检查 ========== -->
+
+        <module name="RedundantImport">
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="ImportOrder">
+            <property name="severity" value="error"/>
+            <property name="groups" value="org.apache.flink,*,javax,java,scala"/>
+            <property name="separated" value="true"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+            <property name="option" value="bottom"/>
+            <property name="tokens" value="STATIC_IMPORT, IMPORT"/>
+        </module>
+
+        <module name="AvoidStarImport">
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="UnusedImports">
+            <property name="severity" value="error"/>
+            <property name="processJavadoc" value="true"/>
+        </module>
+
+        <module name="RedundantModifier">
+            <property name="tokens" value="VARIABLE_DEF, ANNOTATION_FIELD_DEF, INTERFACE_DEF, CLASS_DEF, ENUM_DEF"/>
+        </module>
+
+        <!-- ========== Naming 检查 ========== -->
+
         <module name="PackageName">
-            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]{1,})*$"/>
+            <property name="severity" value="error"/>
         </module>
 
         <module name="TypeName">
             <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
-        </module>
-
-        <module name="MethodName">
-            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
-        </module>
-
-        <module name="ParameterName">
-            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
-        </module>
-
-        <module name="LocalVariableName">
-            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
         </module>
 
         <module name="ConstantName">
-            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+            <property name="format" value="^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|FLAG_.*)$"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="StaticVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*_?$"/>
+            <property name="severity" value="error"/>
         </module>
 
         <module name="MemberName">
             <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
         </module>
 
-        <!-- 代码风格 -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="LocalFinalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- ========== Coding 检查 ========== -->
+
         <module name="NeedBraces">
-            <property name="tokens" value="LITERAL_DO, LITERAL_ELSE, LITERAL_FOR, LITERAL_IF, LITERAL_WHILE"/>
+            <property name="severity" value="error"/>
+            <property name="tokens" value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO"/>
         </module>
 
-        <module name="LeftCurly"/>
-        <module name="RightCurly">
-            <property name="option" value="same"/>
+        <module name="UpperEll">
+            <property name="severity" value="error"/>
         </module>
 
-        <module name="EmptyBlock">
-            <property name="option" value="TEXT"/>
+        <module name="FallThrough">
+            <property name="reliefPattern" value="fall through|Fall through|fallthru|Fallthru|falls through|Falls through|fallthrough|Fallthrough|No break|NO break|no break|continue on"/>
+            <property name="severity" value="error"/>
         </module>
 
-        <module name="OneStatementPerLine"/>
+        <module name="SimplifyBooleanExpression"/>
+
+        <module name="EmptyStatement"/>
+
         <module name="MissingSwitchDefault"/>
+
+        <!-- ========== Modifier 检查 ========== -->
+
+        <module name="ModifierOrder">
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- ========== Whitespace 检查 ========== -->
+
+        <module name="EmptyLineSeparator">
+            <property name="allowMultipleEmptyLines" value="false"/>
+            <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
+            <property name="tokens" value="PACKAGE_DEF, IMPORT, STATIC_IMPORT, CLASS_DEF, INTERFACE_DEF, ENUM_DEF, STATIC_INIT, INSTANCE_INIT, METHOD_DEF, CTOR_DEF"/>
+        </module>
+
+        <module name="WhitespaceAround">
+            <property name="tokens" value="ASSIGN, BAND, BAND_ASSIGN, BOR, BOR_ASSIGN, BSR, BSR_ASSIGN, BXOR, BXOR_ASSIGN, COLON, DIV, DIV_ASSIGN, EQUAL, GE, GT, LAMBDA, LAND, LE, LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR, LITERAL_IF, LITERAL_RETURN, LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, LOR, LT, MINUS, MINUS_ASSIGN, MOD, MOD_ASSIGN, NOT_EQUAL, PLUS, PLUS_ASSIGN, QUESTION, SL, SL_ASSIGN, SR_ASSIGN, STAR, STAR_ASSIGN, TYPE_EXTENSION_AND"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+        </module>
+
+        <module name="NoWhitespaceAfter">
+            <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS, UNARY_PLUS"/>
+            <property name="allowLineBreaks" value="true"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="NoWhitespaceBefore">
+            <property name="tokens" value="SEMI, DOT, POST_DEC, POST_INC"/>
+            <property name="allowLineBreaks" value="true"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <module name="OperatorWrap">
+            <property name="option" value="eol"/>
+            <property name="tokens" value="ASSIGN"/>
+        </module>
+
+        <module name="ParenPad">
+            <property name="severity" value="error"/>
+        </module>
 
     </module>
 </module>

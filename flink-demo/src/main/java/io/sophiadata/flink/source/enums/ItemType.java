@@ -28,7 +28,7 @@ public enum ItemType {
 
     String desc;
 
-    ItemType(String desc) {
+    ItemType(final String desc) {
         this.desc = desc;
     }
 }

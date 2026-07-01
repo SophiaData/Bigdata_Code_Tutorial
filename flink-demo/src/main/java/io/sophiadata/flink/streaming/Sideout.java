@@ -31,22 +31,23 @@ import io.sophiadata.flink.base.BaseCode;
 @SuppressWarnings("deprecation")
 public class Sideout extends BaseCode {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         //
         new Sideout().init(args, "sideout");
     }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env) {
+    public void handle(final String[] args, final StreamExecutionEnvironment env) {
         env.setParallelism(1);
-        SingleOutputStreamOperator<String> sideout =
+        final SingleOutputStreamOperator<String> sideout =
                 env.fromElements(STREAM)
                         .flatMap(
                                 new FlatMapFunction<String, String>() {
                                     @Override
-                                    public void flatMap(String value, Collector<String> out)
+                                    public void flatMap(
+                                            final String value, final Collector<String> out)
                                             throws Exception {
-                                        for (String split : value.toLowerCase().split(",")) {
+                                        for (final String split : value.toLowerCase().split(",")) {
                                             if (!split.isEmpty()) {
                                                 out.collect(split);
                                             }
@@ -57,9 +58,9 @@ public class Sideout extends BaseCode {
                                 new ProcessFunction<String, String>() {
                                     @Override
                                     public void processElement(
-                                            String value,
-                                            ProcessFunction<String, String>.Context ctx,
-                                            Collector<String> out) {
+                                            final String value,
+                                            final ProcessFunction<String, String>.Context ctx,
+                                            final Collector<String> out) {
                                         if (value.equals("hello")) {
                                             ctx.output(new OutputTag<>("hello") {}, value);
                                         } else {

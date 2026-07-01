@@ -60,7 +60,7 @@ public final class NacosUtil {
      *   <li>{@code --nacos_server=host:port --nacos_data_id=xxx} — Nacos remote
      * </ul>
      */
-    public static ParameterTool mergeInto(ParameterTool args) {
+    public static ParameterTool mergeInto(final ParameterTool args) {
         if (args.has(CONFIG_KEY)) {
             return mergeLocalFile(args);
         }
@@ -72,15 +72,15 @@ public final class NacosUtil {
 
     // ==================== Local file ====================
 
-    private static ParameterTool mergeLocalFile(ParameterTool args) {
-        String configPath = args.get(CONFIG_KEY);
+    private static ParameterTool mergeLocalFile(final ParameterTool args) {
+        final String configPath = args.get(CONFIG_KEY);
         if (configPath == null || configPath.isEmpty()) {
             throw new IllegalArgumentException("--config path is empty");
         }
         try {
-            Properties fileProps = loadPropertiesFile(configPath);
-            ParameterTool fileTool = ParameterTool.fromMap(toStringMap(fileProps));
-            ParameterTool merged = fileTool.mergeWith(args);
+            final Properties fileProps = loadPropertiesFile(configPath);
+            final ParameterTool fileTool = ParameterTool.fromMap(toStringMap(fileProps));
+            final ParameterTool merged = fileTool.mergeWith(args);
             LOG.info("merged {} keys from {} (CLI wins on conflict)", fileProps.size(), configPath);
             return merged;
         } catch (Exception e) {
@@ -88,20 +88,20 @@ public final class NacosUtil {
         }
     }
 
-    private static Properties loadPropertiesFile(String path) throws IOException {
+    private static Properties loadPropertiesFile(final String path) throws IOException {
         if (path.startsWith("classpath:")) {
-            String resource = path.substring("classpath:".length());
+            final String resource = path.substring("classpath:".length());
             try (InputStream is = NacosUtil.class.getResourceAsStream("/" + resource)) {
                 if (is == null) {
                     throw new IOException("classpath resource not found: " + resource);
                 }
-                Properties props = new Properties();
+                final Properties props = new Properties();
                 props.load(is);
                 return props;
             }
         }
         try (FileInputStream fis = new FileInputStream(path)) {
-            Properties props = new Properties();
+            final Properties props = new Properties();
             props.load(fis);
             return props;
         }
@@ -109,13 +109,13 @@ public final class NacosUtil {
 
     // ==================== Nacos ====================
 
-    private static ParameterTool mergeNacos(ParameterTool args) {
-        String dataId = args.get(NACOS_DATA_ID_KEY, "flink-sync");
-        String group = args.get(NACOS_GROUP_KEY, DEFAULT_GROUP);
+    private static ParameterTool mergeNacos(final ParameterTool args) {
+        final String dataId = args.get(NACOS_DATA_ID_KEY, "flink-sync");
+        final String group = args.get(NACOS_GROUP_KEY, DEFAULT_GROUP);
         try {
-            Properties remote = getFromNacosConfig(dataId, args, group);
-            ParameterTool remoteTool = ParameterTool.fromMap(toStringMap(remote));
-            ParameterTool merged = remoteTool.mergeWith(args);
+            final Properties remote = getFromNacosConfig(dataId, args, group);
+            final ParameterTool remoteTool = ParameterTool.fromMap(toStringMap(remote));
+            final ParameterTool merged = remoteTool.mergeWith(args);
             LOG.info(
                     "merged {} keys from Nacos dataId={} group={} (CLI wins on conflict)",
                     remote.size(),
@@ -128,26 +128,27 @@ public final class NacosUtil {
         }
     }
 
-    static Properties getFromNacosConfig(String assembly, ParameterTool params, String group)
+    static final Properties getFromNacosConfig(
+            final String assembly, final ParameterTool params, final String group)
             throws IOException, NacosException {
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         properties.setProperty("serverAddr", params.get(NACOS_SERVER_KEY, ""));
         properties.setProperty("username", params.get(NACOS_USERNAME_KEY, ""));
         properties.setProperty("password", params.get(NACOS_PASSWORD_KEY, ""));
         properties.setProperty("namespace", params.get(NACOS_NAMESPACE_KEY, ""));
 
-        ConfigService service = NacosFactory.createConfigService(properties);
-        String content = service.getConfig(assembly + ".properties", group, 5000L);
-        Properties load = PropertiesUtil.load(content);
+        final ConfigService service = NacosFactory.createConfigService(properties);
+        final String content = service.getConfig(assembly + ".properties", group, 5000L);
+        final Properties load = PropertiesUtil.load(content);
         LOG.info("nacos successfully configured acquisition");
         return load;
     }
 
     // ==================== utils ====================
 
-    private static Map<String, String> toStringMap(Properties p) {
-        java.util.Map<String, String> out = new java.util.HashMap<>();
-        for (String name : p.stringPropertyNames()) {
+    private static Map<String, String> toStringMap(final Properties p) {
+        final java.util.Map<String, String> out = new java.util.HashMap<>();
+        for (final String name : p.stringPropertyNames()) {
             out.put(name, p.getProperty(name));
         }
         return out;

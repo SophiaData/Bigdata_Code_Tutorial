@@ -31,7 +31,7 @@ import io.sophiadata.flink.function.SplitFunction;
 public class SQLTest1 {
 
     @SuppressWarnings("deprecation")
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -39,7 +39,7 @@ public class SQLTest1 {
         // set sql job name
         tEnv.getConfig().getConfiguration().setString("pipeline.name", "SQLTest");
 
-        DataStreamSource<Tuple4<Integer, String, String, String>> tuple4DataStreamSource =
+        final DataStreamSource<Tuple4<Integer, String, String, String>> tuple4DataStreamSource =
                 env.fromElements(
                         Tuple4.of(200, "e40153bd-8a88-46e1-7996-47e1cd77fe1c", "136", "8z!8k1!80"));
 
@@ -52,7 +52,7 @@ public class SQLTest1 {
 
         tEnv.createTemporarySystemFunction("SplitFunction", SplitFunction.class);
 
-        Table table1 =
+        final Table table1 =
                 tEnv.sqlQuery(
                         "SELECT * "
                                 + " FROM myTable, LATERAL TABLE(SplitFunction(f3,'!')) as T(temp)");

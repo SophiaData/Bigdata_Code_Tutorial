@@ -31,22 +31,23 @@ import io.sophiadata.flink.base.BaseCode;
 @SuppressWarnings("deprecation")
 public class WordCount extends BaseCode {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         //
         new WordCount().init(args, "WordCount");
     }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env) throws Exception {
-        DataStream<String> source = env.fromElements(WORDS);
-        DataStream<Tuple2<String, Integer>> flatMapped =
+    public void handle(final String[] args, final StreamExecutionEnvironment env) throws Exception {
+        final DataStream<String> source = env.fromElements(WORDS);
+        final DataStream<Tuple2<String, Integer>> flatMapped =
                 source.flatMap(
                         new FlatMapFunction<String, Tuple2<String, Integer>>() {
                             @Override
                             public void flatMap(
-                                    String value, Collector<Tuple2<String, Integer>> out)
+                                    final String value,
+                                    final Collector<Tuple2<String, Integer>> out)
                                     throws Exception {
-                                for (String word : value.toLowerCase().split(",")) {
+                                for (final String word : value.toLowerCase().split(",")) {
                                     if (!word.isEmpty()) {
                                         out.collect(new Tuple2<>(word, 1));
                                     }

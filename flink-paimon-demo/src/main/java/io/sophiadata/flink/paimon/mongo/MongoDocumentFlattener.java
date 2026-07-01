@@ -27,7 +27,8 @@ public final class MongoDocumentFlattener {
 
     private MongoDocumentFlattener() {}
 
-    public static Object[] flatten(Document doc, String[] columns, int flattenDepth) {
+    public static Object[] flatten(
+            final Document doc, final String[] columns, final int flattenDepth) {
         Object[] result = new Object[columns.length];
         for (int i = 0; i < columns.length; i++) {
             result[i] = extractValue(doc, columns[i], flattenDepth);
@@ -35,13 +36,14 @@ public final class MongoDocumentFlattener {
         return result;
     }
 
-    private static Object extractValue(Document doc, String column, int flattenDepth) {
+    private static Object extractValue(
+            final Document doc, final String column, final int flattenDepth) {
         if (flattenDepth <= 0) {
             return convertValue(doc.get(column));
         }
-        String[] parts = column.split("\\.");
+        final String[] parts = column.split("\\.");
         Object current = doc;
-        for (String part : parts) {
+        for (final String part : parts) {
             if (!(current instanceof Document)) {
                 return convertValue(current);
             }
@@ -53,7 +55,7 @@ public final class MongoDocumentFlattener {
         return convertValue(current);
     }
 
-    private static Object convertValue(Object value) {
+    private static Object convertValue(final Object value) {
         if (value == null) {
             return null;
         }

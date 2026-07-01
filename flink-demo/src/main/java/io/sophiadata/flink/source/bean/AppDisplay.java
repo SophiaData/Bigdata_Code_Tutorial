@@ -46,7 +46,11 @@ public class AppDisplay {
     private Integer posId;
 
     public AppDisplay(
-            ItemType itemType, String item, DisplayType displayType, Integer order, Integer posId) {
+            final ItemType itemType,
+            final String item,
+            final DisplayType displayType,
+            final Integer order,
+            final Integer posId) {
         this.itemType = itemType;
         this.item = item;
         this.displayType = displayType;
@@ -58,7 +62,7 @@ public class AppDisplay {
         return itemType;
     }
 
-    public void setItemType(ItemType itemType) {
+    public void setItemType(final ItemType itemType) {
         this.itemType = itemType;
     }
 
@@ -66,7 +70,7 @@ public class AppDisplay {
         return item;
     }
 
-    public void setItem(String item) {
+    public void setItem(final String item) {
         this.item = item;
     }
 
@@ -74,7 +78,7 @@ public class AppDisplay {
         return displayType;
     }
 
-    public void setDisplayType(DisplayType displayType) {
+    public void setDisplayType(final DisplayType displayType) {
         this.displayType = displayType;
     }
 
@@ -82,7 +86,7 @@ public class AppDisplay {
         return order;
     }
 
-    public void setOrder(Integer order) {
+    public void setOrder(final Integer order) {
         this.order = order;
     }
 
@@ -90,19 +94,19 @@ public class AppDisplay {
         return posId;
     }
 
-    public void setPosId(Integer posId) {
+    public void setPosId(final Integer posId) {
         this.posId = posId;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppDisplay that = (AppDisplay) o;
+        final AppDisplay that = (AppDisplay) o;
         return Objects.equals(itemType, that.itemType)
                 && Objects.equals(item, that.item)
                 && Objects.equals(displayType, that.displayType)
@@ -130,66 +134,80 @@ public class AppDisplay {
                 + '}';
     }
 
-    public static List<AppDisplay> buildList(AppPage appPage) {
+    public static List<AppDisplay> buildList(final AppPage appPage) {
 
-        List<AppDisplay> displayList = new ArrayList<>();
-        Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
-        RandomOptionGroup isSkewRandom =
+        final List<AppDisplay> displayList = new ArrayList<>();
+        final Boolean isSkew = ParamUtil.checkBoolean(AppConfig.MOCK_SKEW);
+        final RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
 
-        // 促销活动：首页、发现页、分类页
-        if (appPage.getPageId() == PageId.home
-                || appPage.getPageId() == PageId.discovery
-                || appPage.getPageId() == PageId.category) {
-            int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
-            int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
-            for (int i = 1; i <= displayCount; i++) {
-                int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
-                AppDisplay appDisplay =
-                        new AppDisplay(
-                                ItemType.activity_id, actId + "", DisplayType.activity, i, pos_id);
-                displayList.add(appDisplay);
-            }
-        }
-
-        // 非促销活动曝光
-        if (appPage.getPageId() == PageId.good_detail // 商品明细
-                || appPage.getPageId() == PageId.home //   首页
-                || appPage.getPageId() == PageId.category // 分类
-                || appPage.getPageId() == PageId.activity // 活动
-                || appPage.getPageId() == PageId.good_spec //  规格
-                || appPage.getPageId() == PageId.good_list // 商品列表
-                || appPage.getPageId() == PageId.discovery) { // 发现
-
-            int displayCount = RandomNum.getRandInt(MIN_DISPLAY_COUNT, MAX_DISPLAY_COUNT);
-            int activityCount = displayList.size(); // 商品显示从 活动后面开始
-            for (int i = 1 + activityCount; i <= displayCount + activityCount; i++) {
-                // TODO 商品点击，添加倾斜逻辑
-                int skuId;
-                if (appPage.getPageId() == PageId.good_detail
-                        && isSkew
-                        && isSkewRandom.getRandBoolValue()) {
-                    skuId = MAX_SKU_ID / 2;
-                } else {
-                    skuId = RandomNum.getRandInt(1, MAX_SKU_ID);
-                }
-
-                int pos_id = RandomNum.getRandInt(1, MAX_POS_ID);
-                // 商品推广：查询结果：算法推荐 = 30：60：10
-                RandomOptionGroup<DisplayType> dispTypeGroup =
-                        RandomOptionGroup.<DisplayType>builder()
-                                .add(DisplayType.promotion, 30)
-                                .add(DisplayType.query, 60)
-                                .add(DisplayType.recommend, 10)
-                                .build();
-                DisplayType displayType = dispTypeGroup.getValue();
-
-                AppDisplay appDisplay =
-                        new AppDisplay(ItemType.sku_id, skuId + "", displayType, i, pos_id);
-                displayList.add(appDisplay);
-            }
-        }
+        appendActivities(appPage, displayList);
+        appendSkus(appPage, displayList, isSkew, isSkewRandom);
 
         return displayList;
+    }
+
+    /** 促销活动：首页、发现页、分类页 */
+    private static void appendActivities(
+            final AppPage appPage, final List<AppDisplay> displayList) {
+        if (appPage.getPageId() != PageId.home
+                && appPage.getPageId() != PageId.discovery
+                && appPage.getPageId() != PageId.category) {
+            return;
+        }
+        final int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
+        final int posId = RandomNum.getRandInt(1, MAX_POS_ID);
+        for (int i = 1; i <= displayCount; i++) {
+            final int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
+            displayList.add(
+                    new AppDisplay(
+                            ItemType.activity_id, actId + "", DisplayType.activity, i, posId));
+        }
+    }
+
+    /** 非促销活动曝光：商品列表 */
+    private static void appendSkus(
+            final AppPage appPage,
+            final List<AppDisplay> displayList,
+            final Boolean isSkew,
+            final RandomOptionGroup isSkewRandom) {
+        if (!isSkuPage(appPage)) {
+            return;
+        }
+        final int displayCount = RandomNum.getRandInt(MIN_DISPLAY_COUNT, MAX_DISPLAY_COUNT);
+        final int offset = displayList.size();
+        for (int i = 1 + offset; i <= displayCount + offset; i++) {
+            final int skuId = resolveSkuId(appPage, isSkew, isSkewRandom);
+            final int posId = RandomNum.getRandInt(1, MAX_POS_ID);
+            final RandomOptionGroup<DisplayType> dispTypeGroup =
+                    RandomOptionGroup.<DisplayType>builder()
+                            .add(DisplayType.promotion, 30)
+                            .add(DisplayType.query, 60)
+                            .add(DisplayType.recommend, 10)
+                            .build();
+            displayList.add(
+                    new AppDisplay(
+                            ItemType.sku_id, skuId + "", dispTypeGroup.getValue(), i, posId));
+        }
+    }
+
+    private static boolean isSkuPage(final AppPage appPage) {
+        return appPage.getPageId() == PageId.good_detail
+                || appPage.getPageId() == PageId.home
+                || appPage.getPageId() == PageId.category
+                || appPage.getPageId() == PageId.activity
+                || appPage.getPageId() == PageId.good_spec
+                || appPage.getPageId() == PageId.good_list
+                || appPage.getPageId() == PageId.discovery;
+    }
+
+    private static int resolveSkuId(
+            final AppPage appPage, final Boolean isSkew, final RandomOptionGroup isSkewRandom) {
+        if (appPage.getPageId() == PageId.good_detail
+                && isSkew
+                && isSkewRandom.getRandBoolValue()) {
+            return MAX_SKU_ID / 2;
+        }
+        return RandomNum.getRandInt(1, MAX_SKU_ID);
     }
 }

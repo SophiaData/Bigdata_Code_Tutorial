@@ -64,15 +64,22 @@ public class MySqlContainer extends JdbcDatabaseContainer {
         }
 
         addEnv("MYSQL_DATABASE", databaseName);
-        addEnv("MYSQL_USER", username);
-        if (password != null && !password.isEmpty()) {
-            addEnv("MYSQL_PASSWORD", password);
-            addEnv("MYSQL_ROOT_PASSWORD", password);
-        } else if (MYSQL_ROOT_USER.equalsIgnoreCase(username)) {
-            addEnv("MYSQL_ALLOW_EMPTY_PASSWORD", "yes");
+        if (MYSQL_ROOT_USER.equalsIgnoreCase(username)) {
+            // root 用户只需设置 ROOT_PASSWORD，不能同时设置 MYSQL_USER
+            if (password != null && !password.isEmpty()) {
+                addEnv("MYSQL_ROOT_PASSWORD", password);
+            } else {
+                addEnv("MYSQL_ALLOW_EMPTY_PASSWORD", "yes");
+            }
         } else {
-            throw new ContainerLaunchException(
-                    "Empty password can be used only with the root user");
+            addEnv("MYSQL_USER", username);
+            if (password != null && !password.isEmpty()) {
+                addEnv("MYSQL_PASSWORD", password);
+                addEnv("MYSQL_ROOT_PASSWORD", password);
+            } else {
+                throw new ContainerLaunchException(
+                        "Empty password can be used only with the root user");
+            }
         }
         setStartupAttempts(3);
     }

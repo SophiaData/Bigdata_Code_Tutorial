@@ -62,6 +62,9 @@ jobs:
           restore-keys: |
             m2-${{ runner.os }}-jdk11-
 
+      - name: Install local modules
+        run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+
       - name: Verify spotless format
         run: ./mvnw -pl ${{ matrix.module }} -am spotless:check
 
@@ -69,20 +72,8 @@ jobs:
         run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
         continue-on-error: false
 
-      - name: Install local modules for PMD dependency resolution
-        run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
-
-      - name: Run PMD static analysis
-        run: ./mvnw -pl ${{ matrix.module }} pmd:check
-
-      - name: Upload PMD report on warnings
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: pmd-${{ matrix.module }}
-          path: ${{ matrix.module }}/target/pmd.xml
-          if-no-files-found: ignore
-          retention-days: 7
+      - name: Run PMD complexity analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
 
       - name: Run unit tests (skip *IT and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
@@ -173,6 +164,50 @@ jobs:
         with:
           name: surefire-integration
           path: sync_database_mysql/target/surefire-reports
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Job 2b: e2e tests (Testcontainers MySQL + MongoDB, requires Docker)
+  # ---------------------------------------------------------------------------
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v5
+        with:
+          java-version: '11'
+          distribution: temurin
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-jdk11-
+
+      - name: Build all modules (skip tests)
+        run: |
+          set +H
+          ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+
+      - name: Run e2e tests
+        run: |
+          set +H
+          ./mvnw test -pl e2e-tests
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: surefire-e2e
+          path: e2e-tests/target/surefire-reports
           if-no-files-found: ignore
           retention-days: 7
 

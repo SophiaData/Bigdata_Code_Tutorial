@@ -39,17 +39,18 @@ public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchem
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBDebeziumDeserializer.class);
 
     @Override
-    public void deserialize(SourceRecord record, Collector<Document> out) throws Exception {
-        Struct value = (Struct) record.value();
+    public void deserialize(final SourceRecord record, final Collector<Document> out)
+            throws Exception {
+        final Struct value = (Struct) record.value();
         if (value == null) {
             return;
         }
 
-        Struct after = getStructAfter(value);
+        final Struct after = getStructAfter(value);
         if (after == null) {
             // Skip delete events
             try {
-                String op = value.getString("op");
+                final String op = value.getString("op");
                 if ("d".equals(op)) {
                     LOG.debug("Skipping delete event for topic: {}", record.topic());
                     return;
@@ -61,7 +62,7 @@ public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchem
             return;
         }
 
-        Document doc = structToDocument(after);
+        final Document doc = structToDocument(after);
         doc.put("_collection", extractCollectionFromTopic(record.topic()));
         try {
             doc.put("_op", value.getString("op"));
@@ -77,7 +78,7 @@ public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchem
         return TypeInformation.of(Document.class);
     }
 
-    private Struct getStructAfter(Struct value) {
+    private Struct getStructAfter(final Struct value) {
         try {
             return value.getStruct("after");
         } catch (Exception e) {
@@ -85,20 +86,20 @@ public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchem
         }
     }
 
-    private String extractCollectionFromTopic(String topic) {
+    private String extractCollectionFromTopic(final String topic) {
         if (topic == null) {
             return "unknown";
         }
-        String[] parts = topic.split("\\.");
+        final String[] parts = topic.split("\\.");
         return parts[parts.length - 1];
     }
 
     @SuppressWarnings("unchecked")
-    private Document structToDocument(Struct struct) {
-        Document doc = new Document();
-        for (org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Field field :
-                struct.schema().fields()) {
-            Object val = struct.get(field);
+    private Document structToDocument(final Struct struct) {
+        final Document doc = new Document();
+        for (final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Field
+                field : struct.schema().fields()) {
+            final Object val = struct.get(field);
             if (val != null) {
                 doc.put(field.name(), convertValue(val));
             }
@@ -107,19 +108,19 @@ public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchem
     }
 
     @SuppressWarnings("unchecked")
-    private Object convertValue(Object value) {
+    private Object convertValue(final Object value) {
         if (value instanceof Struct) {
             return structToDocument((Struct) value);
         } else if (value instanceof java.util.List) {
-            java.util.List<Object> list = new java.util.ArrayList<>();
-            for (Object item : (java.util.List<?>) value) {
+            final java.util.List<Object> list = new java.util.ArrayList<>();
+            for (final Object item : (java.util.List<?>) value) {
                 list.add(convertValue(item));
             }
             return list;
         } else if (value instanceof java.util.Map) {
-            java.util.Map<?, ?> map = (java.util.Map<?, ?>) value;
-            Document nested = new Document();
-            for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+            final java.util.Map<?, ?> map = (java.util.Map<?, ?>) value;
+            final Document nested = new Document();
+            for (final java.util.Map.Entry<?, ?> entry : map.entrySet()) {
                 nested.put(String.valueOf(entry.getKey()), convertValue(entry.getValue()));
             }
             return nested;

@@ -34,23 +34,23 @@ public class IncrementMapFunction extends BaseCode {
     /** Exposed as a named class so it can be unit-tested without running the full pipeline. */
     public static class IncrementMapper implements MapFunction<Long, Long> {
         @Override
-        public Long map(Long value) {
+        public Long map(final Long value) {
             return value + 1L;
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         new IncrementMapFunction().init(args, "MapFunction");
     }
 
     @Override
-    public void handle(String[] args, StreamExecutionEnvironment env) throws Exception {
+    public void handle(final String[] args, final StreamExecutionEnvironment env) throws Exception {
 
-        ArrayList<Long> testData = new ArrayList<>();
+        final ArrayList<Long> testData = new ArrayList<>();
         testData.add(1L);
         testData.add(2L);
-        DataStreamSource<Long> testDataStream = env.fromCollection(testData);
-        SingleOutputStreamOperator<Long> map = testDataStream.map(new IncrementMapper());
+        final DataStreamSource<Long> testDataStream = env.fromCollection(testData);
+        final SingleOutputStreamOperator<Long> map = testDataStream.map(new IncrementMapper());
         // Print sink registers itself as the terminal operator of the streaming topology.
         // DO NOT call env.execute() here — BaseCode.init() calls it once after handle() returns.
         // Calling it twice would clear the transformations list (Flink 1.20 default) and the

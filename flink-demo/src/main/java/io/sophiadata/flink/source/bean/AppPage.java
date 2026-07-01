@@ -41,14 +41,14 @@ public class AppPage {
     private DisplayType sourceType;
 
     public AppPage(
-            PageId lastPageId,
-            PageId pageId,
-            ItemType itemType,
-            String item,
-            Integer duringTime,
-            String extend1,
-            String extend2,
-            DisplayType sourceType) {
+            final PageId lastPageId,
+            final PageId pageId,
+            final ItemType itemType,
+            final String item,
+            final Integer duringTime,
+            final String extend1,
+            final String extend2,
+            final DisplayType sourceType) {
         this.lastPageId = lastPageId;
         this.pageId = pageId;
         this.itemType = itemType;
@@ -63,7 +63,7 @@ public class AppPage {
         return lastPageId;
     }
 
-    public void setLastPageId(PageId lastPageId) {
+    public void setLastPageId(final PageId lastPageId) {
         this.lastPageId = lastPageId;
     }
 
@@ -71,7 +71,7 @@ public class AppPage {
         return pageId;
     }
 
-    public void setPageId(PageId pageId) {
+    public void setPageId(final PageId pageId) {
         this.pageId = pageId;
     }
 
@@ -79,7 +79,7 @@ public class AppPage {
         return itemType;
     }
 
-    public void setItemType(ItemType itemType) {
+    public void setItemType(final ItemType itemType) {
         this.itemType = itemType;
     }
 
@@ -87,7 +87,7 @@ public class AppPage {
         return item;
     }
 
-    public void setItem(String item) {
+    public void setItem(final String item) {
         this.item = item;
     }
 
@@ -95,7 +95,7 @@ public class AppPage {
         return duringTime;
     }
 
-    public void setDuringTime(Integer duringTime) {
+    public void setDuringTime(final Integer duringTime) {
         this.duringTime = duringTime;
     }
 
@@ -103,7 +103,7 @@ public class AppPage {
         return extend1;
     }
 
-    public void setExtend1(String extend1) {
+    public void setExtend1(final String extend1) {
         this.extend1 = extend1;
     }
 
@@ -111,7 +111,7 @@ public class AppPage {
         return extend2;
     }
 
-    public void setExtend2(String extend2) {
+    public void setExtend2(final String extend2) {
         this.extend2 = extend2;
     }
 
@@ -119,19 +119,20 @@ public class AppPage {
         return sourceType;
     }
 
-    public void setSourceType(DisplayType sourceType) {
+    public void setSourceType(final DisplayType sourceType) {
         this.sourceType = sourceType;
     }
 
-    public static AppPage build(PageId pageId, PageId lastPageId, Integer duringTime) {
+    public static AppPage build(
+            final PageId pageId, final PageId lastPageId, final Integer duringTime) {
 
         ItemType itemType = null;
         String item = null;
-        String extend1 = null;
-        String extend2 = null;
+        final String extend1 = null;
+        final String extend2 = null;
         DisplayType sourceType = null;
 
-        RandomOptionGroup<DisplayType> sourceTypeGroup =
+        final RandomOptionGroup<DisplayType> sourceTypeGroup =
                 RandomOptionGroup.<DisplayType>builder()
                         .add(DisplayType.query, AppConfig.SOURCE_TYPE_RATE[0])
                         .add(DisplayType.promotion, AppConfig.SOURCE_TYPE_RATE[1])
@@ -164,14 +165,14 @@ public class AppPage {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AppPage that = (AppPage) o;
+        final AppPage that = (AppPage) o;
         return lastPageId == that.lastPageId
                 && pageId == that.pageId
                 && itemType == that.itemType
