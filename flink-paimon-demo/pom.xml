@@ -180,6 +180,20 @@
                                     <exclude>org.slf4j:*</exclude>
                                     <exclude>org.apache.logging.log4j:*</exclude>
                                     <exclude>org.apache.flink:flink-shaded-jackson</exclude>
+                                    <!-- CDC shaded uber jars bundle org.apache.kafka.connect.* relocated
+                                             to org.apache.flink.cdc.connectors.shaded.* When this uber
+                                             jar is consumed as a library (e.g. by e2e-tests), the shaded
+                                             classes override the non-shaded ones from
+                                             flink-connector-debezium / flink-connector-mysql-cdc and
+                                             cause AbstractMethodError / NoSuchMethodError at runtime. -->
+                                    <exclude>org.apache.flink:flink-sql-connector-mysql-cdc</exclude>
+                                    <exclude>org.apache.flink:flink-sql-connector-mongodb-cdc</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-pipeline-connector-mysql</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-pipeline-connector-paimon</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-pipeline-connectors</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-source-connectors</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-connect</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-composer</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>

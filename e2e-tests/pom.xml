@@ -32,6 +32,23 @@
             <artifactId>flink-paimon-demo</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- CDC shaded uber jars carry shaded Kafka Connect classes that
+                     override non-shaded ones in flink-connector-debezium / mysql-cdc,
+                     causing AbstractMethodError / NoSuchMethodError at runtime. -->
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-pipeline-connector-mysql</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-pipeline-connector-paimon</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-sql-connector-mongodb-cdc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.sophiadata</groupId>
