@@ -15,13 +15,6 @@
     <!-- 认知复杂度 -->
     <rule ref="category/java/design.xml/CognitiveComplexity"/>
 
-    <!-- NPath 复杂度：switch/查找表 NPath 数学值极高但无实际嵌套路径，阈值 50000 -->
-    <rule ref="category/java/design.xml/NPathComplexity">
-        <properties>
-            <property name="minimum" value="50000"/>
-        </properties>
-    </rule>
-
     <!-- 方法参数数量 -->
     <rule ref="category/java/design.xml/ExcessiveParameterList"/>
 

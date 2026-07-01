@@ -221,41 +221,64 @@ public final class MysqlUtil {
         }
     }
 
+    /** CDC 类型 → MySQL 列类型的映射表 */
+    private static final java.util.Map<String, String> CDC_TO_MYSQL;
+
+    static {
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        m.put("BOOLEAN", "TINYINT(1)");
+        m.put("BOOL", "TINYINT(1)");
+        m.put("BIGINT", "BIGINT");
+        m.put("INT", "INT");
+        m.put("INTEGER", "INT");
+        m.put("TINYINT", "INT");
+        m.put("SMALLINT", "INT");
+        m.put("TEXT", "VARCHAR(1024)");
+        m.put("LONGTEXT", "VARCHAR(1024)");
+        m.put("TIMESTAMP", "TIMESTAMP(6)");
+        m.put("DATETIME", "DATETIME(6)");
+        m.put("DATE", "DATE");
+        m.put("TIME", "TIME");
+        m.put("DOUBLE", "DOUBLE");
+        m.put("FLOAT", "FLOAT");
+        m.put("BLOB", "BLOB");
+        m.put("BINARY", "BLOB");
+        m.put("VARBINARY", "BLOB");
+        CDC_TO_MYSQL = java.util.Collections.unmodifiableMap(m);
+    }
+
     /**
      * 将 CDC / Debezium 报告的类型字符串映射为 MySQL 列类型。 例如 "TEXT" → "VARCHAR(1024)"，"BOOLEAN" → "TINYINT(1)"。
      * 带精度的类型（如 "DECIMAL(10,2)"）会保留原始精度。
      */
-    private static final java.util.Map<String, String> TYPE_MAP = new java.util.HashMap<>();
-
-    static {
-        TYPE_MAP.put("BOOLEAN", "TINYINT(1)");
-        TYPE_MAP.put("BOOL", "TINYINT(1)");
-        TYPE_MAP.put("BIGINT", "BIGINT");
-        TYPE_MAP.put("INT", "INT");
-        TYPE_MAP.put("INTEGER", "INT");
-        TYPE_MAP.put("TINYINT", "INT");
-        TYPE_MAP.put("SMALLINT", "INT");
-        TYPE_MAP.put("TEXT", "VARCHAR(1024)");
-        TYPE_MAP.put("LONGTEXT", "VARCHAR(1024)");
-        TYPE_MAP.put("TIMESTAMP", "TIMESTAMP(6)");
-        TYPE_MAP.put("DATETIME", "DATETIME(6)");
-        TYPE_MAP.put("DATE", "DATE");
-        TYPE_MAP.put("TIME", "TIME");
-        TYPE_MAP.put("DOUBLE", "DOUBLE");
-        TYPE_MAP.put("FLOAT", "FLOAT");
-        TYPE_MAP.put("BLOB", "BLOB");
-        TYPE_MAP.put("BINARY", "BLOB");
-        TYPE_MAP.put("VARBINARY", "BLOB");
-    }
-
     public static String mapType(String cdcType) {
         String upper = cdcType.toUpperCase();
         if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
             return cdcType;
         }
         if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
-            return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
+            return upper.contains("(") ? cdcType : "DECIMAL(10,2)";
         }
-        return TYPE_MAP.getOrDefault(upper, "VARCHAR(1024)");
+        // Map 查找失败时，回退到 contains 匹配处理带后缀的类型
+        String mapped = CDC_TO_MYSQL.get(upper);
+        if (mapped != null) {
+            return mapped;
+        }
+        if (upper.contains("DOUBLE")) {
+            return "DOUBLE";
+        }
+        if (upper.contains("FLOAT")) {
+            return "FLOAT";
+        }
+        if (upper.contains("TIMESTAMP")) {
+            return "TIMESTAMP(6)";
+        }
+        if (upper.contains("DATETIME")) {
+            return "DATETIME(6)";
+        }
+        if (upper.contains("BLOB") || upper.contains("BINARY")) {
+            return "BLOB";
+        }
+        return "VARCHAR(1024)";
     }
 }
