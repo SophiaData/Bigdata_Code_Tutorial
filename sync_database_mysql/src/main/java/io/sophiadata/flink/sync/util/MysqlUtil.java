@@ -92,6 +92,32 @@ public final class MysqlUtil {
             String[] fieldNames,
             DataType[] fieldDataTypes,
             List<String> primaryKeys) {
+        validateCreateTableArgs(sinkTableName, fieldNames, fieldDataTypes, primaryKeys);
+
+        StringBuilder stmt = new StringBuilder();
+        stmt.append("create table if not exists `").append(sinkTableName).append("` (\n");
+        for (int i = 0; i < fieldNames.length; i++) {
+            stmt.append("  `")
+                    .append(fieldNames[i])
+                    .append("` ")
+                    .append(fieldDataTypes[i].toString());
+            if (needsTimestampDefault(fieldDataTypes[i])) {
+                stmt.append(MYSQL_TIMESTAMP_DEFAULT);
+            }
+            stmt.append(",\n");
+        }
+        stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
+
+        String createSql = stmt.toString();
+        LOG.debug("Generated SQL: {}", createSql);
+        return createSql;
+    }
+
+    private static void validateCreateTableArgs(
+            String sinkTableName,
+            String[] fieldNames,
+            DataType[] fieldDataTypes,
+            List<String> primaryKeys) {
         if (!isValidIdentifier(sinkTableName)) {
             throw new IllegalArgumentException("Invalid table name: " + sinkTableName);
         }
@@ -102,20 +128,10 @@ public final class MysqlUtil {
                             + " vs "
                             + fieldDataTypes.length);
         }
-
-        StringBuilder stmt = new StringBuilder();
-        stmt.append("create table if not exists `").append(sinkTableName).append("` (\n");
-        for (int i = 0; i < fieldNames.length; i++) {
-            String column = fieldNames[i];
-            if (!isValidIdentifier(column)) {
-                throw new IllegalArgumentException("Invalid column name: " + column);
+        for (String field : fieldNames) {
+            if (!isValidIdentifier(field)) {
+                throw new IllegalArgumentException("Invalid column name: " + field);
             }
-            DataType dataType = fieldDataTypes[i];
-            stmt.append("  `").append(column).append("` ").append(dataType.toString());
-            if (needsTimestampDefault(dataType)) {
-                stmt.append(MYSQL_TIMESTAMP_DEFAULT);
-            }
-            stmt.append(",\n");
         }
         if (primaryKeys == null || primaryKeys.isEmpty()) {
             throw new IllegalArgumentException(
@@ -126,11 +142,6 @@ public final class MysqlUtil {
                 throw new IllegalArgumentException("Invalid primary key: " + pk);
             }
         }
-        stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
-
-        String createSql = stmt.toString();
-        LOG.debug("Generated SQL: {}", createSql);
-        return createSql;
     }
 
     private static boolean needsTimestampDefault(DataType dataType) {
@@ -214,48 +225,37 @@ public final class MysqlUtil {
      * 将 CDC / Debezium 报告的类型字符串映射为 MySQL 列类型。 例如 "TEXT" → "VARCHAR(1024)"，"BOOLEAN" → "TINYINT(1)"。
      * 带精度的类型（如 "DECIMAL(10,2)"）会保留原始精度。
      */
+    private static final java.util.Map<String, String> TYPE_MAP = new java.util.HashMap<>();
+
+    static {
+        TYPE_MAP.put("BOOLEAN", "TINYINT(1)");
+        TYPE_MAP.put("BOOL", "TINYINT(1)");
+        TYPE_MAP.put("BIGINT", "BIGINT");
+        TYPE_MAP.put("INT", "INT");
+        TYPE_MAP.put("INTEGER", "INT");
+        TYPE_MAP.put("TINYINT", "INT");
+        TYPE_MAP.put("SMALLINT", "INT");
+        TYPE_MAP.put("TEXT", "VARCHAR(1024)");
+        TYPE_MAP.put("LONGTEXT", "VARCHAR(1024)");
+        TYPE_MAP.put("TIMESTAMP", "TIMESTAMP(6)");
+        TYPE_MAP.put("DATETIME", "DATETIME(6)");
+        TYPE_MAP.put("DATE", "DATE");
+        TYPE_MAP.put("TIME", "TIME");
+        TYPE_MAP.put("DOUBLE", "DOUBLE");
+        TYPE_MAP.put("FLOAT", "FLOAT");
+        TYPE_MAP.put("BLOB", "BLOB");
+        TYPE_MAP.put("BINARY", "BLOB");
+        TYPE_MAP.put("VARBINARY", "BLOB");
+    }
+
     public static String mapType(String cdcType) {
         String upper = cdcType.toUpperCase();
-        if (upper.contains("BOOLEAN") || upper.contains("BOOL")) {
-            return "TINYINT(1)";
-        }
-        if (upper.contains("BIGINT")) {
-            return "BIGINT";
-        }
-        if (upper.contains("INT")) {
-            return "INT";
-        }
         if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
             return cdcType;
-        }
-        if (upper.contains("TEXT")) {
-            return "VARCHAR(1024)";
         }
         if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
             return upper.matches(".*DECIMAL\\(\\d+,\\d+\\).*") ? cdcType : "DECIMAL(10,2)";
         }
-        if (upper.contains("TIMESTAMP")) {
-            return "TIMESTAMP(6)";
-        }
-        if (upper.contains("DATETIME")) {
-            return "DATETIME(6)";
-        }
-        if (upper.contains("DATE")) {
-            return "DATE";
-        }
-        if (upper.contains("TIME")) {
-            return "TIME";
-        }
-        if (upper.contains("DOUBLE")) {
-            return "DOUBLE";
-        }
-        if (upper.contains("FLOAT")) {
-            return "FLOAT";
-        }
-        if (upper.contains("BLOB") || upper.contains("BINARY")) {
-            return "BLOB";
-        }
-        LOG.warn("Unknown CDC type '{}', mapping to VARCHAR(1024)", cdcType);
-        return "VARCHAR(1024)";
+        return TYPE_MAP.getOrDefault(upper, "VARCHAR(1024)");
     }
 }

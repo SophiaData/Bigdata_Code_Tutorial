@@ -339,48 +339,36 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         return alterConnection;
     }
 
+    private static final java.util.Map<String, String> MYSQL_TYPE_MAP = new java.util.HashMap<>();
+
+    static {
+        MYSQL_TYPE_MAP.put("TEXT", "VARCHAR(2147483647)");
+        MYSQL_TYPE_MAP.put("BIGINT", "BIGINT");
+        MYSQL_TYPE_MAP.put("INT", "INT");
+        MYSQL_TYPE_MAP.put("TINYINT", "INT");
+        MYSQL_TYPE_MAP.put("SMALLINT", "INT");
+        MYSQL_TYPE_MAP.put("TIMESTAMP", "TIMESTAMP(6)");
+        MYSQL_TYPE_MAP.put("DATETIME", "DATETIME(6)");
+        MYSQL_TYPE_MAP.put("DATE", "DATE");
+        MYSQL_TYPE_MAP.put("TIME", "TIME");
+        MYSQL_TYPE_MAP.put("DOUBLE", "DOUBLE");
+        MYSQL_TYPE_MAP.put("FLOAT", "FLOAT");
+        MYSQL_TYPE_MAP.put("BOOLEAN", "BOOLEAN");
+        MYSQL_TYPE_MAP.put("BOOL", "BOOLEAN");
+        MYSQL_TYPE_MAP.put("BLOB", "BLOB");
+        MYSQL_TYPE_MAP.put("BINARY", "BLOB");
+        MYSQL_TYPE_MAP.put("VARBINARY", "BLOB");
+    }
+
     private String mapToMysqlType(String cdcType) {
         String u = cdcType.toUpperCase();
         if (u.contains("VARCHAR") || u.contains("CHAR")) {
             return cdcType;
         }
-        if (u.contains("TEXT")) {
-            return "VARCHAR(2147483647)";
-        }
-        if (u.contains("BIGINT")) {
-            return "BIGINT";
-        }
-        if (u.contains("INT") || u.contains("TINYINT") || u.contains("SMALLINT")) {
-            return "INT";
-        }
         if (u.contains("DECIMAL")) {
             return cdcType;
         }
-        if (u.contains("TIMESTAMP")) {
-            return "TIMESTAMP(6)";
-        }
-        if (u.contains("DATETIME")) {
-            return "DATETIME(6)";
-        }
-        if (u.contains("DATE")) {
-            return "DATE";
-        }
-        if (u.contains("TIME")) {
-            return "TIME";
-        }
-        if (u.contains("DOUBLE")) {
-            return "DOUBLE";
-        }
-        if (u.contains("FLOAT")) {
-            return "FLOAT";
-        }
-        if (u.contains("BOOLEAN")) {
-            return "BOOLEAN";
-        }
-        if (u.contains("BINARY") || u.contains("VARBINARY") || u.contains("BLOB")) {
-            return "BLOB";
-        }
-        return "VARCHAR(2147483647)";
+        return MYSQL_TYPE_MAP.getOrDefault(u, "VARCHAR(2147483647)");
     }
 
     public void shutdown() {

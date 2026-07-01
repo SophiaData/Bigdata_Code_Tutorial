@@ -69,6 +69,9 @@ jobs:
         run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
         continue-on-error: false
 
+      - name: Run PMD complexity analysis
+        run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
+
       - name: Run unit tests (skip *IT and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
         run: |

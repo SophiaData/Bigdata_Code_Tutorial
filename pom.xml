@@ -577,6 +577,32 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- PMD: 仅检查复杂度（与 Checkstyle 互补） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.21.0</version>
+                <configuration>
+                    <targetJdk>11</targetJdk>
+                    <rulesets>
+                        <ruleset>checkstyle/pmd-complexity.xml</ruleset>
+                    </rulesets>
+                    <failOnViolation>true</failOnViolation>
+                    <printFailingErrors>true</printFailingErrors>
+                    <generateReport>false</generateReport>
+                    <linkXref>false</linkXref>
+                    <sourceEncoding>UTF-8</sourceEncoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- JaCoCo: 测试覆盖率收集 -->
             <plugin>
                 <groupId>org.jacoco</groupId>

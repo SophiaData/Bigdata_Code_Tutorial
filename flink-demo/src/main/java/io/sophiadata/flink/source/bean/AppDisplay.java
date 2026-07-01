@@ -137,59 +137,72 @@ public class AppDisplay {
         RandomOptionGroup isSkewRandom =
                 RandomOptionGroup.builder().add(true, 80).add(false, 20).build();
 
-        // 促销活动：首页、发现页、分类页
-        if (appPage.getPageId() == PageId.home
-                || appPage.getPageId() == PageId.discovery
-                || appPage.getPageId() == PageId.category) {
-            int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
-            int posId = RandomNum.getRandInt(1, MAX_POS_ID);
-            for (int i = 1; i <= displayCount; i++) {
-                int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
-                AppDisplay appDisplay =
-                        new AppDisplay(
-                                ItemType.activity_id, actId + "", DisplayType.activity, i, posId);
-                displayList.add(appDisplay);
-            }
-        }
-
-        // 非促销活动曝光
-        if (appPage.getPageId() == PageId.good_detail // 商品明细
-                || appPage.getPageId() == PageId.home //   首页
-                || appPage.getPageId() == PageId.category // 分类
-                || appPage.getPageId() == PageId.activity // 活动
-                || appPage.getPageId() == PageId.good_spec //  规格
-                || appPage.getPageId() == PageId.good_list // 商品列表
-                || appPage.getPageId() == PageId.discovery) { // 发现
-
-            int displayCount = RandomNum.getRandInt(MIN_DISPLAY_COUNT, MAX_DISPLAY_COUNT);
-            int activityCount = displayList.size(); // 商品显示从 活动后面开始
-            for (int i = 1 + activityCount; i <= displayCount + activityCount; i++) {
-                // TODO 商品点击，添加倾斜逻辑
-                int skuId;
-                if (appPage.getPageId() == PageId.good_detail
-                        && isSkew
-                        && isSkewRandom.getRandBoolValue()) {
-                    skuId = MAX_SKU_ID / 2;
-                } else {
-                    skuId = RandomNum.getRandInt(1, MAX_SKU_ID);
-                }
-
-                int posId = RandomNum.getRandInt(1, MAX_POS_ID);
-                // 商品推广：查询结果：算法推荐 = 30：60：10
-                RandomOptionGroup<DisplayType> dispTypeGroup =
-                        RandomOptionGroup.<DisplayType>builder()
-                                .add(DisplayType.promotion, 30)
-                                .add(DisplayType.query, 60)
-                                .add(DisplayType.recommend, 10)
-                                .build();
-                DisplayType displayType = dispTypeGroup.getValue();
-
-                AppDisplay appDisplay =
-                        new AppDisplay(ItemType.sku_id, skuId + "", displayType, i, posId);
-                displayList.add(appDisplay);
-            }
-        }
+        appendActivities(appPage, displayList);
+        appendSkus(appPage, displayList, isSkew, isSkewRandom);
 
         return displayList;
+    }
+
+    /** 促销活动：首页、发现页、分类页 */
+    private static void appendActivities(AppPage appPage, List<AppDisplay> displayList) {
+        if (appPage.getPageId() != PageId.home
+                && appPage.getPageId() != PageId.discovery
+                && appPage.getPageId() != PageId.category) {
+            return;
+        }
+        int displayCount = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
+        int posId = RandomNum.getRandInt(1, MAX_POS_ID);
+        for (int i = 1; i <= displayCount; i++) {
+            int actId = RandomNum.getRandInt(1, MAX_ACTIVITY_COUNT);
+            displayList.add(
+                    new AppDisplay(
+                            ItemType.activity_id, actId + "", DisplayType.activity, i, posId));
+        }
+    }
+
+    /** 非促销活动曝光：商品列表 */
+    private static void appendSkus(
+            AppPage appPage,
+            List<AppDisplay> displayList,
+            Boolean isSkew,
+            RandomOptionGroup isSkewRandom) {
+        if (!isSkuPage(appPage)) {
+            return;
+        }
+        int displayCount = RandomNum.getRandInt(MIN_DISPLAY_COUNT, MAX_DISPLAY_COUNT);
+        int offset = displayList.size();
+        for (int i = 1 + offset; i <= displayCount + offset; i++) {
+            int skuId = resolveSkuId(appPage, isSkew, isSkewRandom);
+            int posId = RandomNum.getRandInt(1, MAX_POS_ID);
+            RandomOptionGroup<DisplayType> dispTypeGroup =
+                    RandomOptionGroup.<DisplayType>builder()
+                            .add(DisplayType.promotion, 30)
+                            .add(DisplayType.query, 60)
+                            .add(DisplayType.recommend, 10)
+                            .build();
+            displayList.add(
+                    new AppDisplay(
+                            ItemType.sku_id, skuId + "", dispTypeGroup.getValue(), i, posId));
+        }
+    }
+
+    private static boolean isSkuPage(AppPage appPage) {
+        return appPage.getPageId() == PageId.good_detail
+                || appPage.getPageId() == PageId.home
+                || appPage.getPageId() == PageId.category
+                || appPage.getPageId() == PageId.activity
+                || appPage.getPageId() == PageId.good_spec
+                || appPage.getPageId() == PageId.good_list
+                || appPage.getPageId() == PageId.discovery;
+    }
+
+    private static int resolveSkuId(
+            AppPage appPage, Boolean isSkew, RandomOptionGroup isSkewRandom) {
+        if (appPage.getPageId() == PageId.good_detail
+                && isSkew
+                && isSkewRandom.getRandBoolValue()) {
+            return MAX_SKU_ID / 2;
+        }
+        return RandomNum.getRandInt(1, MAX_SKU_ID);
     }
 }
