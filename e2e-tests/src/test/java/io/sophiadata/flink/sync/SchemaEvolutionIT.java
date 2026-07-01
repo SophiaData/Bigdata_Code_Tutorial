@@ -18,13 +18,17 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +57,14 @@ public class SchemaEvolutionIT {
 
     private static final String SOURCE_DB = "flink_source";
     private static final String SINK_DB = "flink_sink";
+
+    @ClassRule
+    public static final MiniClusterWithClientResource miniClusterResource =
+            new MiniClusterWithClientResource(
+                    new MiniClusterResourceConfiguration.Builder()
+                            .setNumberTaskManagers(1)
+                            .setNumberSlotsPerTaskManager(1)
+                            .build());
 
     private JdbcDatabaseContainer<?> sourceContainer;
     private JdbcDatabaseContainer<?> sinkContainer;
@@ -141,10 +153,18 @@ public class SchemaEvolutionIT {
     @After
     public void tearDown() {
         if (flinkJobThread != null) {
-            flinkJobThread.interrupt();
+            // 先给管道时间自然结束，不要立即打断
             try {
-                flinkJobThread.join(5000);
+                flinkJobThread.join(15000);
             } catch (InterruptedException ignored) {
+            }
+            // 如果还没结束，再强制打断
+            if (flinkJobThread.isAlive()) {
+                flinkJobThread.interrupt();
+                try {
+                    flinkJobThread.join(5000);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         if (sourceContainer != null) sourceContainer.stop();
@@ -242,6 +262,7 @@ public class SchemaEvolutionIT {
 
     private void startFlinkPipeline() {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
         env.enableCheckpointing(2000);
         tEnv = StreamTableEnvironment.create(env);
@@ -259,6 +280,7 @@ public class SchemaEvolutionIT {
         args.put("sinkUrl", sinkUrl);
         args.put("sinkUsername", "root");
         args.put("sinkPassword", "root");
+        args.put("serverTimeZone", "UTC");
         args.put("setParallelism", "1");
         args.put("cdcSourceName", "mysql-cdc-sit");
 

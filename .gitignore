@@ -53,3 +53,8 @@ docs/internal/
 # OS
 Thumbs.db
 error/
+
+# Surefire / Failsafe reports accidentally written to the repo root
+# (happens when CI runs e2e tests with the wrong working directory)
+/TEST-*.xml
+/*.txt
