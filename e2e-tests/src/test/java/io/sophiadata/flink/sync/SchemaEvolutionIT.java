@@ -19,6 +19,9 @@
 package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -62,6 +65,14 @@ public class SchemaEvolutionIT {
     public static final MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
+                            // Explicitly bound TM memory; the default gets parsed as
+                            // 1024 GB on this classpath and the job cannot acquire a
+                            // slot (NoResourceAvailableException). 1 GiB is plenty.
+                            .setConfiguration(
+                                    new Configuration()
+                                            .set(
+                                                    TaskManagerOptions.TOTAL_PROCESS_MEMORY,
+                                                    MemorySize.ofMebiBytes(1024)))
                             .setNumberTaskManagers(1)
                             .setNumberSlotsPerTaskManager(1)
                             .build());
