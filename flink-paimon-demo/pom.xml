@@ -189,6 +189,13 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <!-- Pipeline CDC connector's DebeziumDeserializationSchema uses
+                                             shaded SourceRecord and would override the non-shaded version
+                                             in flink-connector-debezium when this uber jar is used as a
+                                             library dependency (e.g. from e2e-tests). -->
+                                        <exclude>org/apache/flink/cdc/debezium/DebeziumDeserializationSchema.class</exclude>
+                                        <exclude>org/apache/flink/cdc/debezium/StringDebeziumDeserializationSchema.class</exclude>
+                                        <exclude>org/apache/flink/cdc/debezium/JsonDebeziumDeserializationSchema.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
