@@ -58,8 +58,11 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         if (record == null) {
             return;
         }
-        final org.apache.kafka.connect.data.Struct valueStruct =
-                (org.apache.kafka.connect.data.Struct) record.value();
+        final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct
+                valueStruct =
+                        (org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data
+                                        .Struct)
+                                record.value();
         if (valueStruct == null) {
             return;
         }
@@ -69,7 +72,8 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return;
         }
 
-        final org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
+        final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct source =
+                valueStruct.getStruct("source");
         if (source == null) {
             LOG.warn("Missing source info, skipping event");
             return;
@@ -77,8 +81,10 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         final String dbName = source.getString("db");
         final String tableName = source.getString("table");
 
-        final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
-        final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
+        final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct before =
+                valueStruct.getStruct("before");
+        final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct after =
+                valueStruct.getStruct("after");
 
         final Object[] beforeVals = extractValues(before);
         final Object[] afterVals = extractValues(after);
@@ -110,13 +116,15 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
 
     /** 从 Kafka Connect Struct 中提取所有字段值为 Object 数组。 */
     @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-    static Object[] extractValues(final org.apache.kafka.connect.data.Struct row) {
+    static Object[] extractValues(
+            final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct row) {
         if (row == null) {
             return null;
         }
         Object[] values = new Object[row.schema().fields().size()];
         int i = 0;
-        for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+        for (final org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Field f :
+                row.schema().fields()) {
             values[i++] = convertValue(row.get(f.name()));
         }
         return values;
