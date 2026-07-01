@@ -153,10 +153,18 @@ public class SchemaEvolutionIT {
     @After
     public void tearDown() {
         if (flinkJobThread != null) {
-            flinkJobThread.interrupt();
+            // 先给管道时间自然结束，不要立即打断
             try {
-                flinkJobThread.join(5000);
+                flinkJobThread.join(15000);
             } catch (InterruptedException ignored) {
+            }
+            // 如果还没结束，再强制打断
+            if (flinkJobThread.isAlive()) {
+                flinkJobThread.interrupt();
+                try {
+                    flinkJobThread.join(5000);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         if (sourceContainer != null) sourceContainer.stop();
