@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs filter that biases output toward the same bug categories
+  IntelliJ IDEA flags with its "Java | Errors and Warnings" inspections:
+    CORRECTNESS     -> "Probable bugs" / "Probable bug"
+    BAD_PRACTICE    -> "Resource management" / "Malicious code" / "Naming"
+    PERFORMANCE     -> "Performance" / "Java language level migration aids"
+    MT_CORRECTNESS  -> "Threading issues"
+    SECURITY        -> "Security"
+  The "STYLE" and "EXPERIMENTAL" categories are excluded on purpose: they
+  produce a lot of noise that IDEA itself suppresses by default.
+-->
+<FindBugsFilter>
+    <Match><Bug category="CORRECTNESS"/></Match>
+    <Match><Bug category="BAD_PRACTICE"/></Match>
+    <Match><Bug category="PERFORMANCE"/></Match>
+    <Match><Bug category="MT_CORRECTNESS"/></Match>
+    <Match><Bug category="SECURITY"/></Match>
+</FindBugsFilter>
