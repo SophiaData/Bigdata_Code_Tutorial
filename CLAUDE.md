@@ -67,6 +67,19 @@ export PATH="$JAVA_HOME/bin:$PATH"
 - **禁止**：`git push --force`、`git reset --hard`、`rm -rf`（全局 / ~ / 仓库根）
 - 提交前必跑：`./mvnw spotless:apply`
 
+## 开发流程（强制）
+
+**每次改代码前必须按顺序执行：**
+
+1. **切到 master 并拉最新**：`git checkout master && git pull origin master`
+2. **从最新 master 切新分支**：`git checkout -b <type>/<description>`
+3. **确认分支正确**：`git branch --show-current` 确认在新分支上
+4. **再开始改代码**
+
+**禁止**：在别人的分支、未合并的分支、或 master 上直接改代码。每个独立改动一个分支，不混。
+
+
+
 ## 安全规则
 
 - **永远不要**把真实 API key / 数据库密码 / 私钥写入代码或 `.env` 的提交版本
