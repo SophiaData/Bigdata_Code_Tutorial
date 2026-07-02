@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
  * 以匹配 JDBC sink 的类型期望。
  */
 public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
 
     /**
@@ -419,22 +420,6 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             }
         }
         return columnNames;
-    }
-
-    /**
-     * Extract column names from a Debezium historyRecord JSON string. Used for Flink CDC 3.x DDL
-     * events where the schema changes are embedded as a JSON string rather than a Struct.
-     */
-    @SuppressWarnings("unchecked")
-    private java.util.List<String> extractColumnNamesFromHistoryRecord(
-            final org.apache.kafka.connect.data.Struct change) {
-        // historyRecord can be a JSON string in some Debezium formats
-        final Object hr = change.get("historyRecord");
-        if (hr instanceof String) {
-            return parseHistoryRecord((String) hr);
-        }
-        // Or columns may be directly available as in schemaChanges/tableChanges formats
-        return new java.util.ArrayList<>(extractColumnStructs(change).keySet());
     }
 
     @Override

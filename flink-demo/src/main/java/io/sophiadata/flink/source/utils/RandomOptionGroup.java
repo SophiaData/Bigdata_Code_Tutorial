@@ -20,7 +20,7 @@ package io.sophiadata.flink.source.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** (@sophiadata) (@date 2023/8/2 11:19). */
 public class RandomOptionGroup<T> {
@@ -86,28 +86,28 @@ public class RandomOptionGroup<T> {
     }
 
     public T getValue() {
-        final int i = new Random().nextInt(totalWeight);
+        final int i = ThreadLocalRandom.current().nextInt(totalWeight);
         return optList.get(i).getValue();
     }
 
     public RanOpt<T> getRandomOpt() {
-        final int i = new Random().nextInt(totalWeight);
+        final int i = ThreadLocalRandom.current().nextInt(totalWeight);
         return optList.get(i);
     }
 
     public String getRandStringValue() {
-        final int i = new Random().nextInt(totalWeight);
+        final int i = ThreadLocalRandom.current().nextInt(totalWeight);
         return (String) optList.get(i).getValue();
     }
 
     public Integer getRandIntValue() {
-        final int i = new Random().nextInt(totalWeight);
+        final int i = ThreadLocalRandom.current().nextInt(totalWeight);
         return (Integer) optList.get(i).getValue();
     }
 
     public Boolean getRandBoolValue() {
 
-        final int i = new Random().nextInt(totalWeight);
+        final int i = ThreadLocalRandom.current().nextInt(totalWeight);
         return (Boolean) optList.get(i).getValue();
     }
 

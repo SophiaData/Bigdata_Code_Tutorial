@@ -800,6 +800,7 @@
                     <failOnError>false</failOnError>
                     <failOnViolation>false</failOnViolation>
                     <includeFilterFile>spotbugs-include.xml</includeFilterFile>
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
                     <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>
                 </configuration>
                 <executions>

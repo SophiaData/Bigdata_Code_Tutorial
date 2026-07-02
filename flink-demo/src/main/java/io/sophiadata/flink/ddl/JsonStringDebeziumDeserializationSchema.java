@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 public class JsonStringDebeziumDeserializationSchema
         implements DebeziumDeserializationSchema<Tuple2<Boolean, String>> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public void deserialize(final SourceRecord record, final Collector<Tuple2<Boolean, String>> out)
             throws Exception {

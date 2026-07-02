@@ -85,6 +85,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     /** Wrapper to make an ALTER statement checkpointable. */
     @SuppressWarnings("serial")
     private static final class AlterRecord implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         final String sqlStatement;
         final long checkpointTime;
 
