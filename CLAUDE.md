@@ -72,12 +72,26 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 **每次改代码前必须按顺序执行：**
 
-1. **切到 master 并拉最新**：`git checkout master && git pull origin master`
-2. **从最新 master 切新分支**：`git checkout -b <type>/<description>`
+1. **拉取 upstream 最新**：`git fetch upstream`
+2. **从 upstream/master 切新分支**：`git checkout -b <type>/<description> upstream/master`
 3. **确认分支正确**：`git branch --show-current` 确认在新分支上
 4. **再开始改代码**
 
 **禁止**：在别人的分支、未合并的分支、或 master 上直接改代码。每个独立改动一个分支，不混。
+
+**为什么从 upstream/master 切**：fork 的 master 会积累 merge commit（跟 upstream 同步产生），从 fork master 切分支会把这些脏历史带进 PR，导致一个简单改动携带十几个 commit。
+
+**同步 fork 用 rebase 不用 merge**：
+
+```bash
+# ❌ 会产生 merge commit
+git checkout master && git merge upstream/master
+
+# ✅ 线性历史，干净
+git checkout master && git rebase upstream/master
+```
+
+**fork 的 master 只做同步，不做开发**：所有改动都在从 upstream/master 切出的分支上进行，fork master 保持和 upstream 一致。
 
 
 
