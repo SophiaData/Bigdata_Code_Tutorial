@@ -128,7 +128,6 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - [快速开始](DOCKER_TEST_GUIDE.md) - Docker 一键测试指南
 - [开发指南](docs/DEVELOPMENT.md) - 本地开发流程
 - [工程化文档](docs/reliability/) - CI/CD 和质量保证
-- [API 文档](docs/api/) - 核心类和接口说明
 - [Paimon 同步](flink-paimon-demo/) - MySQL → Paimon 数据湖同步示例
 
 ## 🎯 核心特性

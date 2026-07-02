@@ -337,5 +337,5 @@ flink-jobmanager:
 
 - [Docker Compose 官方文档](https://docs.docker.com/compose/)
 - [Flink 官方文档](https://nightlies.apache.org/flink/flink-docs-release-1.20/)
-- [MySQL CDC 连接器](https://nightlies.apache.org/flink/flink-cdc-docs-release-3.6/docs/connectors/mysql-cdc/)
-- [Flink 性能调优](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/ops/performance_tuning/)
+- [Flink CDC 官方文档](https://nightlies.apache.org/flink/flink-cdc-docs-release-3.6/)
+- [Flink 性能调优](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/table/tuning/)

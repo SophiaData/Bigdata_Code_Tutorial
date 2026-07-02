@@ -222,5 +222,4 @@ SHOW STATUS LIKE 'Com_insert%';
 ## 📚 相关文档
 
 - [Flink CDC 官方文档](https://nightlies.apache.org/flink/flink-cdc-docs-release-3.6/)
-- [MySQL CDC 配置说明](https://nightlies.apache.org/flink/flink-cdc-docs-release-3.6/docs/connectors/mysql-cdc/)
-- [Flink 性能调优](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/ops/performance_tuning/)
+- [Flink 性能调优](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/table/tuning/)
