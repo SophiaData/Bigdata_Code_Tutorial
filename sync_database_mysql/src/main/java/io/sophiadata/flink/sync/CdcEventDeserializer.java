@@ -20,10 +20,13 @@ package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.cdc.common.data.GenericRecordData;
+import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.TableId;
 import org.apache.flink.cdc.common.event.TruncateTableEvent;
+import org.apache.flink.cdc.common.schema.Column;
+import org.apache.flink.cdc.common.types.DataTypes;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 
@@ -64,18 +67,28 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return;
         }
 
-        final String op = valueStruct.getString("op");
-        if (op == null) {
-            return;
-        }
-
         final org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
         if (source == null) {
-            LOG.warn("Missing source info, skipping event");
+            LOG.warn(
+                    "Missing source info, skipping event. value fields: {}",
+                    valueStruct.schema().fields().stream()
+                            .map(org.apache.kafka.connect.data.Field::name)
+                            .collect(java.util.stream.Collectors.toList()));
             return;
         }
         final String dbName = source.getString("db");
         final String tableName = source.getString("table");
+
+        final String op;
+        try {
+            op = valueStruct.getString("op");
+        } catch (final org.apache.kafka.connect.errors.DataException e) {
+            LOG.info("Non-DML event for {}.{}, skipping: {}", dbName, tableName, e.getMessage());
+            return;
+        }
+        if (op == null) {
+            return;
+        }
 
         final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
         final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
@@ -157,6 +170,78 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return s;
         }
         return value;
+    }
+
+    /**
+     * Parse Debezium schema change events (DDL) and emit corresponding Flink CDC schema change
+     * events.
+     */
+    @SuppressWarnings("unchecked")
+    private void emitSchemaChange(
+            final org.apache.kafka.connect.data.Struct valueStruct,
+            final String dbName,
+            final String tableName,
+            final Collector<Event> out) {
+        final Object schemaChangesRaw = valueStruct.get("schemaChanges");
+        if (!(schemaChangesRaw instanceof java.util.List)) {
+            return;
+        }
+        final java.util.List<?> changes = (java.util.List<?>) schemaChangesRaw;
+        final TableId tid = TableId.tableId(dbName, tableName);
+        for (final Object changeObj : changes) {
+            if (!(changeObj instanceof org.apache.kafka.connect.data.Struct)) {
+                continue;
+            }
+            final org.apache.kafka.connect.data.Struct change =
+                    (org.apache.kafka.connect.data.Struct) changeObj;
+            final String type = change.getString("type");
+            if (type == null) {
+                continue;
+            }
+            switch (type) {
+                case "ALTER":
+                    emitAlterColumns(change, tid, out);
+                    break;
+                default:
+                    LOG.debug(
+                            "Unhandled schema change type: {} for {}.{}", type, dbName, tableName);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void emitAlterColumns(
+            final org.apache.kafka.connect.data.Struct change,
+            final TableId tid,
+            final Collector<Event> out) {
+        final Object columnsRaw = change.get("columns");
+        if (!(columnsRaw instanceof java.util.List)) {
+            return;
+        }
+        final java.util.List<?> columns = (java.util.List<?>) columnsRaw;
+        final java.util.List<AddColumnEvent.ColumnWithPosition> addedColumns =
+                new java.util.ArrayList<>();
+        for (final Object colObj : columns) {
+            if (!(colObj instanceof org.apache.kafka.connect.data.Struct)) {
+                continue;
+            }
+            final org.apache.kafka.connect.data.Struct col =
+                    (org.apache.kafka.connect.data.Struct) colObj;
+            final String name = col.getString("name");
+            final String typeName = col.getString("typeName");
+            if (name == null || typeName == null) {
+                continue;
+            }
+            addedColumns.add(
+                    new AddColumnEvent.ColumnWithPosition(
+                            Column.physicalColumn(name, DataTypes.STRING()),
+                            AddColumnEvent.ColumnPosition.LAST,
+                            null));
+            LOG.info("Parsed ALTER column: {} {}", name, typeName);
+        }
+        if (!addedColumns.isEmpty()) {
+            out.collect(new AddColumnEvent(tid, addedColumns));
+        }
     }
 
     @Override

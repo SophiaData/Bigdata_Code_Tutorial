@@ -22,6 +22,7 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.CreateTableEvent;
+import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.SchemaChangeEvent;
 import org.apache.flink.cdc.common.schema.Column;
@@ -138,7 +139,7 @@ public class FlinkSqlWDS extends BaseCode {
         final Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
         final Map<String, String> pks = new ConcurrentHashMap<>();
 
-        final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
+        final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp, "sink_");
         LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
 
         // 构建 CDC Source：监听整个数据库（db + ".*" 匹配所有表）
@@ -230,6 +231,8 @@ public class FlinkSqlWDS extends BaseCode {
                     (CreateTableEvent) event, sinkJdbcUrl, sinkUser, sinkPassword, schemas, pks);
         } else if (event instanceof AddColumnEvent) {
             handleAddColumn((AddColumnEvent) event, schemas);
+        } else if (event instanceof DropColumnEvent) {
+            handleDropColumn((DropColumnEvent) event, schemas);
         }
     }
 
@@ -267,6 +270,22 @@ public class FlinkSqlWDS extends BaseCode {
             colMap.put(cp.getAddColumn().getName(), cp.getAddColumn().getType().toString());
         }
         LOG.info("AddColumn schema updated for {}", tableName);
+    }
+
+    private static void handleDropColumn(
+            final DropColumnEvent dce, final Map<String, Map<String, String>> schemas) {
+        final String tableName = dce.tableId().getTableName();
+        final Map<String, String> colMap = schemas.get(tableName);
+        if (colMap == null) {
+            return;
+        }
+        for (final String droppedCol : dce.getDroppedColumnNames()) {
+            colMap.remove(droppedCol);
+        }
+        LOG.info(
+                "DropColumn schema updated for {}: removed {}",
+                tableName,
+                dce.getDroppedColumnNames());
     }
 
     /**
@@ -308,7 +327,7 @@ public class FlinkSqlWDS extends BaseCode {
                 String pk = "id";
                 try (PreparedStatement psCol =
                         conn.prepareStatement(
-                                "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?")) {
+                                "SELECT COLUMN_NAME, DATA_TYPE, ORDINAL_POSITION FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION")) {
                     psCol.setString(1, source.database);
                     psCol.setString(2, table);
                     try (ResultSet rs = psCol.executeQuery()) {

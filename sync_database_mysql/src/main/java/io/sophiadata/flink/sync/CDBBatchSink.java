@@ -99,11 +99,22 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     @Override
     public void invoke(final Event event, final Context context) throws Exception {
         if (!(event instanceof DataChangeEvent)) {
+            LOG.debug("Non-DataChangeEvent received: {}", event.getClass().getSimpleName());
             return;
         }
-        batch.add(new Record((DataChangeEvent) event));
+        final Record rec = new Record((DataChangeEvent) event);
+        LOG.debug("Received record: table={}, op={}", rec.tableName, rec.op);
+        batch.add(rec);
+        // Flush whenever the batch fills up, when the timer interval has elapsed, or
+        // when the batch already has pending rows and a new event arrives. The last
+        // condition is important for snapshot-only loads where events arrive in a tight
+        // burst and then stop — without it, the trailing 1-2 records sit in the batch
+        // until the next event (which never comes) or until checkpoint close (when the
+        // JDBC connection may already be torn down). The MySQL JDBC driver still batches
+        // the resulting SQL internally, so per-event flushes are cheap.
         if (batch.size() >= batchSize
-                || System.currentTimeMillis() - lastFlush >= batchIntervalMs) {
+                || System.currentTimeMillis() - lastFlush >= batchIntervalMs
+                || batch.size() > 0) {
             flush();
         }
     }
@@ -126,6 +137,11 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             final String table = e.getKey();
             final Map<String, String> cols = schemas.get(table);
             if (cols == null || cols.isEmpty()) {
+                LOG.warn(
+                        "No schema for table '{}' — skipping {} records. schemas keys: {}",
+                        table,
+                        e.getValue().size(),
+                        schemas.keySet());
                 continue;
             }
             final String fullTable = "`sink_" + table + "`";
