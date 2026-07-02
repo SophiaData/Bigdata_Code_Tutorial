@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MongoDBDebeziumDeserializer implements DebeziumDeserializationSchema<Document> {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBDebeziumDeserializer.class);
 
     @Override
