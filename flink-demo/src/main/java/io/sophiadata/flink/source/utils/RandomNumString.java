@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** (@sophiadata) (@date 2023/8/2 11:18). */
 public final class RandomNumString {
@@ -45,7 +45,7 @@ public final class RandomNumString {
             final int fromNum, final int toNum, final int count, final String delimiter) {
         final ArrayList<Integer> numList = new ArrayList<>();
         while (numList.size() < count) {
-            numList.add(fromNum + new Random().nextInt(toNum - fromNum + 1));
+            numList.add(fromNum + ThreadLocalRandom.current().nextInt(toNum - fromNum + 1));
         }
         return StringUtils.join(numList, delimiter);
     }
@@ -56,12 +56,12 @@ public final class RandomNumString {
         final HashSet<Integer> numSet = new HashSet<>();
         if (count <= range / 2) {
             while (numSet.size() < count) {
-                numSet.add(fromNum + new Random().nextInt(range));
+                numSet.add(fromNum + ThreadLocalRandom.current().nextInt(range));
             }
         } else {
             final HashSet<Integer> exNumSet = new HashSet<>();
             while (exNumSet.size() < (range - count)) {
-                exNumSet.add(fromNum + new Random().nextInt(range));
+                exNumSet.add(fromNum + ThreadLocalRandom.current().nextInt(range));
             }
             for (int i = fromNum; i <= toNum; i++) {
                 if (!exNumSet.contains(i)) {

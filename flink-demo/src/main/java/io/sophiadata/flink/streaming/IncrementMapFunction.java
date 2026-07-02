@@ -33,6 +33,8 @@ public class IncrementMapFunction extends BaseCode {
 
     /** Exposed as a named class so it can be unit-tested without running the full pipeline. */
     public static class IncrementMapper implements MapFunction<Long, Long> {
+        private static final long serialVersionUID = 1L;
+
         @Override
         public Long map(final Long value) {
             return value + 1L;

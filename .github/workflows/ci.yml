@@ -215,8 +215,8 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Job 2c: IDEA-style static analysis (Error Prone + SpotBugs)
-  #         Report-only: findings are uploaded as artifacts, the job does not fail
-  #         the build. Once the baseline is at zero, switch failOnViolation -> true.
+  #         Error Prone blocks the build on ERROR-level checks.
+  #         SpotBugs remains report-only (too many false positives).
   # ---------------------------------------------------------------------------
   intellij-style-lint:
     name: IDEA-style Lint (Error Prone + SpotBugs)
@@ -240,7 +240,7 @@ jobs:
           restore-keys: |
             m2-${{ runner.os }}-jdk11-
 
-      - name: Compile under Error Prone (findings printed, build stays green)
+      - name: Compile under Error Prone (errors block the build)
         run: ./mvnw -B -ntp -pl flink-demo,sync_database_mysql,flink-function,flink-paimon-demo -am clean compile -DskipTests
 
       - name: Run SpotBugs (report-only, mirrors IDEA's bug-level inspections)

@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("deprecation")
 public class CDBBatchSink extends RichSinkFunction<Event> {
+
+    private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CDBBatchSink.class);
     private final String sinkJdbcUrl;
     private final String sinkUser;
@@ -95,8 +97,10 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
         conn.setAutoCommit(false);
         // Verify connection is alive
-        try (java.sql.Statement check = conn.createStatement()) {
-            check.executeQuery("SELECT 1");
+        try (java.sql.Statement check = conn.createStatement();
+                @SuppressWarnings("unused")
+                        java.sql.ResultSet rs = check.executeQuery("SELECT 1")) {
+            // Result consumed to verify the query executes without error
         }
         batch = new ArrayList<>();
         lastFlush = System.currentTimeMillis();

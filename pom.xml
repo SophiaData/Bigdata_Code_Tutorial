@@ -40,7 +40,7 @@
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
         <!-- Error Prone: bring IDEA-style static findings into the compile step. -->
-        <errorprone.version>2.36.0</errorprone.version>
+        <errorprone.version>2.31.0</errorprone.version>
         <!-- SpotBugs: bytecode-level analysis that mirrors IDEA's bug-level inspections. -->
         <spotbugs.version>4.8.6.6</spotbugs.version>
         <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
@@ -664,17 +664,14 @@
                     <testSource>${java.version}</testSource>
                     <testTarget>${java.version}</testTarget>
                     <!--
-                        Error Prone deferred: ErrorProne 2.36 requires JDK 17+ for the
-                        javac plugin. Project pins JDK 11, so the -Xplugin:ErrorProne
-                        arg below is commented out. Re-enable when CI moves to JDK 17.
+                        Error Prone 2.31.0 (latest JDK 11-compatible version).
+                        Blocks the build on ERROR-level checks.
+                        See: https://errorprone.info/docs/installation
                     -->
                     <compilerArgs>
                         <arg>-XDcompilePolicy=simple</arg>
-                        <!--
-                        <arg>-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepDisableWarningsInGeneratedCode</arg>
-                        -->
+                        <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode</arg>
                     </compilerArgs>
-                    <!--
                     <annotationProcessorPaths>
                         <path>
                             <groupId>com.google.errorprone</groupId>
@@ -682,7 +679,6 @@
                             <version>${errorprone.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    -->
                 </configuration>
             </plugin>
             <plugin>
@@ -804,6 +800,7 @@
                     <failOnError>false</failOnError>
                     <failOnViolation>false</failOnViolation>
                     <includeFilterFile>spotbugs-include.xml</includeFilterFile>
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
                     <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>
                 </configuration>
                 <executions>

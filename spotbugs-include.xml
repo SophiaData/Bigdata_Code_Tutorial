@@ -16,4 +16,28 @@
     <Match><Bug category="PERFORMANCE"/></Match>
     <Match><Bug category="MT_CORRECTNESS"/></Match>
     <Match><Bug category="SECURITY"/></Match>
+
+    <!--
+      Intentional exclusions for this project:
+      - Dynamic DDL is core to CDC sync — SQL_NONCONSTANT_STRING is by design
+      - Flink ProcessFunction inner classes are always non-static (framework pattern)
+      - Transient JDBC fields are rebuilt in open(), not serialized
+      - Builder/data-bean fields may be unused but needed for serialization
+    -->
+    <Match>
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE,
+                       SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING"/>
+    </Match>
+    <Match>
+        <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON"/>
+        <Package name="~io\.sophiadata\.flink\..*"/>
+    </Match>
+    <Match>
+        <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED"/>
+        <Class name="~io\.sophiadata\.flink\.sync\.(CDBBatchSink|CdcEventDeserializer)"/>
+    </Match>
+    <Match>
+        <Bug pattern="UUF_UNUSED_FIELD|URF_UNREAD_FIELD"/>
+        <Class name="~io\.sophiadata\.flink\.source\.bean\..*"/>
+    </Match>
 </FindBugsFilter>
