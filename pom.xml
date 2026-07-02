@@ -39,6 +39,10 @@
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <spotless.version>2.23.0</spotless.version>
+        <!-- Error Prone: bring IDEA-style static findings into the compile step. -->
+        <errorprone.version>2.36.0</errorprone.version>
+        <!-- SpotBugs: bytecode-level analysis that mirrors IDEA's bug-level inspections. -->
+        <spotbugs.version>4.8.6.6</spotbugs.version>
         <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
@@ -659,6 +663,26 @@
                     <target>${java.version}</target>
                     <testSource>${java.version}</testSource>
                     <testTarget>${java.version}</testTarget>
+                    <!--
+                        Error Prone deferred: ErrorProne 2.36 requires JDK 17+ for the
+                        javac plugin. Project pins JDK 11, so the -Xplugin:ErrorProne
+                        arg below is commented out. Re-enable when CI moves to JDK 17.
+                    -->
+                    <compilerArgs>
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <!--
+                        <arg>-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepDisableWarningsInGeneratedCode</arg>
+                        -->
+                    </compilerArgs>
+                    <!--
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${errorprone.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    -->
                 </configuration>
             </plugin>
             <plugin>
@@ -758,6 +782,33 @@
                 <executions>
                     <execution>
                         <id>checkstyle-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                SpotBugs: byte-code analysis that mirrors IDEA's bug-level inspections
+                (null handling, resource closure, hashing, threading, ...). Report-only:
+                the verify phase still completes and uploads the XML/HTML report.
+            -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                    <failOnError>false</failOnError>
+                    <failOnViolation>false</failOnViolation>
+                    <includeFilterFile>spotbugs-include.xml</includeFilterFile>
+                    <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
