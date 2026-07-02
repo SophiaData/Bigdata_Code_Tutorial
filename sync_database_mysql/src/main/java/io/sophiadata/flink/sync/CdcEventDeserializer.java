@@ -26,7 +26,6 @@ import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.TableId;
 import org.apache.flink.cdc.common.event.TruncateTableEvent;
-import org.apache.flink.cdc.common.schema.Column;
 import org.apache.flink.cdc.common.types.utils.DataTypeUtils;
 import org.apache.flink.cdc.connectors.mysql.schema.MySqlTypeUtils;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
@@ -99,10 +98,19 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         } catch (final org.apache.kafka.connect.errors.DataException e) {
             // DDL events (no "op" field) → parse schema changes so the schemas map
             // stays in sync with MySQL table evolution (ADD / DROP / ALTER columns).
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("DDL event for {}.{}, emitting schema change events", dbName, tableName);
+            // Wrapped in try-catch so a DDL parsing failure never kills the pipeline.
+            try {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("DDL event for {}.{}, parsing schema changes", dbName, tableName);
+                }
+                emitSchemaChange(valueStruct, dbName, tableName, out);
+            } catch (final Exception ddlEx) {
+                LOG.warn(
+                        "Failed to parse DDL event for {}.{}: {}",
+                        dbName,
+                        tableName,
+                        ddlEx.getMessage());
             }
-            emitSchemaChange(valueStruct, dbName, tableName, out);
             return;
         }
         if (op == null) {
@@ -307,24 +315,18 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             }
         }
 
-        // Detect and emit added columns with correct DataType via MySqlTypeUtils
-        for (final java.util.Map.Entry<String, org.apache.kafka.connect.data.Struct> entry :
-                newColStructs.entrySet()) {
-            final String newName = entry.getKey();
+        // NOTE: We intentionally do NOT emit AddColumnEvent for added columns.
+        // The schemas map is used by CDBBatchSink to build INSERT SQL column lists.
+        // Emitting AddColumnEvent would update schemas before the async ALTER TABLE on
+        // the sink completes, causing INSERT to reference non-existent columns → MySQL error.
+        // DropColumnEvent is safe because it only removes columns from schemas,
+        // making the INSERT SQL narrower (which always matches the sink table).
+        for (final String newName : newColStructs.keySet()) {
             if (!oldNames.contains(newName)) {
-                final org.apache.flink.cdc.common.types.DataType dataType =
-                        columnStructToFlinkType(entry.getValue());
                 LOG.info(
-                        "Detected added column: {}.{} -> {}",
+                        "Detected added column (schema ALTER handled by SchemaEvolver): {}.{}",
                         tid.getTableName(),
-                        newName,
-                        dataType);
-                out.collect(
-                        new AddColumnEvent(
-                                tid,
-                                java.util.List.of(
-                                        new AddColumnEvent.ColumnWithPosition(
-                                                Column.physicalColumn(newName, dataType)))));
+                        newName);
             }
         }
     }

@@ -292,7 +292,7 @@ public class SchemaEvolutionIT {
             try (Connection c = getSourceConnection();
                     Statement st = c.createStatement()) {
                 st.executeUpdate(
-                        "INSERT INTO t_order (id, product, amount, create_time) "
+                        "INSERT IGNORE INTO t_order (id, product, amount, create_time) "
                                 + "VALUES (3, 'keyboard', 199.00, NOW())");
             }
             LOG.info("INSERT attempt {} succeeded", attempt);
