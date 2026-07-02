@@ -153,7 +153,7 @@ public class FlinkSqlWDS extends BaseCode {
                         .databaseList(db)
                         .tableList(db + ".*")
                         .serverTimeZone(tz)
-                        .deserializer(new CdcEventDeserializer())
+                        .deserializer(new CdcEventDeserializer(schemas))
                         .includeSchemaChanges(true)
                         .build();
 

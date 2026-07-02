@@ -22,12 +22,15 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.cdc.common.data.GenericRecordData;
 import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
+import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.TableId;
 import org.apache.flink.cdc.common.event.TruncateTableEvent;
 import org.apache.flink.cdc.common.schema.Column;
-import org.apache.flink.cdc.common.types.DataTypes;
+import org.apache.flink.cdc.common.types.utils.DataTypeUtils;
+import org.apache.flink.cdc.connectors.mysql.schema.MySqlTypeUtils;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.util.Collector;
 
 import org.slf4j.Logger;
@@ -53,6 +56,17 @@ import org.slf4j.LoggerFactory;
  */
 public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
+
+    /**
+     * Shared schemas cache (tableName → ordered columnName → typeString). Used to detect DROP/ADD
+     * columns when processing DDL events, so the column order in {@link CDBBatchSink} stays in sync
+     * with the actual MySQL table schema.
+     */
+    private final java.util.Map<String, java.util.Map<String, String>> schemas;
+
+    CdcEventDeserializer(final java.util.Map<String, java.util.Map<String, String>> schemas) {
+        this.schemas = schemas;
+    }
 
     @Override
     @SuppressWarnings("PMD.ImplicitSwitchFallThrough")
@@ -83,7 +97,12 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         try {
             op = valueStruct.getString("op");
         } catch (final org.apache.kafka.connect.errors.DataException e) {
-            LOG.info("Non-DML event for {}.{}, skipping: {}", dbName, tableName, e.getMessage());
+            // DDL events (no "op" field) → parse schema changes so the schemas map
+            // stays in sync with MySQL table evolution (ADD / DROP / ALTER columns).
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("DDL event for {}.{}, emitting schema change events", dbName, tableName);
+            }
+            emitSchemaChange(valueStruct, dbName, tableName, out);
             return;
         }
         if (op == null) {
@@ -173,8 +192,13 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     }
 
     /**
-     * Parse Debezium schema change events (DDL) and emit corresponding Flink CDC schema change
-     * events.
+     * Parse Debezium schema change events (DDL) and emit Flink CDC {@link SchemaChangeEvent}
+     * objects (AddColumnEvent / DropColumnEvent).
+     *
+     * <p>Supports both {@code schemaChanges} (Debezium 1.x) and {@code tableChanges} (HistoryRecord
+     * / CDC 3.x) formats. Compares the new column list against the current in-memory {@link
+     * #schemas} map to determine which columns were added or dropped, then emits the corresponding
+     * events so {@code FlinkSqlWDS.handleSchemaEvent()} can keep the schemas cache in sync.
      */
     @SuppressWarnings("unchecked")
     private void emitSchemaChange(
@@ -182,11 +206,16 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             final String dbName,
             final String tableName,
             final Collector<Event> out) {
-        final Object schemaChangesRaw = valueStruct.get("schemaChanges");
-        if (!(schemaChangesRaw instanceof java.util.List)) {
+        // Try schemaChanges field (Debezium 1.x MySQL connector format)
+        Object changesRaw = valueStruct.get("schemaChanges");
+        // Try tableChanges field (Debezium HistoryRecord / CDC 3.x format)
+        if (!(changesRaw instanceof java.util.List)) {
+            changesRaw = valueStruct.get("tableChanges");
+        }
+        if (!(changesRaw instanceof java.util.List)) {
             return;
         }
-        final java.util.List<?> changes = (java.util.List<?>) schemaChangesRaw;
+        final java.util.List<?> changes = (java.util.List<?>) changesRaw;
         final TableId tid = TableId.tableId(dbName, tableName);
         for (final Object changeObj : changes) {
             if (!(changeObj instanceof org.apache.kafka.connect.data.Struct)) {
@@ -209,38 +238,151 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void emitAlterColumns(
-            final org.apache.kafka.connect.data.Struct change,
-            final TableId tid,
-            final Collector<Event> out) {
-        final Object columnsRaw = change.get("columns");
+    /**
+     * Extract column-name → column-struct map from a Debezium schema-change or table-change struct.
+     * Handles both {@code schemaChanges} (direct "columns" field) and {@code tableChanges} (nested
+     * "table" → "columns") formats. Returns a {@link java.util.LinkedHashMap} to preserve insertion
+     * order.
+     */
+    private java.util.Map<String, org.apache.kafka.connect.data.Struct> extractColumnStructs(
+            final org.apache.kafka.connect.data.Struct change) {
+        final java.util.Map<String, org.apache.kafka.connect.data.Struct> result =
+                new java.util.LinkedHashMap<>();
+        Object columnsRaw = change.get("columns");
         if (!(columnsRaw instanceof java.util.List)) {
-            return;
+            // Try nested "table" → "columns" (tableChanges / HistoryRecord format)
+            final org.apache.kafka.connect.data.Struct table = change.getStruct("table");
+            if (table != null) {
+                columnsRaw = table.get("columns");
+            }
         }
-        final java.util.List<?> columns = (java.util.List<?>) columnsRaw;
-        final java.util.List<AddColumnEvent.ColumnWithPosition> addedColumns =
-                new java.util.ArrayList<>();
-        for (final Object colObj : columns) {
+        if (!(columnsRaw instanceof java.util.List)) {
+            return result;
+        }
+        for (final Object colObj : (java.util.List<?>) columnsRaw) {
             if (!(colObj instanceof org.apache.kafka.connect.data.Struct)) {
                 continue;
             }
             final org.apache.kafka.connect.data.Struct col =
                     (org.apache.kafka.connect.data.Struct) colObj;
             final String name = col.getString("name");
-            final String typeName = col.getString("typeName");
-            if (name == null || typeName == null) {
-                continue;
+            if (name != null) {
+                result.put(name, col);
             }
-            addedColumns.add(
-                    new AddColumnEvent.ColumnWithPosition(
-                            Column.physicalColumn(name, DataTypes.STRING()),
-                            AddColumnEvent.ColumnPosition.LAST,
-                            null));
-            LOG.info("Parsed ALTER column: {} {}", name, typeName);
         }
-        if (!addedColumns.isEmpty()) {
-            out.collect(new AddColumnEvent(tid, addedColumns));
+        return result;
+    }
+
+    /**
+     * Compares the new column list from an ALTER event against the in-memory {@link #schemas} map
+     * and emits {@link DropColumnEvent} / {@link AddColumnEvent} to keep the schemas cache in sync.
+     *
+     * <p>Column types for added columns are resolved via {@link MySqlTypeUtils#fromDbzColumn} so
+     * the sink table's ALTER ADD COLUMN uses the correct Flink CDC {@link
+     * org.apache.flink.table.types.DataType} (e.g. {@code DECIMAL(10,2)} → {@code
+     * DataTypes.DECIMAL(10,2)}), not a hardcoded {@code STRING()}.
+     */
+    @SuppressWarnings("unchecked")
+    private void emitAlterColumns(
+            final org.apache.kafka.connect.data.Struct change,
+            final TableId tid,
+            final Collector<Event> out) {
+        final java.util.Map<String, org.apache.kafka.connect.data.Struct> newColStructs =
+                extractColumnStructs(change);
+        if (newColStructs.isEmpty()) {
+            return;
+        }
+
+        final java.util.Map<String, String> existing = schemas.get(tid.getTableName());
+        if (existing == null) {
+            return;
+        }
+
+        // Detect dropped columns: present in old schemas but absent from the new DDL
+        final java.util.Set<String> oldNames = existing.keySet();
+        for (final String oldName : oldNames) {
+            if (!newColStructs.containsKey(oldName)) {
+                LOG.info("Detected dropped column: {}.{}", tid.getTableName(), oldName);
+                out.collect(new DropColumnEvent(tid, java.util.List.of(oldName)));
+            }
+        }
+
+        // Detect and emit added columns with correct DataType via MySqlTypeUtils
+        for (final java.util.Map.Entry<String, org.apache.kafka.connect.data.Struct> entry :
+                newColStructs.entrySet()) {
+            final String newName = entry.getKey();
+            if (!oldNames.contains(newName)) {
+                final org.apache.flink.cdc.common.types.DataType dataType =
+                        columnStructToFlinkType(entry.getValue());
+                LOG.info(
+                        "Detected added column: {}.{} -> {}",
+                        tid.getTableName(),
+                        newName,
+                        dataType);
+                out.collect(
+                        new AddColumnEvent(
+                                tid,
+                                java.util.List.of(
+                                        new AddColumnEvent.ColumnWithPosition(
+                                                Column.physicalColumn(newName, dataType)))));
+            }
+        }
+    }
+
+    /**
+     * Convert a Debezium DDL column struct (Kafka Connect Struct) to Flink CDC {@link
+     * org.apache.flink.cdc.common.types.DataType} by constructing a {@link
+     * io.debezium.relational.Column} and delegating to {@link MySqlTypeUtils#fromDbzColumn}, then
+     * converting via {@link DataTypeUtils#fromFlinkDataType}.
+     *
+     * <p>Falls back to {@code DataTypes.STRING()} if any part of the mapping fails (missing fields,
+     * unknown type name, etc.).
+     */
+    @SuppressWarnings("unchecked")
+    static org.apache.flink.cdc.common.types.DataType columnStructToFlinkType(
+            final org.apache.kafka.connect.data.Struct colStruct) {
+        try {
+            final String typeName = colStruct.getString("typeName");
+            if (typeName == null) {
+                return DataTypeUtils.fromFlinkDataType(DataTypes.STRING());
+            }
+
+            final io.debezium.relational.ColumnEditor editor =
+                    io.debezium.relational.Column.editor();
+            editor.name(colStruct.getString("name"));
+            editor.type(typeName);
+
+            // length / precision
+            final org.apache.kafka.connect.data.Field lengthField =
+                    colStruct.schema().field("length");
+            if (lengthField != null && colStruct.get("length") != null) {
+                editor.length(colStruct.getInt32("length"));
+            }
+
+            // scale
+            final org.apache.kafka.connect.data.Field scaleField =
+                    colStruct.schema().field("scale");
+            if (scaleField != null && colStruct.get("scale") != null) {
+                editor.scale(colStruct.getInt32("scale"));
+            }
+
+            // optional
+            final org.apache.kafka.connect.data.Field optionalField =
+                    colStruct.schema().field("optional");
+            if (optionalField != null && colStruct.get("optional") instanceof Boolean) {
+                editor.optional(colStruct.getBoolean("optional"));
+            }
+
+            final io.debezium.relational.Column debeziumColumn = editor.create();
+            final org.apache.flink.table.types.DataType flinkDataType =
+                    MySqlTypeUtils.fromDbzColumn(debeziumColumn, false);
+            return DataTypeUtils.fromFlinkDataType(flinkDataType);
+        } catch (final Exception e) {
+            LOG.warn(
+                    "Failed to map DDL column type for '{}', falling back to STRING.",
+                    colStruct.getString("name"),
+                    e);
+            return DataTypeUtils.fromFlinkDataType(DataTypes.STRING());
         }
     }
 

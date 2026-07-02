@@ -91,19 +91,37 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         Class.forName("com.mysql.cj.jdbc.Driver");
         conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
         conn.setAutoCommit(false);
+        // Verify connection is alive
+        try (java.sql.Statement check = conn.createStatement()) {
+            check.executeQuery("SELECT 1");
+        }
         batch = new ArrayList<>();
         lastFlush = System.currentTimeMillis();
         LOG.info("CDBBatchSink connected to sink");
     }
 
+    /** Reconnect if the current connection is broken. */
+    private void ensureConnection() throws SQLException {
+        if (conn == null || conn.isClosed() || !conn.isValid(5)) {
+            LOG.warn("JDBC connection lost, reconnecting to sink");
+            try {
+                if (conn != null && !conn.isClosed()) {
+                    conn.close();
+                }
+            } catch (SQLException ignored) {
+            }
+            conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
+            conn.setAutoCommit(false);
+            LOG.info("CDBBatchSink reconnected to sink");
+        }
+    }
+
     @Override
     public void invoke(final Event event, final Context context) throws Exception {
         if (!(event instanceof DataChangeEvent)) {
-            LOG.debug("Non-DataChangeEvent received: {}", event.getClass().getSimpleName());
             return;
         }
         final Record rec = new Record((DataChangeEvent) event);
-        LOG.debug("Received record: table={}, op={}", rec.tableName, rec.op);
         batch.add(rec);
         // Flush whenever the batch fills up, when the timer interval has elapsed, or
         // when the batch already has pending rows and a new event arrives. The last
@@ -131,6 +149,16 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         batch.clear();
         lastFlush = System.currentTimeMillis();
 
+        try {
+            flushInternal(currentBatch);
+        } catch (SQLException ex) {
+            LOG.warn("Flush failed, reconnecting and retrying once: {}", ex.getMessage());
+            ensureConnection();
+            flushInternal(currentBatch);
+        }
+    }
+
+    private void flushInternal(final List<Record> currentBatch) throws Exception {
         final Map<String, List<Record>> byTable = groupByTable(currentBatch);
 
         for (final Map.Entry<String, List<Record>> e : byTable.entrySet()) {
@@ -185,6 +213,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         if (upserts.isEmpty()) {
             return;
         }
+        ensureConnection();
         final String colList = "`" + String.join("`,`", columnNames) + "`";
         final String placeholders = String.join(",", Collections.nCopies(columnNames.size(), "?"));
         final String updateClause =
@@ -219,6 +248,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         if (deletes.isEmpty()) {
             return;
         }
+        ensureConnection();
         final String pk = pks.getOrDefault(table, "id");
         final String deleteSql = String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
 
@@ -260,22 +290,32 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     public void close() {
         try {
             if (batch != null && !batch.isEmpty()) {
-                flush();
+                try {
+                    flush();
+                } catch (Exception e) {
+                    LOG.warn("Final flush failed, attempting reconnect: {}", e.getMessage());
+                    try {
+                        ensureConnection();
+                        flush();
+                    } catch (Exception e2) {
+                        LOG.error("Final flush failed after reconnect", e2);
+                    }
+                }
             }
         } catch (Exception e) {
             LOG.error("Error during final flush", e);
         } finally {
             try {
-                if (conn != null) {
+                if (conn != null && !conn.isClosed()) {
                     conn.close();
                 }
             } catch (SQLException e) {
-                LOG.error("Error closing connection", e);
+                LOG.debug("Error closing connection (may already be closed)", e.getMessage());
             }
             try {
                 super.close();
             } catch (Exception e) {
-                LOG.error("Error in super.close()", e);
+                LOG.debug("Error in super.close(): {}", e.getMessage());
             }
         }
     }

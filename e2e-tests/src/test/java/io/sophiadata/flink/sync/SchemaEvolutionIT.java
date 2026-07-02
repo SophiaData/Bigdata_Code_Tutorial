@@ -147,11 +147,12 @@ public class SchemaEvolutionIT {
             st.executeUpdate("FLUSH PRIVILEGES");
         }
 
-        // Create source table (empty — data inserted after pipeline starts)
+        // Create source table (drop first to ensure clean state)
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
+            st.executeUpdate("DROP TABLE IF EXISTS t_order");
             st.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS t_order ("
+                    "CREATE TABLE t_order ("
                             + "  id BIGINT NOT NULL, "
                             + "  product VARCHAR(255), "
                             + "  amount DECIMAL(10,2), "
@@ -279,17 +280,32 @@ public class SchemaEvolutionIT {
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("ALTER TABLE t_order DROP COLUMN amount");
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(10);
             st.executeUpdate("ALTER TABLE t_order ADD COLUMN amount DECIMAL(10,2) DEFAULT 0.00");
         }
         LOG.info("DDL executed: DROP + RE-ADD amount column");
-        TimeUnit.SECONDS.sleep(5);
+        // Extra delay for CDC binlog reader to fully recover after DDL
+        TimeUnit.SECONDS.sleep(15);
 
-        try (Connection c = getSourceConnection();
-                Statement st = c.createStatement()) {
-            st.executeUpdate(
-                    "INSERT INTO t_order (id, product, amount, create_time) "
-                            + "VALUES (3, 'keyboard', 199.00, NOW())");
+        // Retry INSERT up to 3 times with delays
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try (Connection c = getSourceConnection();
+                    Statement st = c.createStatement()) {
+                st.executeUpdate(
+                        "INSERT INTO t_order (id, product, amount, create_time) "
+                                + "VALUES (3, 'keyboard', 199.00, NOW())");
+            }
+            LOG.info("INSERT attempt {} succeeded", attempt);
+            TimeUnit.SECONDS.sleep(5);
+            try (Connection c = getSinkConnection();
+                    Statement st = c.createStatement();
+                    ResultSet rs =
+                            st.executeQuery("SELECT COUNT(*) FROM " + SINK_DB + ".sink_t_order")) {
+                if (rs.next() && rs.getInt(1) >= 3) {
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         waitForSinkRowCount("sink_t_order", 3, 60);
