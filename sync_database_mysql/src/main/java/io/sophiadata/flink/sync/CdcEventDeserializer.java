@@ -20,16 +20,12 @@ package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.cdc.common.data.GenericRecordData;
-import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.TableId;
 import org.apache.flink.cdc.common.event.TruncateTableEvent;
-import org.apache.flink.cdc.common.types.utils.DataTypeUtils;
-import org.apache.flink.cdc.connectors.mysql.schema.MySqlTypeUtils;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
-import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.util.Collector;
 
 import org.slf4j.Logger;
@@ -57,14 +53,17 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
 
     /**
-     * Shared schemas cache (tableName → ordered columnName → typeString). Used to detect DROP/ADD
-     * columns when processing DDL events, so the column order in {@link CDBBatchSink} stays in sync
-     * with the actual MySQL table schema.
+     * Shared schemas cache. Transient — Flink serialization creates independent copies which break
+     * DDL-triggered updates. Always access via schemas() → SharedSchemaState.
      */
-    private final java.util.Map<String, java.util.Map<String, String>> schemas;
+    private transient java.util.Map<String, java.util.Map<String, String>> schemas;
 
-    CdcEventDeserializer(final java.util.Map<String, java.util.Map<String, String>> schemas) {
-        this.schemas = schemas;
+    CdcEventDeserializer() {
+        this.schemas = SharedSchemaState.schemas();
+    }
+
+    private java.util.Map<String, java.util.Map<String, String>> schemas() {
+        return SharedSchemaState.schemas();
     }
 
     @Override
@@ -214,53 +213,42 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             final String dbName,
             final String tableName,
             final Collector<Event> out) {
-        // Try schemaChanges field (Debezium 1.x MySQL connector format)
-        Object changesRaw = valueStruct.get("schemaChanges");
-        // Try tableChanges field (Debezium HistoryRecord / CDC 3.x format)
-        if (!(changesRaw instanceof java.util.List)) {
-            changesRaw = valueStruct.get("tableChanges");
-        }
-        if (!(changesRaw instanceof java.util.List)) {
-            return;
-        }
-        final java.util.List<?> changes = (java.util.List<?>) changesRaw;
-        final TableId tid = TableId.tableId(dbName, tableName);
-        for (final Object changeObj : changes) {
-            if (!(changeObj instanceof org.apache.kafka.connect.data.Struct)) {
-                continue;
-            }
-            final org.apache.kafka.connect.data.Struct change =
-                    (org.apache.kafka.connect.data.Struct) changeObj;
-            final String type = change.getString("type");
-            if (type == null) {
-                continue;
-            }
-            switch (type) {
-                case "ALTER":
-                    emitAlterColumns(change, tid, out);
-                    break;
-                default:
-                    LOG.debug(
-                            "Unhandled schema change type: {} for {}.{}", type, dbName, tableName);
+        final java.util.Set<String> fieldNames =
+                valueStruct.schema().fields().stream()
+                        .map(org.apache.kafka.connect.data.Field::name)
+                        .collect(java.util.stream.Collectors.toSet());
+
+        // Flink CDC 3.x: historyRecord is a JSON string with tableChanges
+        if (fieldNames.contains("historyRecord")) {
+            final String json = valueStruct.getString("historyRecord");
+            if (json != null) {
+                emitFromHistoryRecord(json, dbName, tableName, out);
+                return;
             }
         }
+
+        // Fallback: Debezium 1.x schemaChanges / tableChanges Struct arrays
+        emitFromStructChanges(valueStruct, fieldNames, dbName, tableName, out);
     }
 
     /**
      * Extract column-name → column-struct map from a Debezium schema-change or table-change struct.
-     * Handles both {@code schemaChanges} (direct "columns" field) and {@code tableChanges} (nested
-     * "table" → "columns") formats. Returns a {@link java.util.LinkedHashMap} to preserve insertion
-     * order.
      */
     private java.util.Map<String, org.apache.kafka.connect.data.Struct> extractColumnStructs(
             final org.apache.kafka.connect.data.Struct change) {
         final java.util.Map<String, org.apache.kafka.connect.data.Struct> result =
                 new java.util.LinkedHashMap<>();
-        Object columnsRaw = change.get("columns");
-        if (!(columnsRaw instanceof java.util.List)) {
-            // Try nested "table" → "columns" (tableChanges / HistoryRecord format)
+        final java.util.Set<String> fieldNames =
+                change.schema().fields().stream()
+                        .map(org.apache.kafka.connect.data.Field::name)
+                        .collect(java.util.stream.Collectors.toSet());
+
+        Object columnsRaw = null;
+        if (fieldNames.contains("columns")) {
+            columnsRaw = change.get("columns");
+        } else if (fieldNames.contains("table")) {
             final org.apache.kafka.connect.data.Struct table = change.getStruct("table");
-            if (table != null) {
+            if (table != null && table.schema().field("columns") != null) {
                 columnsRaw = table.get("columns");
             }
         }
@@ -282,15 +270,9 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     }
 
     /**
-     * Compares the new column list from an ALTER event against the in-memory {@link #schemas} map
-     * and emits {@link DropColumnEvent} / {@link AddColumnEvent} to keep the schemas cache in sync.
-     *
-     * <p>Column types for added columns are resolved via {@link MySqlTypeUtils#fromDbzColumn} so
-     * the sink table's ALTER ADD COLUMN uses the correct Flink CDC {@link
-     * org.apache.flink.table.types.DataType} (e.g. {@code DECIMAL(10,2)} → {@code
-     * DataTypes.DECIMAL(10,2)}), not a hardcoded {@code STRING()}.
+     * Compares the new column list from an ALTER event against the in-memory schemas map and emits
+     * DropColumnEvent to keep the schemas cache in sync.
      */
-    @SuppressWarnings("unchecked")
     private void emitAlterColumns(
             final org.apache.kafka.connect.data.Struct change,
             final TableId tid,
@@ -301,26 +283,23 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return;
         }
 
-        final java.util.Map<String, String> existing = schemas.get(tid.getTableName());
+        final java.util.Map<String, String> existing = schemas().get(tid.getTableName());
         if (existing == null) {
             return;
         }
 
         // Detect dropped columns: present in old schemas but absent from the new DDL
-        final java.util.Set<String> oldNames = existing.keySet();
+        final java.util.Set<String> oldNames = new java.util.HashSet<>(existing.keySet());
         for (final String oldName : oldNames) {
             if (!newColStructs.containsKey(oldName)) {
                 LOG.info("Detected dropped column: {}.{}", tid.getTableName(), oldName);
+                // Directly update the static shared map — Flink serialization means
+                // ProcessFunction/CDBBatchSink each get separate copies otherwise.
+                schemas().get(tid.getTableName()).remove(oldName);
                 out.collect(new DropColumnEvent(tid, java.util.List.of(oldName)));
             }
         }
 
-        // NOTE: We intentionally do NOT emit AddColumnEvent for added columns.
-        // The schemas map is used by CDBBatchSink to build INSERT SQL column lists.
-        // Emitting AddColumnEvent would update schemas before the async ALTER TABLE on
-        // the sink completes, causing INSERT to reference non-existent columns → MySQL error.
-        // DropColumnEvent is safe because it only removes columns from schemas,
-        // making the INSERT SQL narrower (which always matches the sink table).
         for (final String newName : newColStructs.keySet()) {
             if (!oldNames.contains(newName)) {
                 LOG.info(
@@ -331,61 +310,131 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private void emitFromStructChanges(
+            final org.apache.kafka.connect.data.Struct valueStruct,
+            final java.util.Set<String> fieldNames,
+            final String dbName,
+            final String tableName,
+            final Collector<Event> out) {
+        Object changesRaw = null;
+        if (fieldNames.contains("schemaChanges")) {
+            changesRaw = valueStruct.get("schemaChanges");
+        } else if (fieldNames.contains("tableChanges")) {
+            changesRaw = valueStruct.get("tableChanges");
+        }
+        if (!(changesRaw instanceof java.util.List)) {
+            return;
+        }
+        final java.util.List<?> changes = (java.util.List<?>) changesRaw;
+        final TableId tid = TableId.tableId(dbName, tableName);
+        for (final Object changeObj : changes) {
+            if (!(changeObj instanceof org.apache.kafka.connect.data.Struct)) {
+                continue;
+            }
+            final org.apache.kafka.connect.data.Struct change =
+                    (org.apache.kafka.connect.data.Struct) changeObj;
+            final String type = change.getString("type");
+            if ("ALTER".equals(type)) {
+                emitAlterColumns(change, tid, out);
+            } else if (LOG.isDebugEnabled()) {
+                LOG.debug("Unhandled schema change type: {} for {}.{}", type, dbName, tableName);
+            }
+        }
+    }
+
     /**
-     * Convert a Debezium DDL column struct (Kafka Connect Struct) to Flink CDC {@link
-     * org.apache.flink.cdc.common.types.DataType} by constructing a {@link
-     * io.debezium.relational.Column} and delegating to {@link MySqlTypeUtils#fromDbzColumn}, then
-     * converting via {@link DataTypeUtils#fromFlinkDataType}.
-     *
-     * <p>Falls back to {@code DataTypes.STRING()} if any part of the mapping fails (missing fields,
-     * unknown type name, etc.).
+     * Parse a Debezium historyRecord JSON string and emit DropColumnEvent for columns that were
+     * removed from the table.
+     */
+    private void emitFromHistoryRecord(
+            final String historyRecordJson,
+            final String dbName,
+            final String tableName,
+            final Collector<Event> out) {
+        final java.util.List<String> newColNames = parseHistoryRecord(historyRecordJson);
+        if (newColNames.isEmpty()) {
+            return;
+        }
+
+        final java.util.Map<String, String> existing = schemas().get(tableName);
+        if (existing == null) {
+            return;
+        }
+
+        final TableId tid = TableId.tableId(dbName, tableName);
+        final java.util.Set<String> oldNames = new java.util.HashSet<>(existing.keySet());
+
+        // Detect dropped columns
+        for (final String oldName : oldNames) {
+            if (!newColNames.contains(oldName)) {
+                LOG.info("Detected dropped column: {}.{}", tableName, oldName);
+                // Directly update schemas map here — Flink serialization means the
+                // ProcessFunction's handleDropColumn operates on a different map copy.
+                existing.remove(oldName);
+                out.collect(new DropColumnEvent(tid, java.util.List.of(oldName)));
+            }
+        }
+
+        // Log added columns (not emitting AddColumnEvent to avoid async ALTER timing issues)
+        for (final String newName : newColNames) {
+            if (!oldNames.contains(newName)) {
+                LOG.info(
+                        "Detected added column (schema ALTER handled by SchemaEvolver): {}.{}",
+                        tableName,
+                        newName);
+            }
+        }
+    }
+
+    private java.util.List<String> parseHistoryRecord(final String json) {
+        final java.util.List<String> columnNames = new java.util.ArrayList<>();
+        try {
+            final com.fasterxml.jackson.databind.ObjectMapper mapper =
+                    new com.fasterxml.jackson.databind.ObjectMapper();
+            final com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
+            final com.fasterxml.jackson.databind.JsonNode tableChanges = root.get("tableChanges");
+            if (tableChanges == null || !tableChanges.isArray() || tableChanges.isEmpty()) {
+                return columnNames;
+            }
+            // Use the first (and usually only) change entry
+            final com.fasterxml.jackson.databind.JsonNode firstChange = tableChanges.get(0);
+            final com.fasterxml.jackson.databind.JsonNode tableNode = firstChange.get("table");
+            if (tableNode == null) {
+                return columnNames;
+            }
+            final com.fasterxml.jackson.databind.JsonNode columns = tableNode.get("columns");
+            if (columns == null || !columns.isArray()) {
+                return columnNames;
+            }
+            for (final com.fasterxml.jackson.databind.JsonNode col : columns) {
+                final com.fasterxml.jackson.databind.JsonNode nameNode = col.get("name");
+                if (nameNode != null) {
+                    columnNames.add(nameNode.asText());
+                }
+            }
+        } catch (final Exception e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Failed to parse historyRecord JSON: {}", e.getMessage());
+            }
+        }
+        return columnNames;
+    }
+
+    /**
+     * Extract column names from a Debezium historyRecord JSON string. Used for Flink CDC 3.x DDL
+     * events where the schema changes are embedded as a JSON string rather than a Struct.
      */
     @SuppressWarnings("unchecked")
-    static org.apache.flink.cdc.common.types.DataType columnStructToFlinkType(
-            final org.apache.kafka.connect.data.Struct colStruct) {
-        try {
-            final String typeName = colStruct.getString("typeName");
-            if (typeName == null) {
-                return DataTypeUtils.fromFlinkDataType(DataTypes.STRING());
-            }
-
-            final io.debezium.relational.ColumnEditor editor =
-                    io.debezium.relational.Column.editor();
-            editor.name(colStruct.getString("name"));
-            editor.type(typeName);
-
-            // length / precision
-            final org.apache.kafka.connect.data.Field lengthField =
-                    colStruct.schema().field("length");
-            if (lengthField != null && colStruct.get("length") != null) {
-                editor.length(colStruct.getInt32("length"));
-            }
-
-            // scale
-            final org.apache.kafka.connect.data.Field scaleField =
-                    colStruct.schema().field("scale");
-            if (scaleField != null && colStruct.get("scale") != null) {
-                editor.scale(colStruct.getInt32("scale"));
-            }
-
-            // optional
-            final org.apache.kafka.connect.data.Field optionalField =
-                    colStruct.schema().field("optional");
-            if (optionalField != null && colStruct.get("optional") instanceof Boolean) {
-                editor.optional(colStruct.getBoolean("optional"));
-            }
-
-            final io.debezium.relational.Column debeziumColumn = editor.create();
-            final org.apache.flink.table.types.DataType flinkDataType =
-                    MySqlTypeUtils.fromDbzColumn(debeziumColumn, false);
-            return DataTypeUtils.fromFlinkDataType(flinkDataType);
-        } catch (final Exception e) {
-            LOG.warn(
-                    "Failed to map DDL column type for '{}', falling back to STRING.",
-                    colStruct.getString("name"),
-                    e);
-            return DataTypeUtils.fromFlinkDataType(DataTypes.STRING());
+    private java.util.List<String> extractColumnNamesFromHistoryRecord(
+            final org.apache.kafka.connect.data.Struct change) {
+        // historyRecord can be a JSON string in some Debezium formats
+        final Object hr = change.get("historyRecord");
+        if (hr instanceof String) {
+            return parseHistoryRecord((String) hr);
         }
+        // Or columns may be directly available as in schemaChanges/tableChanges formats
+        return new java.util.ArrayList<>(extractColumnStructs(change).keySet());
     }
 
     @Override

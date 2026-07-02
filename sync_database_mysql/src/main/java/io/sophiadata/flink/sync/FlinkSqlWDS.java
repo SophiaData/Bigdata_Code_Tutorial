@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * MySQL 整库实时同步示例 —— 基于 flink-cdc 3.x 的 MySqlSource。
@@ -136,8 +135,10 @@ public class FlinkSqlWDS extends BaseCode {
 
         // schemas: tableName → {columnName → cdcType}，用于动态建表和生成 INSERT SQL
         // pks:      tableName → 主键列名，用于生成 DELETE SQL 和 ON DUPLICATE KEY
-        final Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
-        final Map<String, String> pks = new ConcurrentHashMap<>();
+        // Using static holder to bypass Flink serialization — operators get separate
+        // copies of local ConcurrentHashMap, breaking DDL-triggered schema updates.
+        final Map<String, Map<String, String>> schemas = SharedSchemaState.schemas();
+        final Map<String, String> pks = SharedSchemaState.pks();
 
         final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp, "sink_");
         LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
@@ -153,7 +154,7 @@ public class FlinkSqlWDS extends BaseCode {
                         .databaseList(db)
                         .tableList(db + ".*")
                         .serverTimeZone(tz)
-                        .deserializer(new CdcEventDeserializer(schemas))
+                        .deserializer(new CdcEventDeserializer())
                         .includeSchemaChanges(true)
                         .build();
 
@@ -196,9 +197,7 @@ public class FlinkSqlWDS extends BaseCode {
                                 finalSku,
                                 finalSkp,
                                 BATCH_SIZE,
-                                BATCH_INTERVAL_MS,
-                                schemas,
-                                pks));
+                                BATCH_INTERVAL_MS));
 
         LOG.info("CDC pipeline with SchemaEvolver ready for database {}", db);
 

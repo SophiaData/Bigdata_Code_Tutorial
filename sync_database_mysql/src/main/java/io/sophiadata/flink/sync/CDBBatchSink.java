@@ -61,8 +61,15 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     private final String sinkPassword;
     private final int batchSize;
     private final long batchIntervalMs;
-    private final Map<String, Map<String, String>> schemas;
-    private final Map<String, String> pks;
+    /** Re-read schemas from the static holder to bypass Flink's serialized copy. */
+    private Map<String, Map<String, String>> schemas() {
+        return SharedSchemaState.schemas();
+    }
+
+    private Map<String, String> pks() {
+        return SharedSchemaState.pks();
+    }
+
     private transient Connection conn;
     private transient List<Record> batch;
     private transient long lastFlush;
@@ -72,16 +79,12 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             final String sinkUser,
             final String sinkPassword,
             final int batchSize,
-            final long batchIntervalMs,
-            final Map<String, Map<String, String>> schemas,
-            final Map<String, String> pks) {
+            final long batchIntervalMs) {
         this.sinkJdbcUrl = sinkJdbcUrl;
         this.sinkUser = sinkUser;
         this.sinkPassword = sinkPassword;
         this.batchSize = batchSize;
         this.batchIntervalMs = batchIntervalMs;
-        this.schemas = schemas;
-        this.pks = pks;
     }
 
     /** 初始化 JDBC 连接，关闭自动提交以支持批量事务。 */
@@ -163,15 +166,16 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
 
         for (final Map.Entry<String, List<Record>> e : byTable.entrySet()) {
             final String table = e.getKey();
-            final Map<String, String> cols = schemas.get(table);
+            final Map<String, String> cols = schemas().get(table);
             if (cols == null || cols.isEmpty()) {
                 LOG.warn(
                         "No schema for table '{}' — skipping {} records. schemas keys: {}",
                         table,
                         e.getValue().size(),
-                        schemas.keySet());
+                        schemas().keySet());
                 continue;
             }
+            LOG.info("Flush table '{}': columns={}", table, cols.keySet());
             final String fullTable = "`sink_" + table + "`";
             final List<String> columnNames = new ArrayList<>(cols.keySet());
 
@@ -249,7 +253,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             return;
         }
         ensureConnection();
-        final String pk = pks.getOrDefault(table, "id");
+        final String pk = pks().getOrDefault(table, "id");
         final String deleteSql = String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
 
         try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
