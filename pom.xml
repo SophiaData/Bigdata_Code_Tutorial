@@ -589,7 +589,7 @@
                 <configuration>
                     <targetJdk>11</targetJdk>
                     <rulesets>
-                        <ruleset>checkstyle/pmd-complexity.xml</ruleset>
+                        <ruleset>tool/pmd-complexity.xml</ruleset>
                     </rulesets>
                     <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
@@ -769,8 +769,8 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven-checkstyle-plugin.version}</version>
                 <configuration>
-                    <configLocation>checkstyle/checkstyle.xml</configLocation>
-                    <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
+                    <configLocation>tool/checkstyle.xml</configLocation>
+                    <suppressionsLocation>tool/suppressions.xml</suppressionsLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
@@ -799,8 +799,8 @@
                     <threshold>Low</threshold>
                     <failOnError>false</failOnError>
                     <failOnViolation>false</failOnViolation>
-                    <includeFilterFile>spotbugs-include.xml</includeFilterFile>
-                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                    <includeFilterFile>tool/spotbugs-include.xml</includeFilterFile>
+                    <excludeFilterFile>tool/spotbugs-exclude.xml</excludeFilterFile>
                     <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>
                 </configuration>
                 <executions>
