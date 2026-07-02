@@ -1,11 +1,13 @@
 # GitHub Actions CI for Bigdata_Code_Tutorial
 # Supersedes the legacy "Build and CodeQL.yaml" (which was pinned to Java 8).
 #
-# Four parallel jobs:
+# Five parallel jobs:
 #   1. lint-and-unit          → spotless + unit tests (fast feedback, ~2 min)
 #   2. integration-tests      → full IT with testcontainers-managed MySQL (~5 min)
 #   3. package-sync-database  → build the runnable Flink CDC jar
 #   4. codeql                 → security analysis (preserved from legacy)
+#   5. intellij-style-lint    → Error Prone + SpotBugs (IDEA-style static findings,
+#                                report-only — uploads XML/HTML artifacts for triage)
 #
 # Triggers: push to master + every PR targeting master.
 
@@ -210,6 +212,69 @@ jobs:
           path: e2e-tests/target/surefire-reports
           if-no-files-found: ignore
           retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Job 2c: IDEA-style static analysis (Error Prone + SpotBugs)
+  #         Report-only: findings are uploaded as artifacts, the job does not fail
+  #         the build. Once the baseline is at zero, switch failOnViolation -> true.
+  # ---------------------------------------------------------------------------
+  intellij-style-lint:
+    name: IDEA-style Lint (Error Prone + SpotBugs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v5
+        with:
+          java-version: '11'
+          distribution: temurin
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-jdk11-
+
+      - name: Compile under Error Prone (findings printed, build stays green)
+        run: ./mvnw -B -ntp -pl flink-demo,sync_database_mysql,flink-function,flink-paimon-demo -am clean compile -DskipTests
+
+      - name: Run SpotBugs (report-only, mirrors IDEA's bug-level inspections)
+        run: ./mvnw -B -ntp -pl flink-demo,sync_database_mysql,flink-function,flink-paimon-demo -am verify -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+
+      - name: Upload SpotBugs reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: spotbugs-reports
+          path: |
+            **/target/spotbugs/*.xml
+            **/target/spotbugs/*.html
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Summarise finding counts in job summary
+        if: always()
+        run: |
+          set +e
+          shopt -s globstar nullglob
+          echo "## IDEA-style lint summary" >> "$GITHUB_STEP_SUMMARY"
+          total=0
+          for f in **/target/spotbugs/spotbugsXml.xml; do
+            [ -f "$f" ] || continue
+            mod=$(echo "$f" | cut -d/ -f1)
+            count=$(grep -c '<BugInstance ' "$f" || true)
+            echo "- \`${mod}\`: ${count} SpotBugs findings" >> "$GITHUB_STEP_SUMMARY"
+            total=$((total + count))
+          done
+          echo "**Total: ${total} findings across SpotBugs**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Error Prone findings are printed inline in the \`Compile under Error Prone\` step." >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # Job 3: package the runnable WDS jar (depends on lint-and-unit passing)
