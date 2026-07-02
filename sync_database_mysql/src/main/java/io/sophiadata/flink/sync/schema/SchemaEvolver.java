@@ -102,6 +102,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     private final String sinkUrl;
     private final String sinkUser;
     private final String sinkPassword;
+    private final String sinkTablePrefix;
 
     /**
      * {@code transient} because {@link java.util.concurrent.ThreadPoolExecutor} is technically
@@ -122,9 +123,18 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     private transient volatile Connection alterConnection;
 
     public SchemaEvolver(final String sinkUrl, final String sinkUser, final String sinkPassword) {
+        this(sinkUrl, sinkUser, sinkPassword, "");
+    }
+
+    public SchemaEvolver(
+            final String sinkUrl,
+            final String sinkUser,
+            final String sinkPassword,
+            final String sinkTablePrefix) {
         this.sinkUrl = sinkUrl;
         this.sinkUser = sinkUser;
         this.sinkPassword = sinkPassword;
+        this.sinkTablePrefix = sinkTablePrefix;
         this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
         this.executedAlters = new HashSet<>();
     }
@@ -265,9 +275,8 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
     }
 
     private final String fullTableName(final TableId tid) {
-        final String schema = tid.getSchemaName();
         final String table = tid.getTableName();
-        return schema == null || schema.isEmpty() ? table : schema + "." + table;
+        return sinkTablePrefix + table;
     }
 
     private void alterAddColumn(

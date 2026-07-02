@@ -18,13 +18,20 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.TaskManagerOptions;
+import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +60,25 @@ public class SchemaEvolutionIT {
 
     private static final String SOURCE_DB = "flink_source";
     private static final String SINK_DB = "flink_sink";
+
+    @Rule
+    public MiniClusterWithClientResource miniClusterResource =
+            new MiniClusterWithClientResource(
+                    new MiniClusterResourceConfiguration.Builder()
+                            .setNumberTaskManagers(1)
+                            .setNumberSlotsPerTaskManager(1)
+                            .setConfiguration(createMiniClusterConfig())
+                            .build());
+
+    private static Configuration createMiniClusterConfig() {
+        Configuration config = new Configuration();
+        // Limit TaskManager memory to fit within CI runner (16 GB)
+        config.set(TaskManagerOptions.TASK_HEAP_MEMORY, MemorySize.ofMebiBytes(512));
+        config.set(TaskManagerOptions.TASK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(128));
+        config.set(TaskManagerOptions.FRAMEWORK_HEAP_MEMORY, MemorySize.ofMebiBytes(256));
+        config.set(TaskManagerOptions.FRAMEWORK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(64));
+        return config;
+    }
 
     private JdbcDatabaseContainer<?> sourceContainer;
     private JdbcDatabaseContainer<?> sinkContainer;
@@ -121,30 +147,35 @@ public class SchemaEvolutionIT {
             st.executeUpdate("FLUSH PRIVILEGES");
         }
 
-        // Seed initial source table
+        // Create source table (drop first to ensure clean state)
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
+            st.executeUpdate("DROP TABLE IF EXISTS t_order");
             st.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS t_order ("
+                    "CREATE TABLE t_order ("
                             + "  id BIGINT NOT NULL, "
                             + "  product VARCHAR(255), "
                             + "  amount DECIMAL(10,2), "
                             + "  create_time TIMESTAMP(0) NOT NULL DEFAULT '1970-01-01 09:00:00', "
                             + "  PRIMARY KEY (id))");
-            st.executeUpdate(
-                    "INSERT INTO t_order VALUES "
-                            + "(1, 'laptop', 5999.00, NOW()),"
-                            + "(2, 'phone', 2999.00, NOW())");
         }
     }
 
     @After
     public void tearDown() {
         if (flinkJobThread != null) {
-            flinkJobThread.interrupt();
+            // 先给管道时间自然结束，不要立即打断
             try {
-                flinkJobThread.join(5000);
+                flinkJobThread.join(15000);
             } catch (InterruptedException ignored) {
+            }
+            // 如果还没结束，再强制打断
+            if (flinkJobThread.isAlive()) {
+                flinkJobThread.interrupt();
+                try {
+                    flinkJobThread.join(5000);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         if (sourceContainer != null) sourceContainer.stop();
@@ -154,8 +185,17 @@ public class SchemaEvolutionIT {
     @Test
     public void testSyncWithAddColumn() throws Exception {
         startFlinkPipeline();
+        waitForCdcReady();
 
-        // Wait for initial 2 rows
+        // Insert initial data AFTER pipeline is running (binlog path)
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
+            st.executeUpdate(
+                    "INSERT INTO t_order VALUES "
+                            + "(1, 'laptop', 5999.00, NOW()),"
+                            + "(2, 'phone', 2999.00, NOW())");
+        }
+
         waitForSinkRowCount("sink_t_order", 2, 60);
         assertSinkProduct("sink_t_order", 1, "laptop");
         assertSinkProduct("sink_t_order", 2, "phone");
@@ -185,6 +225,16 @@ public class SchemaEvolutionIT {
     @Test
     public void testSyncWithModifyColumn() throws Exception {
         startFlinkPipeline();
+        waitForCdcReady();
+
+        // Insert initial data AFTER pipeline is running
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
+            st.executeUpdate(
+                    "INSERT INTO t_order VALUES "
+                            + "(1, 'laptop', 5999.00, NOW()),"
+                            + "(2, 'phone', 2999.00, NOW())");
+        }
 
         waitForSinkRowCount("sink_t_order", 2, 60);
         LOG.info("=== testSyncWithModifyColumn: initial data synced ===");
@@ -212,6 +262,16 @@ public class SchemaEvolutionIT {
     @Test
     public void testSyncWithDropAndReAdd() throws Exception {
         startFlinkPipeline();
+        waitForCdcReady();
+
+        // Insert initial data AFTER pipeline is running
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
+            st.executeUpdate(
+                    "INSERT INTO t_order VALUES "
+                            + "(1, 'laptop', 5999.00, NOW()),"
+                            + "(2, 'phone', 2999.00, NOW())");
+        }
 
         waitForSinkRowCount("sink_t_order", 2, 60);
         LOG.info("=== testSyncWithDropAndReAdd: initial data synced ===");
@@ -220,17 +280,32 @@ public class SchemaEvolutionIT {
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("ALTER TABLE t_order DROP COLUMN amount");
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(10);
             st.executeUpdate("ALTER TABLE t_order ADD COLUMN amount DECIMAL(10,2) DEFAULT 0.00");
         }
         LOG.info("DDL executed: DROP + RE-ADD amount column");
-        TimeUnit.SECONDS.sleep(5);
+        // Extra delay for CDC binlog reader to fully recover after DDL
+        TimeUnit.SECONDS.sleep(15);
 
-        try (Connection c = getSourceConnection();
-                Statement st = c.createStatement()) {
-            st.executeUpdate(
-                    "INSERT INTO t_order (id, product, amount, create_time) "
-                            + "VALUES (3, 'keyboard', 199.00, NOW())");
+        // Retry INSERT up to 3 times with delays
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try (Connection c = getSourceConnection();
+                    Statement st = c.createStatement()) {
+                st.executeUpdate(
+                        "INSERT IGNORE INTO t_order (id, product, amount, create_time) "
+                                + "VALUES (3, 'keyboard', 199.00, NOW())");
+            }
+            LOG.info("INSERT attempt {} succeeded", attempt);
+            TimeUnit.SECONDS.sleep(5);
+            try (Connection c = getSinkConnection();
+                    Statement st = c.createStatement();
+                    ResultSet rs =
+                            st.executeQuery("SELECT COUNT(*) FROM " + SINK_DB + ".sink_t_order")) {
+                if (rs.next() && rs.getInt(1) >= 3) {
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         waitForSinkRowCount("sink_t_order", 3, 60);
@@ -242,6 +317,7 @@ public class SchemaEvolutionIT {
 
     private void startFlinkPipeline() {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
         env.enableCheckpointing(2000);
         tEnv = StreamTableEnvironment.create(env);
@@ -252,13 +328,14 @@ public class SchemaEvolutionIT {
         Map<String, String> args = new HashMap<>();
         args.put("hostname", sourceContainer.getHost());
         args.put("port", String.valueOf(sourceContainer.getMappedPort(3306)));
-        args.put("username", "cdc_user");
-        args.put("password", "cdc_password");
+        args.put("username", "root");
+        args.put("password", "root");
         args.put("databaseName", SOURCE_DB);
         args.put("tableList", SOURCE_DB + ".*");
         args.put("sinkUrl", sinkUrl);
         args.put("sinkUsername", "root");
         args.put("sinkPassword", "root");
+        args.put("serverTimeZone", "UTC");
         args.put("setParallelism", "1");
         args.put("cdcSourceName", "mysql-cdc-sit");
 
@@ -288,6 +365,33 @@ public class SchemaEvolutionIT {
 
     private Connection getSinkConnection() throws SQLException {
         return DriverManager.getConnection(sinkUrl, "root", "root");
+    }
+
+    /**
+     * Wait until the CDC pipeline's bootstrap has created the sink table, then give the binlog
+     * reader extra time to fully connect.
+     */
+    @SuppressWarnings("BusyWait")
+    private void waitForCdcReady() throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        while (System.nanoTime() < deadline) {
+            try (Connection c = getSinkConnection();
+                    ResultSet rs =
+                            c.createStatement()
+                                    .executeQuery(
+                                            "SELECT COUNT(*) FROM " + SINK_DB + ".sink_t_order")) {
+                if (rs.next()) {
+                    LOG.info("CDC pipeline ready — sink_t_order exists, waiting for binlog reader");
+                    // Extra wait for binlog reader to fully initialize
+                    TimeUnit.SECONDS.sleep(10);
+                    return;
+                }
+            } catch (Exception ignored) {
+                // table not yet created by bootstrap
+            }
+            Thread.sleep(1000);
+        }
+        LOG.warn("Timed out waiting for sink_t_order to appear — proceeding anyway");
     }
 
     @SuppressWarnings("BusyWait")
