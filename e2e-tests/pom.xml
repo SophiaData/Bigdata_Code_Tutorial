@@ -32,6 +32,23 @@
             <artifactId>flink-paimon-demo</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- CDC shaded uber jars carry shaded Kafka Connect classes that
+                     override non-shaded ones in flink-connector-debezium / mysql-cdc,
+                     causing AbstractMethodError / NoSuchMethodError at runtime. -->
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-pipeline-connector-mysql</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-pipeline-connector-paimon</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-sql-connector-mongodb-cdc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.sophiadata</groupId>
@@ -41,6 +58,12 @@
         </dependency>
         
         <!-- Flink (provided) -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-base</artifactId>
+            <version>${flink.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
@@ -57,6 +80,32 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_2.12</artifactId>
             <version>${flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils</artifactId>
+            <version>${flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-runtime</artifactId>
+            <version>${flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- CDC deserializer interface (provided by sync_database_mysql, must be on test classpath) -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-debezium</artifactId>
+            <version>${flink_cdc.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- MySqlSource / MySqlRecordEmitter (provided by sync_database_mysql, must be on test classpath) -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-mysql-cdc</artifactId>
+            <version>${flink_cdc.version}</version>
             <scope>test</scope>
         </dependency>
         
@@ -105,6 +154,19 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>4.11.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Kafka Connect (needed by CDC deserializer) -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>3.6.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.6.1</version>
             <scope>test</scope>
         </dependency>
         

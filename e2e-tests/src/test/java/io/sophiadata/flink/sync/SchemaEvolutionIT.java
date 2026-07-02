@@ -18,13 +18,20 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.TaskManagerOptions;
+import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +60,25 @@ public class SchemaEvolutionIT {
 
     private static final String SOURCE_DB = "flink_source";
     private static final String SINK_DB = "flink_sink";
+
+    @ClassRule
+    public static final MiniClusterWithClientResource miniClusterResource =
+            new MiniClusterWithClientResource(
+                    new MiniClusterResourceConfiguration.Builder()
+                            .setNumberTaskManagers(1)
+                            .setNumberSlotsPerTaskManager(1)
+                            .setConfiguration(createMiniClusterConfig())
+                            .build());
+
+    private static Configuration createMiniClusterConfig() {
+        Configuration config = new Configuration();
+        // Limit TaskManager memory to fit within CI runner (16 GB)
+        config.set(TaskManagerOptions.TASK_HEAP_MEMORY, MemorySize.ofMebiBytes(512));
+        config.set(TaskManagerOptions.TASK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(128));
+        config.set(TaskManagerOptions.FRAMEWORK_HEAP_MEMORY, MemorySize.ofMebiBytes(256));
+        config.set(TaskManagerOptions.FRAMEWORK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(64));
+        return config;
+    }
 
     private JdbcDatabaseContainer<?> sourceContainer;
     private JdbcDatabaseContainer<?> sinkContainer;
@@ -136,15 +162,36 @@ public class SchemaEvolutionIT {
                             + "(1, 'laptop', 5999.00, NOW()),"
                             + "(2, 'phone', 2999.00, NOW())");
         }
+
+        // Pre-create sink table to avoid race condition
+        try (Connection c = getSinkConnection();
+                Statement st = c.createStatement()) {
+            st.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS sink_t_order ("
+                            + "  id BIGINT NOT NULL, "
+                            + "  product VARCHAR(255), "
+                            + "  amount DECIMAL(10,2), "
+                            + "  create_time TIMESTAMP(0) NOT NULL DEFAULT '1970-01-01 09:00:00', "
+                            + "  PRIMARY KEY (id))");
+            LOG.info("Sink table sink_t_order pre-created");
+        }
     }
 
     @After
     public void tearDown() {
         if (flinkJobThread != null) {
-            flinkJobThread.interrupt();
+            // 先给管道时间自然结束，不要立即打断
             try {
-                flinkJobThread.join(5000);
+                flinkJobThread.join(15000);
             } catch (InterruptedException ignored) {
+            }
+            // 如果还没结束，再强制打断
+            if (flinkJobThread.isAlive()) {
+                flinkJobThread.interrupt();
+                try {
+                    flinkJobThread.join(5000);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         if (sourceContainer != null) sourceContainer.stop();
@@ -242,6 +289,7 @@ public class SchemaEvolutionIT {
 
     private void startFlinkPipeline() {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
         env.enableCheckpointing(2000);
         tEnv = StreamTableEnvironment.create(env);
@@ -252,13 +300,14 @@ public class SchemaEvolutionIT {
         Map<String, String> args = new HashMap<>();
         args.put("hostname", sourceContainer.getHost());
         args.put("port", String.valueOf(sourceContainer.getMappedPort(3306)));
-        args.put("username", "cdc_user");
-        args.put("password", "cdc_password");
+        args.put("username", "root");
+        args.put("password", "root");
         args.put("databaseName", SOURCE_DB);
         args.put("tableList", SOURCE_DB + ".*");
         args.put("sinkUrl", sinkUrl);
         args.put("sinkUsername", "root");
         args.put("sinkPassword", "root");
+        args.put("serverTimeZone", "UTC");
         args.put("setParallelism", "1");
         args.put("cdcSourceName", "mysql-cdc-sit");
 
