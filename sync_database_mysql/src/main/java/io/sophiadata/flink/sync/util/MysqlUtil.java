@@ -208,6 +208,9 @@ public final class MysqlUtil {
         final StringBuilder cl = new StringBuilder();
         int i = 0;
         for (final Map.Entry<String, String> e : cols.entrySet()) {
+            if (e.getKey() == null || e.getKey().isEmpty()) {
+                continue;
+            }
             if (i > 0) {
                 cl.append(", ");
             }
@@ -222,7 +225,10 @@ public final class MysqlUtil {
             s.executeUpdate(sql);
             LOG.info("Sink table '{}' ready", table);
         } catch (SQLException e) {
-            LOG.warn("Sink table create error (may already exist): {}", e.getMessage());
+            LOG.warn(
+                    "Sink table create error (may already exist): {} | SQL was: {}",
+                    e.getMessage(),
+                    sql);
         }
     }
 
@@ -258,17 +264,35 @@ public final class MysqlUtil {
      */
     public static String mapType(final String cdcType) {
         final String upper = cdcType.toUpperCase();
-        if (upper.contains("VARCHAR") || upper.contains("CHAR")) {
-            return cdcType;
+        if (containsWithPrecision(upper, "VARCHAR") || containsWithPrecision(upper, "CHAR")) {
+            return withDefaultLength(cdcType, 255);
         }
-        if (upper.contains("DECIMAL") || upper.contains("NUMERIC")) {
-            return upper.contains("(") ? cdcType : "DECIMAL(10,2)";
+        if (containsWithPrecision(upper, "DECIMAL") || containsWithPrecision(upper, "NUMERIC")) {
+            return withDefaultLength(cdcType, "DECIMAL(10,2)");
         }
-        // Map 查找失败时，回退到 contains 匹配处理带后缀的类型
         final String mapped = CDC_TO_MYSQL.get(upper);
         if (mapped != null) {
             return mapped;
         }
+        return mapByContains(upper);
+    }
+
+    private static boolean containsWithPrecision(final String upper, final String keyword) {
+        return upper.contains(keyword);
+    }
+
+    private static String withDefaultLength(final String cdcType, final int defaultLen) {
+        // information_schema.COLUMNS.DATA_TYPE returns the bare type name (e.g. "varchar")
+        // without the length specifier. MySQL 8 rejects VARCHAR / CHAR without a length,
+        // so add a sensible default when the precision is missing.
+        return cdcType.contains("(") ? cdcType : cdcType + "(" + defaultLen + ")";
+    }
+
+    private static String withDefaultLength(final String cdcType, final String defaultType) {
+        return cdcType.contains("(") ? cdcType : defaultType;
+    }
+
+    private static String mapByContains(final String upper) {
         if (upper.contains("DOUBLE")) {
             return "DOUBLE";
         }

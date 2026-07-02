@@ -300,8 +300,8 @@ public class SchemaEvolutionIT {
         Map<String, String> args = new HashMap<>();
         args.put("hostname", sourceContainer.getHost());
         args.put("port", String.valueOf(sourceContainer.getMappedPort(3306)));
-        args.put("username", "cdc_user");
-        args.put("password", "cdc_password");
+        args.put("username", "root");
+        args.put("password", "root");
         args.put("databaseName", SOURCE_DB);
         args.put("tableList", SOURCE_DB + ".*");
         args.put("sinkUrl", sinkUrl);
