@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusion filter for patterns that are by design in this project.
+  These are NOT bugs — they're intentional patterns in a CDC sync tool.
+-->
+<FindBugsFilter>
+    <!-- Dynamic DDL: CDC sync generates SQL from table metadata, always non-constant -->
+    <Match>
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE,
+                       SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING"/>
+    </Match>
+
+    <!-- Flink ProcessFunction/SourceFunction inner classes are always non-static -->
+    <Match>
+        <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON"/>
+    </Match>
+
+    <!-- Transient JDBC fields (conn, batch, lastFlush) are rebuilt in open(), not serialized -->
+    <Match>
+        <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED"/>
+    </Match>
+
+    <!-- Data beans / builder fields: used by serialization or builder pattern -->
+    <Match>
+        <Bug pattern="UUF_UNUSED_FIELD|URF_UNREAD_FIELD"/>
+    </Match>
+</FindBugsFilter>

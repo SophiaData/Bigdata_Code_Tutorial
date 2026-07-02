@@ -46,13 +46,15 @@ import java.util.Map;
 @SuppressWarnings("deprecation")
 public class MockSourceFunction implements ParallelSourceFunction<String> {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(MockSourceFunction.class);
     private volatile Long ts;
-    private volatile int mockCount;
+    private int mockCount;
 
     @Override
     public void run(final SourceContext<String> ctx) throws Exception {
-        for (; mockCount < AppConfig.MOCK_COUNT; mockCount++) {
+        while (mockCount < AppConfig.MOCK_COUNT) {
+            mockCount++;
             final List<AppMain> appMainList = doAppMock();
             for (final AppMain appMain : appMainList) {
                 ctx.collect(appMain.toString());
