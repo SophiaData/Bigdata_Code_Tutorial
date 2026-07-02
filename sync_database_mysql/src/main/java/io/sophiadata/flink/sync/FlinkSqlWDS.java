@@ -22,6 +22,7 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.CreateTableEvent;
+import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.SchemaChangeEvent;
 import org.apache.flink.cdc.common.schema.Column;
@@ -48,7 +49,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * MySQL 整库实时同步示例 —— 基于 flink-cdc 3.x 的 MySqlSource。
@@ -135,10 +135,12 @@ public class FlinkSqlWDS extends BaseCode {
 
         // schemas: tableName → {columnName → cdcType}，用于动态建表和生成 INSERT SQL
         // pks:      tableName → 主键列名，用于生成 DELETE SQL 和 ON DUPLICATE KEY
-        final Map<String, Map<String, String>> schemas = new ConcurrentHashMap<>();
-        final Map<String, String> pks = new ConcurrentHashMap<>();
+        // Using static holder to bypass Flink serialization — operators get separate
+        // copies of local ConcurrentHashMap, breaking DDL-triggered schema updates.
+        final Map<String, Map<String, String>> schemas = SharedSchemaState.schemas();
+        final Map<String, String> pks = SharedSchemaState.pks();
 
-        final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp);
+        final SchemaEvolver schemaEvolver = new SchemaEvolver(sinkJdbcUrl, sku, skp, "sink_");
         LOG.info("SchemaEvolver initialized for sink: {}", sinkJdbcUrl);
 
         // 构建 CDC Source：监听整个数据库（db + ".*" 匹配所有表）
@@ -195,9 +197,7 @@ public class FlinkSqlWDS extends BaseCode {
                                 finalSku,
                                 finalSkp,
                                 BATCH_SIZE,
-                                BATCH_INTERVAL_MS,
-                                schemas,
-                                pks));
+                                BATCH_INTERVAL_MS));
 
         LOG.info("CDC pipeline with SchemaEvolver ready for database {}", db);
 
@@ -230,6 +230,8 @@ public class FlinkSqlWDS extends BaseCode {
                     (CreateTableEvent) event, sinkJdbcUrl, sinkUser, sinkPassword, schemas, pks);
         } else if (event instanceof AddColumnEvent) {
             handleAddColumn((AddColumnEvent) event, schemas);
+        } else if (event instanceof DropColumnEvent) {
+            handleDropColumn((DropColumnEvent) event, schemas);
         }
     }
 
@@ -267,6 +269,22 @@ public class FlinkSqlWDS extends BaseCode {
             colMap.put(cp.getAddColumn().getName(), cp.getAddColumn().getType().toString());
         }
         LOG.info("AddColumn schema updated for {}", tableName);
+    }
+
+    private static void handleDropColumn(
+            final DropColumnEvent dce, final Map<String, Map<String, String>> schemas) {
+        final String tableName = dce.tableId().getTableName();
+        final Map<String, String> colMap = schemas.get(tableName);
+        if (colMap == null) {
+            return;
+        }
+        for (final String droppedCol : dce.getDroppedColumnNames()) {
+            colMap.remove(droppedCol);
+        }
+        LOG.info(
+                "DropColumn schema updated for {}: removed {}",
+                tableName,
+                dce.getDroppedColumnNames());
     }
 
     /**
@@ -308,7 +326,7 @@ public class FlinkSqlWDS extends BaseCode {
                 String pk = "id";
                 try (PreparedStatement psCol =
                         conn.prepareStatement(
-                                "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?")) {
+                                "SELECT COLUMN_NAME, DATA_TYPE, ORDINAL_POSITION FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION")) {
                     psCol.setString(1, source.database);
                     psCol.setString(2, table);
                     try (ResultSet rs = psCol.executeQuery()) {
