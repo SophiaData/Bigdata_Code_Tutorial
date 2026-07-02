@@ -65,6 +65,7 @@ export PATH="$JAVA_HOME/bin:$PATH"
 - 提交信息格式：`<type>(<scope>): <description>`
   - 例：`feat(sync): add SchemaEvolver for CDC schema changes`
 - **禁止**：`git push --force`、`git reset --hard`、`rm -rf`（全局 / ~ / 仓库根）
+- **禁止自行合并代码**: Claude 不要执行 git merge 或 gh pr merge。所有合并由用户手动完成。
 - 提交前必跑：`./mvnw spotless:apply`
 
 ## 开发流程（强制）
