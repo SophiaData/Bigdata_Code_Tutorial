@@ -40,6 +40,7 @@ import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 
+import io.sophiadata.flink.sync.util.MysqlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -352,36 +353,8 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         return alterConnection;
     }
 
-    private static final java.util.Map<String, String> MYSQL_TYPE_MAP = new java.util.HashMap<>();
-
-    static {
-        MYSQL_TYPE_MAP.put("TEXT", "VARCHAR(2147483647)");
-        MYSQL_TYPE_MAP.put("BIGINT", "BIGINT");
-        MYSQL_TYPE_MAP.put("INT", "INT");
-        MYSQL_TYPE_MAP.put("TINYINT", "INT");
-        MYSQL_TYPE_MAP.put("SMALLINT", "INT");
-        MYSQL_TYPE_MAP.put("TIMESTAMP", "TIMESTAMP(6)");
-        MYSQL_TYPE_MAP.put("DATETIME", "DATETIME(6)");
-        MYSQL_TYPE_MAP.put("DATE", "DATE");
-        MYSQL_TYPE_MAP.put("TIME", "TIME");
-        MYSQL_TYPE_MAP.put("DOUBLE", "DOUBLE");
-        MYSQL_TYPE_MAP.put("FLOAT", "FLOAT");
-        MYSQL_TYPE_MAP.put("BOOLEAN", "BOOLEAN");
-        MYSQL_TYPE_MAP.put("BOOL", "BOOLEAN");
-        MYSQL_TYPE_MAP.put("BLOB", "BLOB");
-        MYSQL_TYPE_MAP.put("BINARY", "BLOB");
-        MYSQL_TYPE_MAP.put("VARBINARY", "BLOB");
-    }
-
     private String mapToMysqlType(final String cdcType) {
-        final String u = cdcType.toUpperCase();
-        if (u.contains("VARCHAR") || u.contains("CHAR")) {
-            return cdcType;
-        }
-        if (u.contains("DECIMAL")) {
-            return cdcType;
-        }
-        return MYSQL_TYPE_MAP.getOrDefault(u, "VARCHAR(2147483647)");
+        return MysqlUtil.mapType(cdcType);
     }
 
     public void shutdown() {
