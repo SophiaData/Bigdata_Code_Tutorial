@@ -183,8 +183,8 @@ public class FlinkSqlWDS extends BaseCode {
                                         finalSinkJdbcUrl,
                                         finalSku,
                                         finalSkp,
-                                        schemas,
-                                        pks);
+                                        SharedSchemaState.schemas(),
+                                        SharedSchemaState.pks());
                                 out.collect(event);
                             }
                         })
