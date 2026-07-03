@@ -165,68 +165,59 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven-shade-plugin.version}</version>
+                <configuration>
+                    <artifactSet>
+                        <excludes>
+                            <!--
+                                CDC shaded uber jars bundle org.apache.kafka.connect.* relocated
+                                to org.apache.flink.cdc.connectors.shaded.* When this uber
+                                jar is consumed as a library (e.g. by e2e-tests), the shaded
+                                classes override the non-shaded ones from
+                                flink-connector-debezium / flink-connector-mysql-cdc and
+                                cause AbstractMethodError / NoSuchMethodError at runtime.
+                            -->
+                            <exclude>org.apache.flink:flink-sql-connector-mysql-cdc</exclude>
+                            <exclude>org.apache.flink:flink-sql-connector-mongodb-cdc</exclude>
+                            <exclude>org.apache.flink:flink-cdc-pipeline-connector-mysql</exclude>
+                            <exclude>org.apache.flink:flink-cdc-pipeline-connector-paimon</exclude>
+                            <exclude>org.apache.flink:flink-cdc-pipeline-connectors</exclude>
+                            <exclude>org.apache.flink:flink-cdc-source-connectors</exclude>
+                            <exclude>org.apache.flink:flink-cdc-connect</exclude>
+                            <exclude>org.apache.flink:flink-cdc-composer</exclude>
+                            <exclude>org.apache.flink:flink-shaded-jackson</exclude>
+                        </excludes>
+                    </artifactSet>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <!--
+                                    CDC connector internals: these classes come from multiple
+                                    CDC artifacts that may have inconsistent versions. When this
+                                    uber jar is consumed as a library (e.g. by e2e-tests), the
+                                    bundled copies override the classes that downstream modules
+                                    pull in transitively, causing AbstractMethodError /
+                                    NoSuchMethodError at runtime. sync_database_mysql declares
+                                    its own flink-connector-mysql-cdc dependency directly, so
+                                    all CDC classes needed at runtime come from there.
+                                -->
+                                <exclude>org/apache/flink/cdc/**</exclude>
+                                <exclude>io/debezium/**</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>io.sophiadata.flink.paimon.mysql.MySqlToPaimonPipeline</mainClass>
+                        </transformer>
+                    </transformers>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <phase>package</phase>
-                        <configuration>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.apache.flink:flink-shaded-force-shading</exclude>
-                                    <exclude>com.google.code.findbugs:jsr305</exclude>
-                                    <exclude>org.slf4j:*</exclude>
-                                    <exclude>org.apache.logging.log4j:*</exclude>
-                                    <exclude>org.apache.flink:flink-shaded-jackson</exclude>
-                                    <!-- CDC shaded uber jars bundle org.apache.kafka.connect.* relocated
-                                             to org.apache.flink.cdc.connectors.shaded.* When this uber
-                                             jar is consumed as a library (e.g. by e2e-tests), the shaded
-                                             classes override the non-shaded ones from
-                                             flink-connector-debezium / flink-connector-mysql-cdc and
-                                             cause AbstractMethodError / NoSuchMethodError at runtime. -->
-                                    <exclude>org.apache.flink:flink-sql-connector-mysql-cdc</exclude>
-                                    <exclude>org.apache.flink:flink-sql-connector-mongodb-cdc</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-pipeline-connector-mysql</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-pipeline-connector-paimon</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-pipeline-connectors</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-source-connectors</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-connect</exclude>
-                                    <exclude>org.apache.flink:flink-cdc-composer</exclude>
-                                </excludes>
-                            </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <!-- Exclude ALL CDC connector internals from the uber jar. These
-                                             classes (DebeziumDeserializationSchema, MySqlRecordEmitter,
-                                             JdbcConnectionPools, shaded Kafka Connect types, etc.) come
-                                             from multiple CDC artifacts that may have inconsistent
-                                             versions. When this uber jar is consumed as a library
-                                             (e.g. by e2e-tests), the bundled copies can override the
-                                             classes that downstream modules already pull in transitively,
-                                             causing AbstractMethodError / NoSuchMethodError at runtime.
-
-                                             FlinkSqlWDS (in sync_database_mysql) declares its own
-                                             flink-connector-mysql-cdc dependency directly, so all CDC
-                                             classes needed at runtime come from there. -->
-                                        <exclude>org/apache/flink/cdc/**</exclude>
-                                        <exclude>io/debezium/**</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>io.sophiadata.flink.paimon.mysql.MySqlToPaimonPipeline</mainClass>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                            </transformers>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
