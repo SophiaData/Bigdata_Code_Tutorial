@@ -22,7 +22,8 @@ import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.types.DataType;
 
 import io.sophiadata.flink.sync.util.MysqlUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.sql.Connection;
@@ -32,11 +33,10 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration test for {@link MysqlUtil#createTable} — runs the generated DDL against a real MySQL
@@ -57,9 +57,9 @@ public class CreateMysqlLSinkTableIT {
 
     @Test
     public void testCreateTableAgainstRealMySQL() throws SQLException, ClassNotFoundException {
-        assumeTrue(
-                "set -DrunIntegrationTests=true to enable the sink-DDL integration test",
-                Boolean.getBoolean("runIntegrationTests"));
+        Assumptions.assumeTrue(
+                Boolean.getBoolean("runIntegrationTests"),
+                "set -DrunIntegrationTests=true to enable the sink-DDL integration test");
 
         String externalUrl = System.getProperty("mysql.test.url");
         String user = System.getProperty("mysql.test.user", "root");
@@ -73,7 +73,7 @@ public class CreateMysqlLSinkTableIT {
             try {
                 container.start();
             } catch (Throwable t) {
-                assumeTrue("Docker unavailable: " + t.getMessage(), false);
+                Assumptions.assumeTrue(false, "Docker unavailable: " + t.getMessage());
                 return;
             }
             try {
@@ -127,11 +127,11 @@ public class CreateMysqlLSinkTableIT {
                     String def = rs.getString("COLUMN_DEFAULT");
                     assertNotNull(def);
                     assertTrue(
-                            "default should be 1970-01-01 09:00:00, got: " + def,
-                            def.startsWith("1970-01-01 09:00:00"));
+                            def.startsWith("1970-01-01 09:00:00"),
+                            "default should be 1970-01-01 09:00:00, got: " + def);
                 }
             }
-            assertEquals("expected exactly 4 columns", 4, count);
+            assertEquals(4, count, "expected exactly 4 columns");
         }
 
         try (Connection c = MysqlUtil.getConnection(url, user, pw);

@@ -193,7 +193,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         conn.commit();
     }
 
-    private final Map<String, List<Record>> groupByTable(final List<Record> records) {
+    final Map<String, List<Record>> groupByTable(final List<Record> records) {
         final Map<String, List<Record>> byTable = new LinkedHashMap<>();
         for (final Record r : records) {
             byTable.computeIfAbsent(r.tableName, k -> new ArrayList<>()).add(r);
@@ -201,7 +201,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         return byTable;
     }
 
-    private void splitByOperation(
+    void splitByOperation(
             final List<Record> records, final List<Record> upserts, final List<Record> deletes) {
         for (final Record r : records) {
             if (r.op == OperationType.DELETE) {
@@ -372,8 +372,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             this.after = extractValues(event.after());
         }
 
-        private static Object[] extractValues(
-                final org.apache.flink.cdc.common.data.RecordData row) {
+        static Object[] extractValues(final org.apache.flink.cdc.common.data.RecordData row) {
             if (row == null) {
                 return null;
             }
