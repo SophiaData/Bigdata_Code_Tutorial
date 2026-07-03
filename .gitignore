@@ -37,6 +37,7 @@ tmp
 .env
 .env.*
 config.properties
+docker-config.properties
 dependency-reduced-pom.xml
 .mimocode/
 

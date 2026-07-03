@@ -118,6 +118,12 @@
                 <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- CVE-2022-1471: snakeyaml -->
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
