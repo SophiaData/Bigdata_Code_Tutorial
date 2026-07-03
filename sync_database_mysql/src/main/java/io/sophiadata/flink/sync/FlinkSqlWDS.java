@@ -223,7 +223,7 @@ public class FlinkSqlWDS extends BaseCode {
         try {
             evolver.processEvent((SchemaChangeEvent) event);
         } catch (Exception e) {
-            LOG.error("SchemaEvolver error: {}", e.getMessage());
+            LOG.error("SchemaEvolver error", e);
         }
         if (event instanceof CreateTableEvent) {
             handleCreateTable(

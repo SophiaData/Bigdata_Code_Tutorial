@@ -20,6 +20,8 @@ package io.sophiadata.flink.glm;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -34,6 +36,7 @@ public class GLMTest {
     private static final String GLM_API_URL =
             "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
+    @Disabled("Requires GLM_API_KEY and GLM_MODEL_1 environment variables; calls external API")
     @Test
     public void testGLM() throws Exception {
         String apiKey = System.getenv("GLM_API_KEY");
@@ -45,7 +48,6 @@ public class GLMTest {
         }
 
         System.out.println("Testing GLM API with model: " + model);
-        System.out.println("API Key: " + apiKey.substring(0, 10) + "...");
 
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("model", model);
@@ -94,14 +96,15 @@ public class GLMTest {
                 System.out.println("Response: " + response);
 
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
-                if (jsonResponse.has("choices")) {
-                    com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
-                    if (!choices.isEmpty()) {
-                        JsonObject choice = choices.get(0).getAsJsonObject();
-                        JsonObject msg = choice.getAsJsonObject("message");
-                        System.out.println("AI Response: " + msg.get("content").getAsString());
-                    }
-                }
+                Assertions.assertTrue(
+                        jsonResponse.has("choices"), "Response should contain 'choices'");
+                com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
+                Assertions.assertFalse(choices.isEmpty(), "Choices should not be empty");
+                JsonObject choice = choices.get(0).getAsJsonObject();
+                JsonObject msg = choice.getAsJsonObject("message");
+                Assertions.assertNotNull(
+                        msg.get("content"), "AI response content should not be null");
+                System.out.println("AI Response: " + msg.get("content").getAsString());
             }
         } else {
             try (BufferedReader br =
@@ -118,8 +121,10 @@ public class GLMTest {
         }
 
         connection.disconnect();
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseCode, "API call should succeed");
     }
 
+    @Disabled("Requires GLM_API_KEY and GLM_MODEL_* environment variables; calls external API")
     @Test
     public void testAllModels() throws Exception {
         String[] models = {
@@ -191,14 +196,15 @@ public class GLMTest {
                 System.out.println("Response: " + response);
 
                 JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
-                if (jsonResponse.has("choices")) {
-                    com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
-                    if (!choices.isEmpty()) {
-                        JsonObject choice = choices.get(0).getAsJsonObject();
-                        JsonObject msg = choice.getAsJsonObject("message");
-                        System.out.println("AI Response: " + msg.get("content").getAsString());
-                    }
-                }
+                Assertions.assertTrue(
+                        jsonResponse.has("choices"), "Response should contain 'choices'");
+                com.google.gson.JsonArray choices = jsonResponse.getAsJsonArray("choices");
+                Assertions.assertFalse(choices.isEmpty(), "Choices should not be empty");
+                JsonObject choice = choices.get(0).getAsJsonObject();
+                JsonObject msg = choice.getAsJsonObject("message");
+                Assertions.assertNotNull(
+                        msg.get("content"), "AI response content should not be null");
+                System.out.println("AI Response: " + msg.get("content").getAsString());
             }
         } else {
             try (BufferedReader br =
@@ -215,5 +221,6 @@ public class GLMTest {
         }
 
         connection.disconnect();
+        Assertions.assertEquals(HttpURLConnection.HTTP_OK, responseCode, "API call should succeed");
     }
 }
