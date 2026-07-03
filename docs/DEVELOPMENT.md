@@ -120,7 +120,7 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 
 ### 场景 5：CI（GitHub Actions / Jenkins）
 
-`./mvnw verify -Pintegration` 之类 —— CI 上挂上场景 2 的命令，每次 push 跑一次完整集成。本仓库目前还没接 CI（见 `docs/ai-context/project-structure.md` 的模块结构）。
+`./mvnw verify -Pintegration` 之类 —— CI 上挂上场景 2 的命令，每次 push 跑一次完整集成。本仓库已通过 GitHub Actions 接入 CI（见 `.github/workflows/ci.yml`）。
 
 ## 代码风格
 

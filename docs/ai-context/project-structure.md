@@ -6,7 +6,7 @@
 
 ```
 Bigdata_Code_Tutorial/
-├── pom.xml                          聚合 POM（Java 11，五个 module）
+├── pom.xml                          聚合 POM（Java 11，四个 module）
 ├── CLAUDE.md                        Claude 项目指令
 ├── README.md                        项目说明
 ├── LICENSE
@@ -14,11 +14,10 @@ Bigdata_Code_Tutorial/
 ├── docs/                            文档与 AI 上下文
 │   ├── DEVELOPMENT.md               开发流程
 │   └── ai-context/                  本目录
-├── flink-demo/                      模块 1：DataStream/SQL/UDF 示例
-├── cdc-mysql-sync/             模块 2：整库同步（核心）
-├── flink-demo/                  模块 3：可复用 Flink 函数
-├── cdc-paimon-sync/               模块 4：CDC → Paimon 数据湖同步
-└── e2e-tests/                       模块 5：端到端集成测试
+├── flink-demo/                      模块 1：DataStream/SQL/UDF/TableFunction 示例
+├── cdc-mysql-sync/                  模块 2：整库同步（核心）
+├── cdc-paimon-sync/                 模块 3：CDC → Paimon 数据湖同步
+└── e2e-tests/                       模块 4：端到端集成测试
 ```
 
 ## flink-demo/
@@ -30,6 +29,7 @@ flink-demo/
     ├── main/java/io/sophiadata/flink/
     │   ├── base/                    BaseCode、BaseSql 抽象
     │   ├── ddl/                     FlinkCDC DDL + Debezium 反序列化
+    │   ├── function/                SplitFunction（TableFunction 示例）
     │   ├── glm/                     GLM API 测试（@Disabled）
     │   ├── source/                  MockSourceFunction、App* bean、配置
     │   │   └── utils/               ParamUtil、RandomNumString、ConfigUtil 等
@@ -37,6 +37,7 @@ flink-demo/
     │   ├── streaming/               WordCount / Sideout / IncrementMapFunction
     │   └── udf/                     UDF 示例
     └── test/java/io/sophiadata/flink/
+        ├── function/                SplitFunctionTest
         ├── glm/                     GLMTest
         └── streaming/               JUnit 5 测试
 ```
@@ -71,18 +72,6 @@ cdc-mysql-sync/
         └── utils/MySqlContainer.java  testcontainers 工具
 ```
 
-## flink-demo/
-
-```
-flink-demo/
-├── pom.xml                          独立打包（shade），Java 11
-└── src/
-    ├── main/java/com/zyzx/realtime/flink/function/
-    │   └── SplitFunction.java       TableFunction 示例
-    └── test/java/com/zyzx/realtime/flink/function/
-        └── SplitFunctionTest.java   JUnit 5
-```
-
 ## cdc-paimon-sync/
 
 ```
@@ -101,10 +90,11 @@ cdc-paimon-sync/
 ```
 e2e-tests/
 ├── pom.xml                          仅测试，依赖前三个模块
-└── src/test/java/
-    ├── SchemaEvolutionIT.java       schema 变更端到端（Testcontainers MySQL）
-    ├── CDBBatchSinkIT.java          批量写入测试（H2）
-    ├── CreateMysqlLSinkTableIT.java sink 建表测试
+└── src/test/java/io/sophiadata/flink/
+    ├── sync/
+    │   ├── SchemaEvolutionIT.java   schema 变更端到端（Testcontainers MySQL）
+    │   ├── CDBBatchSinkIT.java      批量写入测试（H2）
+    │   └── sink/CreateMysqlLSinkTableIT.java  sink 建表测试
     └── paimon/mongo/                MongoDB → Paimon E2E
 ```
 
@@ -113,7 +103,6 @@ e2e-tests/
 ```
 cdc-mysql-sync
   ├─ flink-connector-mysql-cdc 3.6.0-1.20 (provided)
-  ├─ flink-cdc-common 3.6.0-1.20
   ├─ flink-connector-jdbc 3.3.0-1.20
   ├─ mysql-connector-j 8.4.0
   ├─ nacos-client 2.1.2
@@ -121,12 +110,9 @@ cdc-mysql-sync
 
 flink-demo
   ├─ flink-streaming-java (provided)
-  ├─ flink-table-api-*
-  └─ flink-connector-kafka 3.3.0-1.20
-
-flink-demo
   ├─ flink-table-api-java-bridge
-  └─ flink-table-planner
+  ├─ flink-table-planner
+  └─ flink-connector-kafka 3.3.0-1.20
 
 cdc-paimon-sync
   ├─ flink-cdc-connect-mysql
