@@ -23,9 +23,10 @@ import org.apache.flink.table.api.StatementSet;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import io.sophiadata.flink.utils.UniqueDatabase;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration test for Flink CDC 3.6 whole database sync using SQL connector.
@@ -46,9 +47,9 @@ public class MySqlSourceExampleTest extends MySqlSourceTestBase {
 
     @Test
     public void testWholeDatabaseSync() throws Exception {
-        org.junit.Assume.assumeTrue(
-                "set -DrunIntegrationTests=true to run the CDC integration test",
-                Boolean.getBoolean("runIntegrationTests"));
+        Assumptions.assumeTrue(
+                Boolean.getBoolean("runIntegrationTests"),
+                "set -DrunIntegrationTests=true to run the CDC integration test");
 
         inventoryDatabase.createAndInitialize();
 
@@ -129,6 +130,6 @@ public class MySqlSourceExampleTest extends MySqlSourceTestBase {
         runner.interrupt();
 
         // Verify sink table exists (basic smoke test)
-        assertTrue("CDC sync completed without exception", true);
+        assertTrue(true, "CDC sync completed without exception");
     }
 }
