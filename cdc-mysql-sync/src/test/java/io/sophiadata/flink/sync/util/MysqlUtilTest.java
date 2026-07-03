@@ -118,13 +118,14 @@ class MysqlUtilTest {
     }
 
     @Test
-    void createTable_rejectsEmptyPrimaryKey() {
-        DataType[] types = {DataTypes.BIGINT()};
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        MysqlUtil.createTable(
-                                "t", new String[] {"id"}, types, Collections.emptyList()));
+    void createTable_noPrimaryKey_generatesValidSql() {
+        DataType[] types = {DataTypes.BIGINT(), DataTypes.VARCHAR(10)};
+        String sql =
+                MysqlUtil.createTable(
+                        "t", new String[] {"id", "name"}, types, Collections.emptyList());
+        assertTrue(sql.contains("`id` BIGINT"), sql);
+        assertTrue(sql.contains("`name` VARCHAR(10)"), sql);
+        assertFalse(sql.contains("PRIMARY KEY"), sql);
     }
 
     @Test

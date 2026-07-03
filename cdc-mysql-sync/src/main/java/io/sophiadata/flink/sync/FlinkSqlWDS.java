@@ -249,7 +249,7 @@ public class FlinkSqlWDS extends BaseCode {
         schemas.put(tableName, colMap);
         final String pk =
                 cte.getSchema().primaryKeys().isEmpty()
-                        ? "id"
+                        ? null
                         : cte.getSchema().primaryKeys().get(0);
         pks.put(tableName, pk);
         MysqlUtil.createSinkTableIfNotExists(
@@ -322,7 +322,7 @@ public class FlinkSqlWDS extends BaseCode {
 
             for (final String table : tables) {
                 final Map<String, String> cols = new LinkedHashMap<>();
-                String pk = "id";
+                String pk = null;
                 try (PreparedStatement psCol =
                         conn.prepareStatement(
                                 "SELECT COLUMN_NAME, DATA_TYPE, ORDINAL_POSITION FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION")) {

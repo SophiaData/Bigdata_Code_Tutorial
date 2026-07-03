@@ -224,19 +224,33 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         ensureConnection();
         final String colList = "`" + String.join("`,`", columnNames) + "`";
         final String placeholders = String.join(",", Collections.nCopies(columnNames.size(), "?"));
-        final String updateClause =
-                columnNames.stream().map(c -> "`" + c + "`=?").collect(Collectors.joining(","));
-        final String sql =
-                String.format(
-                        "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
-                        fullTable, colList, placeholders, updateClause);
+
+        final String pk = pks().get(table);
+        final String sql;
+        if (pk != null && !pk.isEmpty()) {
+            final String updateClause =
+                    columnNames.stream().map(c -> "`" + c + "`=?").collect(Collectors.joining(","));
+            sql =
+                    String.format(
+                            "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s",
+                            fullTable, colList, placeholders, updateClause);
+        } else {
+            // No primary key — use plain INSERT (append-only semantics)
+            sql =
+                    String.format(
+                            "INSERT INTO %s (%s) VALUES (%s)", fullTable, colList, placeholders);
+        }
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (final Record r : upserts) {
                 if (r.after == null) {
                     continue;
                 }
-                bindRow(ps, r.after, columnNames.size());
+                if (pk != null && !pk.isEmpty()) {
+                    bindRow(ps, r.after, columnNames.size());
+                } else {
+                    bindRowPlain(ps, r.after, columnNames.size());
+                }
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -257,7 +271,14 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             return;
         }
         ensureConnection();
-        final String pk = pks().getOrDefault(table, "id");
+        final String pk = pks().get(table);
+        if (pk == null || pk.isEmpty()) {
+            LOG.warn(
+                    "No primary key for table {}, skipping {} DELETE operations (cannot identify rows to delete)",
+                    table,
+                    deletes.size());
+            return;
+        }
         final String deleteSql = String.format("DELETE FROM %s WHERE `%s` = ?", fullTable, pk);
 
         try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
@@ -290,6 +311,15 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
             final Object val = i < row.length ? row[i] : null;
             ps.setObject(i + 1, val);
             ps.setObject(i + 1 + columnCount, val);
+        }
+    }
+
+    /** Bind row values for plain INSERT (no ON DUPLICATE KEY UPDATE). */
+    private void bindRowPlain(final PreparedStatement ps, final Object[] row, final int columnCount)
+            throws SQLException {
+        for (int i = 0; i < columnCount; i++) {
+            final Object val = i < row.length ? row[i] : null;
+            ps.setObject(i + 1, val);
         }
     }
 

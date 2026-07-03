@@ -111,7 +111,13 @@ public final class MysqlUtil {
             }
             stmt.append(",\n");
         }
-        stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
+        if (primaryKeys != null && !primaryKeys.isEmpty()) {
+            stmt.append("  PRIMARY KEY (").append(String.join(",", primaryKeys)).append(")\n)");
+        } else {
+            // Remove trailing comma from last column
+            stmt.setLength(stmt.length() - 2);
+            stmt.append("\n)");
+        }
 
         final String createSql = stmt.toString();
         LOG.debug("Generated SQL: {}", createSql);
@@ -138,13 +144,11 @@ public final class MysqlUtil {
                 throw new IllegalArgumentException("Invalid column name: " + field);
             }
         }
-        if (primaryKeys == null || primaryKeys.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "primaryKeys must be non-empty (CDC requires a primary key)");
-        }
-        for (final String pk : primaryKeys) {
-            if (!isValidIdentifier(pk)) {
-                throw new IllegalArgumentException("Invalid primary key: " + pk);
+        if (primaryKeys != null) {
+            for (final String pk : primaryKeys) {
+                if (!isValidIdentifier(pk)) {
+                    throw new IllegalArgumentException("Invalid primary key: " + pk);
+                }
             }
         }
     }
@@ -217,9 +221,15 @@ public final class MysqlUtil {
             cl.append("`").append(e.getKey()).append("` ").append(mapType(e.getValue()));
             i++;
         }
-        final String sql =
-                String.format(
-                        "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))", table, cl, pk);
+        final String sql;
+        if (pk != null && !pk.isEmpty()) {
+            sql =
+                    String.format(
+                            "CREATE TABLE IF NOT EXISTS `%s` (%s, PRIMARY KEY(`%s`))",
+                            table, cl, pk);
+        } else {
+            sql = String.format("CREATE TABLE IF NOT EXISTS `%s` (%s)", table, cl);
+        }
         try (Connection c = DriverManager.getConnection(jdbcUrl, user, pass);
                 Statement s = c.createStatement()) {
             s.executeUpdate(sql);
