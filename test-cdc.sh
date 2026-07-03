@@ -196,11 +196,11 @@ deploy_job() {
     
     # 构建项目
     print_info "Building project..."
-    ./mvnw -DskipTests clean package -pl sync_database_mysql
+    ./mvnw -DskipTests clean package -pl cdc-mysql-sync
     
     # 复制 JAR 文件到 Docker
     print_info "Copying JAR to Flink container..."
-    docker cp sync_database_mysql/target/sync_database_mysql-1.0.0-jar-with-dependencies.jar flink-jobmanager:/app/
+    docker cp cdc-mysql-sync/target/cdc-mysql-sync-1.1.0-jar-with-dependencies.jar flink-jobmanager:/app/
     
     # 提交 Flink 作业
     print_info "Submitting Flink job..."
@@ -209,7 +209,7 @@ deploy_job() {
         -c io.sophiadata.flink.sync.FlinkSqlWDS \
         -p 1 \
         --jobname "CDC-Whole-Database-Sync" \
-        /app/sync_database_mysql-1.0.0-jar-with-dependencies.jar \
+        /app/cdc-mysql-sync-1.1.0-jar-with-dependencies.jar \
         --config /app/config.properties
     
     print_success "Flink job deployed successfully."

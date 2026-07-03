@@ -1,7 +1,7 @@
 # 项目可靠性分析报告
 
 > 生成时间：2026-06-29
-> 覆盖范围：flink-demo、sync_database_mysql、flink-function 三个模块
+> 覆盖范围：flink-demo、cdc-mysql-sync、flink-demo 三个模块
 
 ---
 
@@ -12,11 +12,11 @@
 | 模块 | 主代码 (.java) | 测试代码 (.java) | 测试/代码比 |
 |---|---|---|---|
 | flink-demo | 30 | 1 | 3.3% |
-| sync_database_mysql | 8 | 10 | **125%** |
-| flink-function | 1 | 1 | 100% |
+| cdc-mysql-sync | 8 | 10 | **125%** |
+| flink-demo | 1 | 1 | 100% |
 | **合计** | **39** | **14** | **35.9%** |
 
-> sync_database_mysql 测试文件多是因为包含 testcontainers 基础设施类（MySqlContainer、UniqueDatabase 等），实际业务测试覆盖率仍偏低。
+> cdc-mysql-sync 测试文件多是因为包含 testcontainers 基础设施类（MySqlContainer、UniqueDatabase 等），实际业务测试覆盖率仍偏低。
 
 ### 1.2 质量基础设施
 
@@ -61,7 +61,7 @@
 - **建议**：先修复现有 checkstyle 违规，再改为 failsOnError=true
 
 #### G5 — testcontainers MySQL 版本不固定
-- **现状**：sync_database_mysql pom.xml 中 testcontainers-mysql 依赖未指定具体版本
+- **现状**：cdc-mysql-sync pom.xml 中 testcontainers-mysql 依赖未指定具体版本
 - **风险**：CI 环境和本地环境 MySQL 版本不一致，可能导致测试通过但生产失败
 - **建议**：在根 pom.xml 的 dependencyManagement 中固定版本
 
@@ -115,7 +115,7 @@
 阶段二（本周）：补测试
 ├── T-4: flink-demo 核心工具类单元测试（ConfigUtil、ParamUtil、RandomOptionGroup）
 ├── T-5: 修复 checkstyle 违规，改为 failsOnError=true
-└── T-6: sync_database_mysql 缺失的工具类测试（BaseCode、SchemaEvolver）
+└── T-6: cdc-mysql-sync 缺失的工具类测试（BaseCode、SchemaEvolver）
 
 阶段三（下周）：完善工程化
 ├── T-7: 补充 README badge
@@ -170,16 +170,16 @@ CI 当前包含 4 个并行 job：
 
 | 文件路径 | 类型 | 备注 |
 |---|---|---|
-| sync_database_mysql/.../cdc/MySqlSourceExampleTest.java | 单元 | 示例测试 |
-| sync_database_mysql/.../cdc/MySqlSourceTestBase.java | 测试基类 | testcontainers 管理 |
-| sync_database_mysql/.../sync/SchemaEvolutionIT.java | 集成测试 | |
-| sync_database_mysql/.../sync/FlinkSqlWDSTest.java | 端到端 | assumeTrue 守卫 |
-| sync_database_mysql/.../sync/util/ParameterUtilTest.java | 单元 | |
-| sync_database_mysql/.../sync/util/NacosUtilTest.java | 单元 | |
-| sync_database_mysql/.../sync/util/MysqlUtilTest.java | 单元 | |
-| sync_database_mysql/.../sync/util/PropertiesUtilTest.java | 单元 | |
-| sync_database_mysql/.../sync/sink/CreateMysqlLSinkTableIT.java | 集成测试 | |
+| cdc-mysql-sync/.../cdc/MySqlSourceExampleTest.java | 单元 | 示例测试 |
+| cdc-mysql-sync/.../cdc/MySqlSourceTestBase.java | 测试基类 | testcontainers 管理 |
+| cdc-mysql-sync/.../sync/SchemaEvolutionIT.java | 集成测试 | |
+| cdc-mysql-sync/.../sync/FlinkSqlWDSTest.java | 端到端 | assumeTrue 守卫 |
+| cdc-mysql-sync/.../sync/util/ParameterUtilTest.java | 单元 | |
+| cdc-mysql-sync/.../sync/util/NacosUtilTest.java | 单元 | |
+| cdc-mysql-sync/.../sync/util/MysqlUtilTest.java | 单元 | |
+| cdc-mysql-sync/.../sync/util/PropertiesUtilTest.java | 单元 | |
+| cdc-mysql-sync/.../sync/sink/CreateMysqlLSinkTableIT.java | 集成测试 | |
 | flink-demo/.../streaming/IncrementMapFunctionTest.java | 单元 | |
-| flink-function/.../SplitFunctionTest.java | 单元 | |
+| flink-demo/.../SplitFunctionTest.java | 单元 | |
 
 > 注：git status 显示 `IncrementMapFunctionTest.java` 和 `SplitFunctionTest.java` 已从 worktree 中删除，但磁盘上仍存在（可能处于未跟踪状态）。

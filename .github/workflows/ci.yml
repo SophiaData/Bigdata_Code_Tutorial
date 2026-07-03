@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [flink-demo, sync_database_mysql, flink-function, flink-paimon-demo]
+        module: [flink-demo, cdc-mysql-sync, flink-demo, cdc-paimon-sync]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -102,7 +102,7 @@ jobs:
   #         (no external MySQL service needed; only Docker on the runner)
   # ---------------------------------------------------------------------------
   integration-tests:
-    name: Integration Tests (sync_database_mysql)
+    name: Integration Tests (cdc-mysql-sync)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -123,7 +123,7 @@ jobs:
           restore-keys: |
             m2-${{ runner.os }}-jdk11-
 
-      - name: Run sync_database_mysql unit tests + CreateMysqlLSinkTableIT
+      - name: Run cdc-mysql-sync unit tests + CreateMysqlLSinkTableIT
         env:
           MYSQL_IT_SOURCE_URL: ${{ secrets.MYSQL_IT_SOURCE_URL }}
           MYSQL_IT_SOURCE_USER: ${{ secrets.MYSQL_IT_SOURCE_USER }}
@@ -136,7 +136,7 @@ jobs:
               -Dmysql.test.user=${MYSQL_IT_SOURCE_USER:-root} \
               -Dmysql.test.password=${MYSQL_IT_SOURCE_PASSWORD:-root}"
           fi
-          ./mvnw -pl sync_database_mysql -am test \
+          ./mvnw -pl cdc-mysql-sync -am test \
             -Dtest='MysqlUtilTest,NacosUtilTest,PropertiesUtilTest,ParameterUtilTest,CreateMysqlLSinkTableIT' \
             -DrunIntegrationTests=true \
             $EXTRA_ARGS
@@ -150,7 +150,7 @@ jobs:
           MYSQL_IT_SOURCE_PASSWORD: ${{ secrets.MYSQL_IT_SOURCE_PASSWORD }}
           MYSQL_IT_SINK_PASSWORD: ${{ secrets.MYSQL_IT_SINK_PASSWORD }}
         if: env.MYSQL_IT_SOURCE_URL != '' && env.MYSQL_IT_SINK_URL != ''
-        run: ./mvnw -pl sync_database_mysql test \
+        run: ./mvnw -pl cdc-mysql-sync test \
           -Dtest=FlinkSqlWDSTest \
           -DrunIntegrationTests=true \
           -Dmysql.it.source.url="$MYSQL_IT_SOURCE_URL" \
@@ -165,7 +165,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: surefire-integration
-          path: sync_database_mysql/target/surefire-reports
+          path: cdc-mysql-sync/target/surefire-reports
           if-no-files-found: ignore
           retention-days: 7
 
@@ -241,10 +241,10 @@ jobs:
             m2-${{ runner.os }}-jdk11-
 
       - name: Compile under Error Prone (errors block the build)
-        run: ./mvnw -B -ntp -pl flink-demo,sync_database_mysql,flink-function,flink-paimon-demo -am clean compile -DskipTests
+        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,flink-demo,cdc-paimon-sync -am clean compile -DskipTests
 
       - name: Run SpotBugs (report-only, mirrors IDEA's bug-level inspections)
-        run: ./mvnw -B -ntp -pl flink-demo,sync_database_mysql,flink-function,flink-paimon-demo -am verify -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,flink-demo,cdc-paimon-sync -am verify -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
 
       - name: Upload SpotBugs reports
         if: always()
@@ -280,7 +280,7 @@ jobs:
   # Job 3: package the runnable WDS jar (depends on lint-and-unit passing)
   # ---------------------------------------------------------------------------
   package-sync-database:
-    name: Package sync_database_mysql (shaded jar)
+    name: Package cdc-mysql-sync (shaded jar)
     runs-on: ubuntu-latest
     needs: lint-and-unit
     timeout-minutes: 10
@@ -303,13 +303,13 @@ jobs:
             m2-${{ runner.os }}-jdk11-
 
       - name: Build runnable jar
-        run: ./mvnw -pl sync_database_mysql -am clean package -DskipTests
+        run: ./mvnw -pl cdc-mysql-sync -am clean package -DskipTests
 
       - name: Upload shaded jar artifact
         uses: actions/upload-artifact@v7
         with:
           name: sync-database-mysql-jar
-          path: sync_database_mysql/target/sync_database_mysql-*.jar
+          path: cdc-mysql-sync/target/cdc-mysql-sync-*.jar
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------

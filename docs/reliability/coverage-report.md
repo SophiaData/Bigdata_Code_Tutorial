@@ -10,19 +10,19 @@
 
 | 模块 | LINE 覆盖 | BRANCH 覆盖 | 状态 |
 |---|---|---|---|
-| `sync_database_mysql` | **10.1%** (69/683) | 9.5% (26/273) | ⚠️ 基线已建立 |
-| `flink-function` | **100.0%** (6/6) | 100.0% | ✅ 充分覆盖 |
+| `cdc-mysql-sync` | **10.1%** (69/683) | 9.5% (26/273) | ⚠️ 基线已建立 |
+| `flink-demo` | **100.0%** (6/6) | 100.0% | ✅ 充分覆盖 |
 | `flink-demo` | **0.0%** (0/656) | — | 🔴 无覆盖 |
 
 ### 解读
 
-- **sync_database_mysql**：主业务逻辑（`FlinkSqlWDS`、`SchemaEvolver`、`CdcEventDeserializer`）为 0%，被测试的仅是工具类（`MysqlUtil`、`NacosUtil` 等）
+- **cdc-mysql-sync**：主业务逻辑（`FlinkSqlWDS`、`SchemaEvolver`、`CdcEventDeserializer`）为 0%，被测试的仅是工具类（`MysqlUtil`、`NacosUtil` 等）
 - **flink-demo**：虽然 `IncrementMapFunctionTest` 运行成功（1 passed），但主代码（`MockSourceFunction`、`AppConfig`、`RandomOptionGroup` 等）均未被测试覆盖
-- **flink-function**：小模块，SplitFunction 有测试，完全覆盖
+- **flink-demo**：小模块，SplitFunction 有测试，完全覆盖
 
 ---
 
-## 二、sync_database_mysql 包级覆盖率
+## 二、cdc-mysql-sync 包级覆盖率
 
 | 包 | 覆盖率 | 说明 |
 |---|---|---|
@@ -57,10 +57,10 @@
 
 ```bash
 # 本地生成覆盖率报告（HTML）
-./mvnw verify -Djacoco.skip=false -pl sync_database_mysql
+./mvnw verify -Djacoco.skip=false -pl cdc-mysql-sync
 
 # 查看报告（浏览器打开）
-open sync_database_mysql/target/site/jacoco/index.html
+open cdc-mysql-sync/target/site/jacoco/index.html
 
 # 仅检查覆盖率门槛（不生成报告）
 ./mvnw verify -Djacoco.skip=false
@@ -74,8 +74,8 @@ open sync_database_mysql/target/site/jacoco/index.html
 ## 五、JaCoCo 报告位置
 
 ```
-sync_database_mysql/target/site/jacoco/index.html   ← 主覆盖率报告
-flink-function/target/site/jacoco/index.html        ← 已覆盖
+cdc-mysql-sync/target/site/jacoco/index.html   ← 主覆盖率报告
+flink-demo/target/site/jacoco/index.html        ← 已覆盖
 flink-demo/target/site/jacoco/index.html            ← 零覆盖
 ```
 

@@ -15,9 +15,9 @@ Bigdata_Code_Tutorial/
 │   ├── DEVELOPMENT.md               开发流程
 │   └── ai-context/                  本目录
 ├── flink-demo/                      模块 1：DataStream/SQL/UDF 示例
-├── sync_database_mysql/             模块 2：整库同步（核心）
-├── flink-function/                  模块 3：可复用 Flink 函数
-├── flink-paimon-demo/               模块 4：CDC → Paimon 数据湖同步
+├── cdc-mysql-sync/             模块 2：整库同步（核心）
+├── flink-demo/                  模块 3：可复用 Flink 函数
+├── cdc-paimon-sync/               模块 4：CDC → Paimon 数据湖同步
 └── e2e-tests/                       模块 5：端到端集成测试
 ```
 
@@ -41,10 +41,10 @@ flink-demo/
         └── streaming/               JUnit 5 测试
 ```
 
-## sync_database_mysql/
+## cdc-mysql-sync/
 
 ```
-sync_database_mysql/
+cdc-mysql-sync/
 ├── pom.xml
 ├── config.properties                本地配置模板（运行时覆盖）
 └── src/
@@ -71,10 +71,10 @@ sync_database_mysql/
         └── utils/MySqlContainer.java  testcontainers 工具
 ```
 
-## flink-function/
+## flink-demo/
 
 ```
-flink-function/
+flink-demo/
 ├── pom.xml                          独立打包（shade），Java 11
 └── src/
     ├── main/java/com/zyzx/realtime/flink/function/
@@ -83,10 +83,10 @@ flink-function/
         └── SplitFunctionTest.java   JUnit 5
 ```
 
-## flink-paimon-demo/
+## cdc-paimon-sync/
 
 ```
-flink-paimon-demo/
+cdc-paimon-sync/
 ├── pom.xml                          shade jar，mainClass: MySqlToPaimonPipeline
 ├── docker-compose.yml               MySQL 8.4.0 + Flink 1.20
 └── src/
@@ -111,7 +111,7 @@ e2e-tests/
 ## 关键依赖流向
 
 ```
-sync_database_mysql
+cdc-mysql-sync
   ├─ flink-connector-mysql-cdc 3.6.0-1.20 (provided)
   ├─ flink-cdc-common 3.6.0-1.20
   ├─ flink-connector-jdbc 3.3.0-1.20
@@ -124,11 +124,11 @@ flink-demo
   ├─ flink-table-api-*
   └─ flink-connector-kafka 3.3.0-1.20
 
-flink-function
+flink-demo
   ├─ flink-table-api-java-bridge
   └─ flink-table-planner
 
-flink-paimon-demo
+cdc-paimon-sync
   ├─ flink-cdc-connect-mysql
   ├─ flink-paimon
   └─ flink-connector-mongodb (for mongo examples)

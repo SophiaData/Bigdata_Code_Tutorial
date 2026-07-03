@@ -42,7 +42,7 @@ java -version   # 必须 11.x
 ### 场景 1：日常改代码（默认就这个）
 
 ```bash
-./mvnw -pl sync_database_mysql -am test
+./mvnw -pl cdc-mysql-sync -am test
 ```
 
 跑：
@@ -74,7 +74,7 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 ### 场景 2：改了 CDC / SchemaEvolver / FlinkSqlWDS / createTable
 
 ```bash
-./mvnw -pl sync_database_mysql -am test \
+./mvnw -pl cdc-mysql-sync -am test \
     -DrunIntegrationTests=true \
     -Dtest='MysqlUtilTest,NacosUtilTest,PropertiesUtilTest,ParameterUtilTest,FlinkSqlWDSTest,CreateMysqlLSinkTableIT' \
     -Dmysql.test.url='jdbc:mysql://localhost:33061/flink_source?useSSL=false&allowPublicKeyRetrieval=true' \
@@ -101,9 +101,9 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 ### 场景 3：只跑某个测试
 
 ```bash
-./mvnw -pl sync_database_mysql -am test -Dtest=MysqlUtilTest
-./mvnw -pl sync_database_mysql -am test -Dtest='MysqlUtilTest,NacosUtilTest'
-./mvnw -pl sync_database_mysql -am test -Dtest=FlinkSqlWDSTest -DrunIntegrationTests=true \
+./mvnw -pl cdc-mysql-sync -am test -Dtest=MysqlUtilTest
+./mvnw -pl cdc-mysql-sync -am test -Dtest='MysqlUtilTest,NacosUtilTest'
+./mvnw -pl cdc-mysql-sync -am test -Dtest=FlinkSqlWDSTest -DrunIntegrationTests=true \
     -Dmysql.it.source.url='...' -Dmysql.it.sink.url='...'
 ```
 
@@ -113,9 +113,9 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 # 编译（跳过测试）
 ./mvnw -DskipTests package
 
-# 仅打 sync_database_mysql 的可执行 jar
-./mvnw -pl sync_database_mysql -am clean package -DskipTests
-# 产物：sync_database_mysql/target/sync_database_mysql-1.0.0.jar
+# 仅打 cdc-mysql-sync 的可执行 jar
+./mvnw -pl cdc-mysql-sync -am clean package -DskipTests
+# 产物：cdc-mysql-sync/target/cdc-mysql-sync-1.1.0.jar
 ```
 
 ### 场景 5：CI（GitHub Actions / Jenkins）
@@ -135,7 +135,7 @@ build 阶段 spotless 强制 google-java-format AOSP：
 ./mvnw spotless:apply
 ```
 
-## 配置优先级（`sync_database_mysql`）
+## 配置优先级（`cdc-mysql-sync`）
 
 ```
 CLI args  >  --config=file.properties  >  --nacos_server  >  Constants 默认值

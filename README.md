@@ -12,10 +12,10 @@
 
 | 模块 | 说明 |
 |---|---|
-| [sync_database_mysql](sync_database_mysql/) | 整库同步核心：`flink-cdc 3.x` → MySqlCatalog → JDBC sink，含 SchemaEvolver |
+| [cdc-mysql-sync](cdc-mysql-sync/) | 整库同步核心：`flink-cdc 3.x` → MySqlCatalog → JDBC sink，含 SchemaEvolver |
 | [flink-demo](flink-demo/) | DataStream / SQL / CDC DDL / UDF 示例与 Mock 数据源 |
-| [flink-function](flink-function/) | 可复用 Flink TableFunction 示例 |
-| [flink-paimon-demo](flink-paimon-demo/) | MySQL → Apache Paimon 实时同步示例 |
+| [flink-demo](flink-demo/) | 可复用 Flink TableFunction 示例 |
+| [cdc-paimon-sync](cdc-paimon-sync/) | MySQL → Apache Paimon 实时同步示例 |
 
 ## 快速开始
 
@@ -62,8 +62,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw test -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
 
 # 运行覆盖率报告
-./mvnw verify -Djacoco.skip=false -pl sync_database_mysql
-open sync_database_mysql/target/site/jacoco/index.html
+./mvnw verify -Djacoco.skip=false -pl cdc-mysql-sync
+open cdc-mysql-sync/target/site/jacoco/index.html
 ```
 
 #### 运行同步任务
@@ -71,13 +71,13 @@ open sync_database_mysql/target/site/jacoco/index.html
 修改 `config.properties` 中的 MySQL 连接信息后：
 
 ```bash
-# 在 sync_database_mysql 目录下运行
-java -cp target/sync_database_mysql-1.0.0-jar-with-dependencies.jar \
+# 在 cdc-mysql-sync 目录下运行
+java -cp target/cdc-mysql-sync-1.1.0-jar-with-dependencies.jar \
     io.sophiadata.flink.sync.FlinkSqlWDS \
     --config config.properties
 ```
 
-详细说明见 [FlinkSqlWDS.java](sync_database_mysql/src/main/java/io/sophiadata/flink/sync/FlinkSqlWDS.java)。
+详细说明见 [FlinkSqlWDS.java](cdc-mysql-sync/src/main/java/io/sophiadata/flink/sync/FlinkSqlWDS.java)。
 
 ## 测试和部署
 
@@ -117,7 +117,7 @@ java -cp target/sync_database_mysql-1.0.0-jar-with-dependencies.jar \
 ## 核心流程
 
 ```
-MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> MySQL (Sink)
+MySQL (Source) ──CDC──> Flink (cdc-mysql-sync) ──JDBC──> MySQL (Sink)
                            │
                            ├── SchemaEvolver: 自动处理 schema 变更
                            └── CDBBatchSink: 批量写入 + 按表分组
@@ -128,7 +128,7 @@ MySQL (Source) ──CDC──> Flink (sync_database_mysql) ──JDBC──> My
 - [快速开始](DOCKER_TEST_GUIDE.md) - Docker 一键测试指南
 - [开发指南](docs/DEVELOPMENT.md) - 本地开发流程
 - [工程化文档](docs/reliability/) - CI/CD 和质量保证
-- [Paimon 同步](flink-paimon-demo/) - MySQL → Paimon 数据湖同步示例
+- [Paimon 同步](cdc-paimon-sync/) - MySQL → Paimon 数据湖同步示例
 
 ## 🎯 核心特性
 

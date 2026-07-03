@@ -40,8 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > Initial release.
 
 Initial release with:
-- `sync_database_mysql` — Whole-database sync with flink-cdc 3.x, MySqlCatalog, SchemaEvolver, CDBBatchSink
+- `cdc-mysql-sync` — Whole-database sync with flink-cdc 3.x, MySqlCatalog, SchemaEvolver, CDBBatchSink
 - `flink-demo` — DataStream / SQL / CDC DDL / UDF examples with mock data sources
-- `flink-function` — Reusable Flink TableFunction samples
+- `flink-demo` — Reusable Flink TableFunction samples
 - Full CI pipeline with lint, unit tests, integration tests, shaded JAR packaging, and CodeQL security scanning
 - Dependabot automated dependency updates
