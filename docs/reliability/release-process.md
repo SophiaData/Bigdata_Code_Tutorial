@@ -181,7 +181,7 @@ git branch -d hotfix/v${VERSION}
 | Enforcer | ✅ CI Job 1 | 依赖一致性 |
 | JaCoCo Coverage | ✅ CI Job 1 | 覆盖率收集 |
 | Integration Tests | ✅ CI Job 2 | testcontainers MySQL |
-| Package Shaded JAR | ✅ CI Job 3 | sync_database_mysql jar |
+| Package Shaded JAR | ✅ CI Job 3 | cdc-mysql-sync jar |
 | CodeQL Security | ✅ CI Job 4 | 安全静态分析 |
 
 > 发布前确保 CI 全部绿灯。

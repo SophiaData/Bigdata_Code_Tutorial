@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS jdbc_sink_t_user(
 
 ### 环境变量（可选）
 
-`sync_database_mysql` 模块支持从环境变量读取凭证：
+`cdc-mysql-sync` 模块支持从环境变量读取凭证：
 
 ```bash
 export MYSQL_USERNAME=root
@@ -167,8 +167,8 @@ export MYSQL_SINK_PASSWORD=root
 | 模块 | 主要依赖 | 运行时需求 |
 |------|---------|-----------|
 | `flink-demo` | Flink CDC, Flink Streaming, Kafka Connector | Flink 集群 |
-| `sync_database_mysql` | Flink CDC 3.x, MySQL Connector, JDBC | Flink 集群 + MySQL |
-| `flink-function` | TableFunction 示例 | 随其他模块使用 |
+| `cdc-mysql-sync` | Flink CDC 3.x, MySQL Connector, JDBC | Flink 集群 + MySQL |
+| `flink-demo` | TableFunction 示例 | 随其他模块使用 |
 
 详细依赖关系见 `pom.xml` 中的 `dependencyManagement` 段。
 

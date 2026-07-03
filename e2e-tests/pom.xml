@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.sophiadata</groupId>
         <artifactId>bigdata_code_tutorial</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </parent>
     
     <artifactId>e2e-tests</artifactId>
@@ -16,20 +16,20 @@
         <!-- Source modules under test -->
         <dependency>
             <groupId>io.sophiadata</groupId>
-            <artifactId>sync_database_mysql</artifactId>
+            <artifactId>cdc-mysql-sync</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.sophiadata</groupId>
-            <artifactId>sync_database_mysql</artifactId>
+            <artifactId>cdc-mysql-sync</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.sophiadata</groupId>
-            <artifactId>flink-paimon-demo</artifactId>
+            <artifactId>cdc-paimon-sync</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
             <exclusions>
@@ -94,14 +94,14 @@
             <version>${flink.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- CDC deserializer interface (provided by sync_database_mysql, must be on test classpath) -->
+        <!-- CDC deserializer interface (provided by cdc-mysql-sync, must be on test classpath) -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-debezium</artifactId>
             <version>${flink_cdc.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- MySqlSource / MySqlRecordEmitter (provided by sync_database_mysql, must be on test classpath) -->
+        <!-- MySqlSource / MySqlRecordEmitter (provided by cdc-mysql-sync, must be on test classpath) -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-mysql-cdc</artifactId>

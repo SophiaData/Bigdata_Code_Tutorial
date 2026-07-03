@@ -1,6 +1,6 @@
 # 架构说明
 
-## 整库同步流水线（sync_database_mysql/FlinkSqlWDS）
+## 整库同步流水线（cdc-mysql-sync/FlinkSqlWDS）
 
 ```
 ┌──────────────────┐  binlog   ┌────────────────────┐
@@ -70,7 +70,7 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
 - `SQLTest` / `FlinkCDCDDL` 演示 Flink SQL + CDC DDL 写法
 - `streaming/WordCount` / `Sideout` / `IncrementMapFunction` 演示 DataStream API
 
-## flink-function
+## flink-demo
 
 独立的 UDF 库，与项目其他模块无依赖耦合。
 

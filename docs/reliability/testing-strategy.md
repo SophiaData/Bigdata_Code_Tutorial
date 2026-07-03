@@ -267,20 +267,20 @@ void shouldLoadConfigFromResources() {
 ./mvnw -pl flink-demo test
 
 # 运行特定测试类
-./mvnw -pl sync_database_mysql test -Dtest=MysqlUtilTest
+./mvnw -pl cdc-mysql-sync test -Dtest=MysqlUtilTest
 
 # 包含覆盖率报告
-./mvnw verify -Djacoco.skip=false -pl sync_database_mysql
+./mvnw verify -Djacoco.skip=false -pl cdc-mysql-sync
 ```
 
 ### 6.2 集成测试（需要 Docker）
 
 ```bash
 # 运行所有集成测试（需要 Docker）
-./mvnw test -pl sync_database_mysql -Dtest='*IT,*IntegrationTest'
+./mvnw test -pl cdc-mysql-sync -Dtest='*IT,*IntegrationTest'
 
 # 运行端到端测试（需要 MySQL secrets）
-./mvnw test -pl sync_database_mysql \
+./mvnw test -pl cdc-mysql-sync \
   -Dtest=FlinkSqlWDSTest \
   -DrunIntegrationTests=true \
   -Dmysql.it.source.url="jdbc:mysql://localhost:3306/source" \
@@ -298,7 +298,7 @@ void shouldLoadConfigFromResources() {
 ./mvnw -pl $MODULE -am verify -Djacoco.skip=false -DskipTests
 
 # Job 2: 集成测试（自动触发）
-./mvnw -pl sync_database_mysql test -Dtest='*IT,!FlinkSqlWDSTest' -DrunIntegrationTests=true
+./mvnw -pl cdc-mysql-sync test -Dtest='*IT,!FlinkSqlWDSTest' -DrunIntegrationTests=true
 ```
 
 ---
@@ -307,15 +307,15 @@ void shouldLoadConfigFromResources() {
 
 | 模块 | 当前覆盖率 | 阶段一目标（1个月） |
 |---|---|---|
-| `sync_database_mysql` | 10.1% | 25% |
+| `cdc-mysql-sync` | 10.1% | 25% |
 | `flink-demo` | 0.0% | 20% |
-| `flink-function` | 100.0% | 保持 |
+| `flink-demo` | 100.0% | 保持 |
 
 ### 优先补充测试的类
 
-1. `sync_database_mysql`: `BaseCode`、`ParameterUtil` — 工具类易测试
-2. `sync_database_mysql`: `MysqlUtil` — 已有部分测试，补全边界条件
-3. `sync_database_mysql`: `SchemaEvolver` — 核心业务逻辑
+1. `cdc-mysql-sync`: `BaseCode`、`ParameterUtil` — 工具类易测试
+2. `cdc-mysql-sync`: `MysqlUtil` — 已有部分测试，补全边界条件
+3. `cdc-mysql-sync`: `SchemaEvolver` — 核心业务逻辑
 4. `flink-demo`: `ConfigUtil`、`RandomOptionGroup` — 无外部依赖
 
 ---

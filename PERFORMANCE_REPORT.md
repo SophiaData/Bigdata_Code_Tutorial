@@ -154,7 +154,7 @@ taskmanager.memory.network.max: 1g
 ### 监控指标
 ```bash
 # 查看 Flink 作业状态
-./mvnw exec:java -pl sync_database_mysql -Dexec.mainClass="io.sophiadata.flink.sync.FlinkSqlWDS" -Dexec.args="--config config.properties"
+./mvnw exec:java -pl cdc-mysql-sync -Dexec.mainClass="io.sophiadata.flink.sync.FlinkSqlWDS" -Dexec.args="--config config.properties"
 
 # 监控资源使用
 docker stats
