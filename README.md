@@ -1,6 +1,6 @@
 # Bigdata_Code_Tutorial
 
-[Flink CDC](https://github.com/apache/flink-cdc) 整库实时同步示例仓库，基于 Flink 1.20 + flink-cdc 3.x 将 MySQL 数据同步至 MySQL。
+[Flink CDC](https://github.com/apache/flink-cdc) 整库实时同步示例仓库，基于 Flink 1.20 + flink-cdc 3.x，支持 MySQL → MySQL 和 MySQL → Paimon 两种同步模式。
 
 [![CI](https://github.com/SophiaData/Bigdata_Code_Tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/SophiaData/Bigdata_Code_Tutorial/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/SophiaData/Bigdata_Code_Tutorial)](LICENSE)
@@ -12,10 +12,10 @@
 
 | 模块 | 说明 |
 |---|---|
-| [cdc-mysql-sync](cdc-mysql-sync/) | 整库同步核心：`flink-cdc 3.x` → MySqlCatalog → JDBC sink，含 SchemaEvolver |
-| [flink-demo](flink-demo/) | DataStream / SQL / CDC DDL / UDF 示例与 Mock 数据源 |
-| [flink-demo](flink-demo/) | 可复用 Flink TableFunction 示例 |
-| [cdc-paimon-sync](cdc-paimon-sync/) | MySQL → Apache Paimon 实时同步示例 |
+| [flink-demo](flink-demo/) | DataStream / SQL / CDC DDL / UDF / TableFunction 示例与 Mock 数据源 |
+| [cdc-mysql-sync](cdc-mysql-sync/) | 整库同步核心：`flink-cdc 3.x` → JDBC sink，含 SchemaEvolver |
+| [cdc-paimon-sync](cdc-paimon-sync/) | CDC → Apache Paimon 数据湖同步（MySQL + MongoDB） |
+| [e2e-tests](e2e-tests/) | 端到端集成测试（Testcontainers） |
 
 ## 快速开始
 

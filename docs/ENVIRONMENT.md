@@ -166,9 +166,10 @@ export MYSQL_SINK_PASSWORD=root
 
 | 模块 | 主要依赖 | 运行时需求 |
 |------|---------|-----------|
-| `flink-demo` | Flink CDC, Flink Streaming, Kafka Connector | Flink 集群 |
+| `flink-demo` | Flink Streaming, Table API, Kafka Connector | Flink 集群 |
 | `cdc-mysql-sync` | Flink CDC 3.x, MySQL Connector, JDBC | Flink 集群 + MySQL |
-| `flink-demo` | TableFunction 示例 | 随其他模块使用 |
+| `cdc-paimon-sync` | Flink CDC, Paimon, MongoDB Connector | Flink 集群 + MySQL/MongoDB |
+| `e2e-tests` | Testcontainers, H2 | Docker |
 
 详细依赖关系见 `pom.xml` 中的 `dependencyManagement` 段。
 
