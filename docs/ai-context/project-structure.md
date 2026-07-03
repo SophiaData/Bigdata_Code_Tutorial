@@ -6,7 +6,7 @@
 
 ```
 Bigdata_Code_Tutorial/
-├── pom.xml                          聚合 POM（Java 11，三个 module）
+├── pom.xml                          聚合 POM（Java 11，五个 module）
 ├── CLAUDE.md                        Claude 项目指令
 ├── README.md                        项目说明
 ├── LICENSE
@@ -16,7 +16,9 @@ Bigdata_Code_Tutorial/
 │   └── ai-context/                  本目录
 ├── flink-demo/                      模块 1：DataStream/SQL/UDF 示例
 ├── sync_database_mysql/             模块 2：整库同步（核心）
-└── flink-function/                  模块 3：可复用 Flink 函数
+├── flink-function/                  模块 3：可复用 Flink 函数
+├── flink-paimon-demo/               模块 4：CDC → Paimon 数据湖同步
+└── e2e-tests/                       模块 5：端到端集成测试
 ```
 
 ## flink-demo/
@@ -28,11 +30,14 @@ flink-demo/
     ├── main/java/io/sophiadata/flink/
     │   ├── base/                    BaseCode、BaseSql 抽象
     │   ├── ddl/                     FlinkCDC DDL + Debezium 反序列化
+    │   ├── glm/                     GLM API 测试（@Disabled）
     │   ├── source/                  MockSourceFunction、App* bean、配置
+    │   │   └── utils/               ParamUtil、RandomNumString、ConfigUtil 等
     │   ├── sql/                     SQLTest 入口
     │   ├── streaming/               WordCount / Sideout / IncrementMapFunction
     │   └── udf/                     UDF 示例
     └── test/java/io/sophiadata/flink/
+        ├── glm/                     GLMTest
         └── streaming/               JUnit 5 测试
 ```
 
@@ -41,23 +46,28 @@ flink-demo/
 ```
 sync_database_mysql/
 ├── pom.xml
-├── config.properties                本地配置模板（track，运行时覆盖）
+├── config.properties                本地配置模板（运行时覆盖）
 └── src/
     ├── main/java/io/sophiadata/flink/sync/
     │   ├── FlinkSqlWDS.java         整库同步主入口
+    │   ├── CdcEventDeserializer.java  Debezium SourceRecord → Flink CDC Event
+    │   ├── CDBBatchSink.java        批量 JDBC Sink（upsert/delete）
+    │   ├── SharedSchemaState.java   静态共享 schema（绕过 Flink 序列化）
     │   ├── base/BaseCode.java
-    │   ├── common/Constants.java
-    │   ├── schema/SchemaEvolver.java   处理 CDC schema 变更（AddColumn/DropColumn/AlterColumnType/RenameColumn/DropTable/Truncate）
+    │   ├── schema/SchemaEvolver.java  处理 CDC schema 变更（CheckpointedFunction）
     │   └── util/
-    │       ├── MysqlUtil.java       JDBC、建表 SQL 生成
+    │       ├── MysqlUtil.java       JDBC、建表 SQL 生成、类型映射
     │       ├── NacosUtil.java       Nacos / 本地配置合并
     │       ├── ParameterUtil.java   ParameterTool 字段读取
     │       └── PropertiesUtil.java  Properties 解析
-    ├── main/resources/              log4j2 配置
+    ├── main/resources/              log4j 配置、config.properties
     └── test/java/io/sophiadata/flink/
         ├── cdc/                     旧 CDC 集成测试（testcontainers）
-        ├── sync/                    FlinkSqlWDSTest（新集成测试）
-        │   └── util/                JUnit 5 单元测试（MysqlUtilTest/NacosUtilTest/...）
+        ├── sync/                    单元测试
+        │   ├── CdcEventDeserializerTest.java  19 个测试
+        │   ├── FlinkSqlWDSTest.java
+        │   ├── schema/SchemaEvolverTest.java  19 个测试
+        │   └── util/                MysqlUtilTest/NacosUtilTest/ParameterUtilTest/...
         └── utils/MySqlContainer.java  testcontainers 工具
 ```
 
@@ -73,26 +83,55 @@ flink-function/
         └── SplitFunctionTest.java   JUnit 5
 ```
 
+## flink-paimon-demo/
+
+```
+flink-paimon-demo/
+├── pom.xml                          shade jar，mainClass: MySqlToPaimonPipeline
+├── docker-compose.yml               MySQL 8.4.0 + Flink 1.20
+└── src/
+    ├── main/java/io/sophiadata/flink/paimon/
+    │   ├── mongo/                   MongoDB → Paimon（DataStream + SQL）
+    │   └── mysql/                   MySQL → Paimon（DataStream + SQL）
+    └── test/java/                   MongoTypeMapperTest、MongoDocumentFlattenerTest 等
+```
+
+## e2e-tests/
+
+```
+e2e-tests/
+├── pom.xml                          仅测试，依赖前三个模块
+└── src/test/java/
+    ├── SchemaEvolutionIT.java       schema 变更端到端（Testcontainers MySQL）
+    ├── CDBBatchSinkIT.java          批量写入测试（H2）
+    ├── CreateMysqlLSinkTableIT.java sink 建表测试
+    └── paimon/mongo/                MongoDB → Paimon E2E
+```
+
 ## 关键依赖流向
 
 ```
 sync_database_mysql
   ├─ flink-connector-mysql-cdc 3.6.0-1.20 (provided)
   ├─ flink-cdc-common 3.6.0-1.20
-  ├─ flink-sql-connector-mysql-cdc 3.6.0-1.20
-  ├─ flink-connector-jdbc
-  ├─ mysql-connector-java 8.0.30
+  ├─ flink-connector-jdbc 3.3.0-1.20
+  ├─ mysql-connector-j 8.4.0
   ├─ nacos-client 2.1.2
   └─ flink-test-utils-junit (test)
 
 flink-demo
   ├─ flink-streaming-java (provided)
   ├─ flink-table-api-*
-  └─ flink-connector-kafka
+  └─ flink-connector-kafka 3.3.0-1.20
 
 flink-function
   ├─ flink-table-api-java-bridge
   └─ flink-table-planner
+
+flink-paimon-demo
+  ├─ flink-cdc-connect-mysql
+  ├─ flink-paimon
+  └─ flink-connector-mongodb (for mongo examples)
 ```
 
 ## 修改模块结构时的 checklist
