@@ -14,7 +14,7 @@
 
 ```bash
 # macOS 示例（使用 Corretto）
-export JAVA_HOME=/Users/gaotingkai/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home
+export JAVA_HOME=/path/to/jdk-11
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 验证版本

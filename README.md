@@ -52,7 +52,7 @@ chmod +x test-cdc.sh
 
 ```bash
 # 切换到 JDK 11
-export JAVA_HOME=/Users/gaotingkai/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home
+export JAVA_HOME=/path/to/jdk-11
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 编译（跳过测试）

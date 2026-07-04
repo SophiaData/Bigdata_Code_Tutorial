@@ -21,7 +21,7 @@ fi
 # Force JDK 11 regardless of what the caller has JAVA_HOME set to. The shell often has
 # JAVA_HOME=zulu-8 from older setups, and using JDK 8 causes NoClassDefFoundError at
 # startup (Flink classes are compiled to class file 55.0).
-DEFAULT_JAVA_HOME=/Users/gaotingkai/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home
+DEFAULT_JAVA_HOME=""
 if [ ! -x "$DEFAULT_JAVA_HOME/bin/java" ]; then
     echo "error: default JDK 11 not found at $DEFAULT_JAVA_HOME" >&2
     echo "       export JAVA_HOME=/path/to/jdk11 before running this script" >&2
