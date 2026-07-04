@@ -139,4 +139,63 @@ class CDBBatchSinkTest {
         assertEquals(1, upserts.size());
         assertEquals(0, deletes.size());
     }
+
+    // --- Record construction tests ---
+
+    @Test
+    void record_insertEvent_hasCorrectFields() {
+        TableId tid = TableId.tableId("db", "users");
+        DataChangeEvent dce =
+                DataChangeEvent.insertEvent(tid, GenericRecordData.of(new Object[] {1L, "Alice"}));
+        CDBBatchSink.Record rec = new CDBBatchSink.Record(dce);
+
+        assertEquals("users", rec.tableName);
+        assertEquals(OperationType.INSERT, rec.op);
+        assertNull(rec.before);
+        assertNotNull(rec.after);
+        assertEquals(2, rec.after.length);
+        assertEquals(1L, rec.after[0]);
+        assertEquals("Alice", rec.after[1]);
+    }
+
+    @Test
+    void record_updateEvent_hasBothBeforeAndAfter() {
+        TableId tid = TableId.tableId("db", "users");
+        DataChangeEvent dce =
+                DataChangeEvent.updateEvent(
+                        tid,
+                        GenericRecordData.of(new Object[] {1L, "Alice"}),
+                        GenericRecordData.of(new Object[] {1L, "Bob"}));
+        CDBBatchSink.Record rec = new CDBBatchSink.Record(dce);
+
+        assertEquals(OperationType.UPDATE, rec.op);
+        assertNotNull(rec.before);
+        assertNotNull(rec.after);
+        assertEquals("Alice", rec.before[1]);
+        assertEquals("Bob", rec.after[1]);
+    }
+
+    @Test
+    void record_deleteEvent_hasBeforeOnly() {
+        TableId tid = TableId.tableId("db", "users");
+        DataChangeEvent dce =
+                DataChangeEvent.deleteEvent(tid, GenericRecordData.of(new Object[] {1L, "Alice"}));
+        CDBBatchSink.Record rec = new CDBBatchSink.Record(dce);
+
+        assertEquals(OperationType.DELETE, rec.op);
+        assertNotNull(rec.before);
+        assertNull(rec.after);
+    }
+
+    // --- invoke behavior test ---
+
+    @Test
+    void invoke_nonDataChangeEvent_ignored() throws Exception {
+        org.apache.flink.cdc.common.event.Event nonDataEvent =
+                new org.apache.flink.cdc.common.event.TruncateTableEvent(
+                        TableId.tableId("db", "table"));
+        sink.invoke(nonDataEvent, null);
+        // Should not throw, batch should remain empty
+        assertTrue(sink.groupByTable(new ArrayList<>()).isEmpty());
+    }
 }
