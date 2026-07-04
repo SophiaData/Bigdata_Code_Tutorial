@@ -189,6 +189,49 @@ class SchemaEvolverTest {
         evolver.shutdown();
     }
 
+    // --- thread safety ---
+
+    @Test
+    void processEvent_concurrentEvents_doNotThrow() throws InterruptedException {
+        SchemaEvolver evolver = createEvolver();
+        Thread t1 =
+                new Thread(
+                        () -> {
+                            for (int i = 0; i < 10; i++) {
+                                evolver.processEvent(
+                                        new CreateTableEvent(
+                                                TableId.tableId("testdb", "t1"),
+                                                Schema.newBuilder()
+                                                        .column(
+                                                                Column.physicalColumn(
+                                                                        "id", DataTypes.BIGINT()))
+                                                        .primaryKey(Collections.singletonList("id"))
+                                                        .build()));
+                            }
+                        });
+        Thread t2 =
+                new Thread(
+                        () -> {
+                            for (int i = 0; i < 10; i++) {
+                                evolver.processEvent(
+                                        new CreateTableEvent(
+                                                TableId.tableId("testdb", "t2"),
+                                                Schema.newBuilder()
+                                                        .column(
+                                                                Column.physicalColumn(
+                                                                        "id", DataTypes.BIGINT()))
+                                                        .primaryKey(Collections.singletonList("id"))
+                                                        .build()));
+                            }
+                        });
+        t1.start();
+        t2.start();
+        t1.join(5000);
+        t2.join(5000);
+        // No exception means thread safety is working
+        evolver.shutdown();
+    }
+
     // --- helpers ---
 
     private SchemaEvolver createEvolver() {

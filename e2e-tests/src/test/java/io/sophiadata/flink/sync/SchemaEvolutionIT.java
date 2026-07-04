@@ -18,32 +18,13 @@
 
 package io.sophiadata.flink.sync;
 
-import org.apache.flink.api.common.RuntimeExecutionMode;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.MemorySize;
-import org.apache.flink.configuration.TaskManagerOptions;
-import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.test.util.MiniClusterWithClientResource;
-
-import io.sophiadata.flink.utils.MySqlContainer;
-import io.sophiadata.flink.utils.MySqlVersion;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -54,100 +35,12 @@ import static org.junit.Assert.assertTrue;
  * pipeline, simulates DDL changes (ADD COLUMN, MODIFY COLUMN, DROP+RE-ADD), verifies data + schema
  * evolution synced to sink.
  */
-public class SchemaEvolutionIT {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SchemaEvolutionIT.class);
-
-    private static final String SOURCE_DB = "flink_source";
-    private static final String SINK_DB = "flink_sink";
-
-    @Rule
-    public MiniClusterWithClientResource miniClusterResource =
-            new MiniClusterWithClientResource(
-                    new MiniClusterResourceConfiguration.Builder()
-                            .setNumberTaskManagers(1)
-                            .setNumberSlotsPerTaskManager(1)
-                            .setConfiguration(createMiniClusterConfig())
-                            .build());
-
-    private static Configuration createMiniClusterConfig() {
-        Configuration config = new Configuration();
-        // Limit TaskManager memory to fit within CI runner (16 GB)
-        config.set(TaskManagerOptions.TASK_HEAP_MEMORY, MemorySize.ofMebiBytes(512));
-        config.set(TaskManagerOptions.TASK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(128));
-        config.set(TaskManagerOptions.FRAMEWORK_HEAP_MEMORY, MemorySize.ofMebiBytes(256));
-        config.set(TaskManagerOptions.FRAMEWORK_OFF_HEAP_MEMORY, MemorySize.ofMebiBytes(64));
-        return config;
-    }
-
-    private JdbcDatabaseContainer<?> sourceContainer;
-    private JdbcDatabaseContainer<?> sinkContainer;
-
-    private String sourceUrl;
-    private String sinkUrl;
-
-    private StreamExecutionEnvironment env;
-    private StreamTableEnvironment tEnv;
-    private Thread flinkJobThread;
+public class SchemaEvolutionIT extends AbstractMysqlSyncIT {
 
     @Before
     public void setUp() throws Exception {
-        // Source: enable ROW binlog for CDC
-        sourceContainer =
-                new MySqlContainer(MySqlVersion.V8_0)
-                        .withDatabaseName(SOURCE_DB)
-                        .withUsername("root")
-                        .withPassword("root")
-                        .withConfigurationOverride("docker.cnf");
-        sourceContainer.start();
+        startMysqlContainers();
 
-        // Sink: plain MySQL
-        sinkContainer =
-                new MySqlContainer(MySqlVersion.V8_0)
-                        .withDatabaseName(SINK_DB)
-                        .withUsername("root")
-                        .withPassword("root");
-        sinkContainer.start();
-
-        sourceUrl =
-                "jdbc:mysql://"
-                        + sourceContainer.getHost()
-                        + ":"
-                        + sourceContainer.getMappedPort(3306)
-                        + "/"
-                        + SOURCE_DB
-                        + "?useSSL=false&allowPublicKeyRetrieval=true";
-        sinkUrl =
-                "jdbc:mysql://"
-                        + sinkContainer.getHost()
-                        + ":"
-                        + sinkContainer.getMappedPort(3306)
-                        + "/"
-                        + SINK_DB
-                        + "?useSSL=false&allowPublicKeyRetrieval=true";
-
-        LOG.info("Source MySQL: {}", sourceUrl);
-        LOG.info("Sink MySQL: {}", sinkUrl);
-
-        // Create CDC user with replication privileges on source
-        try (Connection c =
-                        DriverManager.getConnection(
-                                "jdbc:mysql://"
-                                        + sourceContainer.getHost()
-                                        + ":"
-                                        + sourceContainer.getMappedPort(3306)
-                                        + "/?useSSL=false&allowPublicKeyRetrieval=true",
-                                "root",
-                                "root");
-                Statement st = c.createStatement()) {
-            st.executeUpdate(
-                    "CREATE USER IF NOT EXISTS 'cdc_user'@'%' IDENTIFIED BY 'cdc_password'");
-            st.executeUpdate(
-                    "GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'cdc_user'@'%'");
-            st.executeUpdate("FLUSH PRIVILEGES");
-        }
-
-        // Create source table (drop first to ensure clean state)
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("DROP TABLE IF EXISTS t_order");
@@ -163,31 +56,14 @@ public class SchemaEvolutionIT {
 
     @After
     public void tearDown() {
-        if (flinkJobThread != null) {
-            // 先给管道时间自然结束，不要立即打断
-            try {
-                flinkJobThread.join(15000);
-            } catch (InterruptedException ignored) {
-            }
-            // 如果还没结束，再强制打断
-            if (flinkJobThread.isAlive()) {
-                flinkJobThread.interrupt();
-                try {
-                    flinkJobThread.join(5000);
-                } catch (InterruptedException ignored) {
-                }
-            }
-        }
-        if (sourceContainer != null) sourceContainer.stop();
-        if (sinkContainer != null) sinkContainer.stop();
+        stopMysqlContainers();
     }
 
     @Test
     public void testSyncWithAddColumn() throws Exception {
-        startFlinkPipeline();
+        startFlinkPipeline("schema-evolution-it");
         waitForCdcReady();
 
-        // Insert initial data AFTER pipeline is running (binlog path)
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate(
@@ -201,15 +77,12 @@ public class SchemaEvolutionIT {
         assertSinkProduct("sink_t_order", 2, "phone");
         LOG.info("=== testSyncWithAddColumn: initial data synced ===");
 
-        // DDL: ADD COLUMN `discount`
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("ALTER TABLE t_order ADD COLUMN discount DECIMAL(10,2) DEFAULT 0.00");
         }
-        LOG.info("DDL executed: ADD COLUMN discount");
         TimeUnit.SECONDS.sleep(5);
 
-        // Insert row with new column
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate(
@@ -219,15 +92,14 @@ public class SchemaEvolutionIT {
 
         waitForSinkRowCount("sink_t_order", 3, 60);
         assertSinkProduct("sink_t_order", 3, "tablet");
-        LOG.info("=== Phase 2 PASSED: ADD COLUMN + new data synced ===");
+        LOG.info("=== testSyncWithAddColumn PASSED ===");
     }
 
     @Test
     public void testSyncWithModifyColumn() throws Exception {
-        startFlinkPipeline();
+        startFlinkPipeline("schema-evolution-it");
         waitForCdcReady();
 
-        // Insert initial data AFTER pipeline is running
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate(
@@ -237,14 +109,11 @@ public class SchemaEvolutionIT {
         }
 
         waitForSinkRowCount("sink_t_order", 2, 60);
-        LOG.info("=== testSyncWithModifyColumn: initial data synced ===");
 
-        // DDL: MODIFY COLUMN `amount` to DOUBLE
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("ALTER TABLE t_order MODIFY COLUMN amount DOUBLE");
         }
-        LOG.info("DDL executed: MODIFY COLUMN amount -> DOUBLE");
         TimeUnit.SECONDS.sleep(5);
 
         try (Connection c = getSourceConnection();
@@ -256,15 +125,14 @@ public class SchemaEvolutionIT {
 
         waitForSinkRowCount("sink_t_order", 3, 60);
         assertSinkProduct("sink_t_order", 3, "monitor");
-        LOG.info("=== Phase 2 PASSED: MODIFY COLUMN + data synced ===");
+        LOG.info("=== testSyncWithModifyColumn PASSED ===");
     }
 
     @Test
     public void testSyncWithDropAndReAdd() throws Exception {
-        startFlinkPipeline();
+        startFlinkPipeline("schema-evolution-it");
         waitForCdcReady();
 
-        // Insert initial data AFTER pipeline is running
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate(
@@ -274,20 +142,15 @@ public class SchemaEvolutionIT {
         }
 
         waitForSinkRowCount("sink_t_order", 2, 60);
-        LOG.info("=== testSyncWithDropAndReAdd: initial data synced ===");
 
-        // Drop then re-add a column
         try (Connection c = getSourceConnection();
                 Statement st = c.createStatement()) {
             st.executeUpdate("ALTER TABLE t_order DROP COLUMN amount");
             TimeUnit.SECONDS.sleep(10);
             st.executeUpdate("ALTER TABLE t_order ADD COLUMN amount DECIMAL(10,2) DEFAULT 0.00");
         }
-        LOG.info("DDL executed: DROP + RE-ADD amount column");
-        // Extra delay for CDC binlog reader to fully recover after DDL
         TimeUnit.SECONDS.sleep(15);
 
-        // Retry INSERT up to 3 times with delays
         for (int attempt = 1; attempt <= 3; attempt++) {
             try (Connection c = getSourceConnection();
                     Statement st = c.createStatement()) {
@@ -295,7 +158,6 @@ public class SchemaEvolutionIT {
                         "INSERT IGNORE INTO t_order (id, product, amount, create_time) "
                                 + "VALUES (3, 'keyboard', 199.00, NOW())");
             }
-            LOG.info("INSERT attempt {} succeeded", attempt);
             TimeUnit.SECONDS.sleep(5);
             try (Connection c = getSinkConnection();
                     Statement st = c.createStatement();
@@ -310,67 +172,11 @@ public class SchemaEvolutionIT {
 
         waitForSinkRowCount("sink_t_order", 3, 60);
         assertSinkProduct("sink_t_order", 3, "keyboard");
-        LOG.info("=== Phase 2 PASSED: DROP + RE-ADD column synced ===");
+        LOG.info("=== testSyncWithDropAndReAdd PASSED ===");
     }
 
     // ---- helpers ----
 
-    private void startFlinkPipeline() {
-        env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
-        env.setParallelism(1);
-        env.enableCheckpointing(2000);
-        tEnv = StreamTableEnvironment.create(env);
-        tEnv.getConfig()
-                .getConfiguration()
-                .setString("pipeline.name", "schema-evolution-it-" + System.currentTimeMillis());
-
-        Map<String, String> args = new HashMap<>();
-        args.put("hostname", sourceContainer.getHost());
-        args.put("port", String.valueOf(sourceContainer.getMappedPort(3306)));
-        args.put("username", "root");
-        args.put("password", "root");
-        args.put("databaseName", SOURCE_DB);
-        args.put("tableList", SOURCE_DB + ".*");
-        args.put("sinkUrl", sinkUrl);
-        args.put("sinkUsername", "root");
-        args.put("sinkPassword", "root");
-        args.put("serverTimeZone", "UTC");
-        args.put("setParallelism", "1");
-        args.put("cdcSourceName", "mysql-cdc-sit");
-
-        flinkJobThread =
-                new Thread(
-                        () -> {
-                            try {
-                                new FlinkSqlWDS().handle(toArgs(args), env, tEnv);
-                            } catch (Exception e) {
-                                LOG.error("Flink pipeline failed", e);
-                            }
-                        },
-                        "flink-wds-it");
-        flinkJobThread.setDaemon(true);
-        flinkJobThread.start();
-
-        // Give pipeline time to start and discover existing tables
-        try {
-            TimeUnit.SECONDS.sleep(8);
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    private Connection getSourceConnection() throws SQLException {
-        return DriverManager.getConnection(sourceUrl, "root", "root");
-    }
-
-    private Connection getSinkConnection() throws SQLException {
-        return DriverManager.getConnection(sinkUrl, "root", "root");
-    }
-
-    /**
-     * Wait until the CDC pipeline's bootstrap has created the sink table, then give the binlog
-     * reader extra time to fully connect.
-     */
     @SuppressWarnings("BusyWait")
     private void waitForCdcReady() throws Exception {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
@@ -382,45 +188,18 @@ public class SchemaEvolutionIT {
                                             "SELECT COUNT(*) FROM " + SINK_DB + ".sink_t_order")) {
                 if (rs.next()) {
                     LOG.info("CDC pipeline ready — sink_t_order exists, waiting for binlog reader");
-                    // Extra wait for binlog reader to fully initialize
                     TimeUnit.SECONDS.sleep(10);
                     return;
                 }
             } catch (Exception ignored) {
-                // table not yet created by bootstrap
             }
             Thread.sleep(1000);
         }
         LOG.warn("Timed out waiting for sink_t_order to appear — proceeding anyway");
     }
 
-    @SuppressWarnings("BusyWait")
-    private void waitForSinkRowCount(String table, int expected, int timeoutSeconds)
-            throws Exception {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
-        int count = 0;
-        while (System.nanoTime() < deadline) {
-            try (Connection c = getSinkConnection();
-                    Statement st = c.createStatement()) {
-                try (ResultSet rs =
-                        st.executeQuery("SELECT COUNT(*) FROM " + SINK_DB + "." + table)) {
-                    if (rs.next()) {
-                        count = rs.getInt(1);
-                        if (count >= expected) return;
-                    }
-                }
-            } catch (Exception ignored) {
-                // table may not exist yet
-            }
-            Thread.sleep(2000);
-        }
-        assertTrue(
-                "Expected at least " + expected + " rows in " + table + ", got " + count,
-                count >= expected);
-    }
-
     private void assertSinkProduct(String table, int id, String expectedProduct)
-            throws SQLException {
+            throws java.sql.SQLException {
         try (Connection c = getSinkConnection();
                 Statement st = c.createStatement();
                 ResultSet rs =
@@ -434,15 +213,5 @@ public class SchemaEvolutionIT {
             assertTrue("row id=" + id + " should exist", rs.next());
             assertEquals("product mismatch for id=" + id, expectedProduct, rs.getString(1));
         }
-    }
-
-    private static String[] toArgs(Map<String, String> m) {
-        String[] out = new String[m.size() * 2];
-        int i = 0;
-        for (Map.Entry<String, String> e : m.entrySet()) {
-            out[i++] = "--" + e.getKey();
-            out[i++] = e.getValue();
-        }
-        return out;
     }
 }
