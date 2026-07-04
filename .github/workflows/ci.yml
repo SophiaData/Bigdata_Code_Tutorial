@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [flink-demo, cdc-mysql-sync, flink-demo, cdc-paimon-sync]
+        module: [flink-demo, cdc-mysql-sync, cdc-paimon-sync]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -241,10 +241,10 @@ jobs:
             m2-${{ runner.os }}-jdk11-
 
       - name: Compile under Error Prone (errors block the build)
-        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,flink-demo,cdc-paimon-sync -am clean compile -DskipTests
+        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,cdc-paimon-sync -am clean compile -DskipTests
 
       - name: Run SpotBugs (report-only, mirrors IDEA's bug-level inspections)
-        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,flink-demo,cdc-paimon-sync -am verify -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+        run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,cdc-paimon-sync -am verify -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
 
       - name: Upload SpotBugs reports
         if: always()

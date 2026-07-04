@@ -308,7 +308,7 @@ void shouldLoadConfigFromResources() {
 | 模块 | 当前覆盖率 | 阶段一目标（1个月） |
 |---|---|---|
 | `cdc-mysql-sync` | 10.1% | 25% |
-| `flink-demo` | 0.0% | 20% |
+| `cdc-paimon-sync` | 0.0% | 20% |
 | `flink-demo` | 100.0% | 保持 |
 
 ### 优先补充测试的类

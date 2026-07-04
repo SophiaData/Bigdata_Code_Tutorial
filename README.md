@@ -5,7 +5,7 @@
 [![CI](https://github.com/SophiaData/Bigdata_Code_Tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/SophiaData/Bigdata_Code_Tutorial/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/SophiaData/Bigdata_Code_Tutorial)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-11-blue?logo=openjdk)](https://adoptium.net/)
-[![Flink](https://img.shields.io/badge/Flink-1.20.0-blue?logo=apache-flink)](https://flink.apache.org/)
+[![Flink](https://img.shields.io/badge/Flink-1.20.5-blue?logo=apache-flink)](https://flink.apache.org/)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-brightgreen?logo=dependabot)](https://github.com/SophiaData/Bigdata_Code_Tutorial/network/dependencies)
 
 ## 模块
