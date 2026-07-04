@@ -20,16 +20,23 @@ package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.cdc.common.data.GenericRecordData;
+import org.apache.flink.cdc.common.event.CreateTableEvent;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.DropColumnEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.TableId;
 import org.apache.flink.cdc.common.event.TruncateTableEvent;
+import org.apache.flink.cdc.common.schema.Schema;
+import org.apache.flink.cdc.common.types.DataType;
+import org.apache.flink.cdc.common.types.DataTypes;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 将 Kafka Connect（Debezium）的 {@code SourceRecord} 转换为 Flink CDC 的 {@link Event}。
@@ -49,6 +56,7 @@ import org.slf4j.LoggerFactory;
  * <p>时间类型需要特殊处理：Debezium 可能返回 OffsetDateTime / ZonedDateTime 等， 需统一转换为 {@link java.sql.Timestamp}
  * 以匹配 JDBC sink 的类型期望。
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
@@ -124,6 +132,9 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         final Object[] afterVals = extractValues(after);
         final TableId tid = TableId.tableId(dbName, tableName);
 
+        // Emit CreateTableEvent on first encounter so schema-evolver populates schemas cache
+        emitCreateTableIfNeeded(record, valueStruct, tid, tableName, out);
+
         switch (op) {
             case "c":
             case "r":
@@ -145,6 +156,66 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
                 break;
             default:
                 LOG.debug("Unknown op: {}", op);
+        }
+    }
+
+    /**
+     * Emit a CreateTableEvent on first encounter of a table so that schema-evolver populates the
+     * schemas cache on the TaskManager side.
+     */
+    private void emitCreateTableIfNeeded(
+            final org.apache.kafka.connect.source.SourceRecord record,
+            final org.apache.kafka.connect.data.Struct valueStruct,
+            final TableId tid,
+            final String tableName,
+            final Collector<Event> out) {
+        if (schemas().containsKey(tableName)) {
+            return;
+        }
+        try {
+            final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
+            final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
+            // Use after if available, fall back to before (e.g. DELETE events have no after)
+            final org.apache.kafka.connect.data.Struct row = after != null ? after : before;
+            if (row == null) {
+                return;
+            }
+            LOG.info(
+                    "schema for {}: fields={}, row.class={}",
+                    tableName,
+                    row.schema().fields().stream()
+                            .map(org.apache.kafka.connect.data.Field::name)
+                            .collect(java.util.stream.Collectors.joining(",")),
+                    row.getClass().getName());
+            final Schema.Builder schemaBuilder = Schema.newBuilder();
+            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+                schemaBuilder.physicalColumn(f.name(), convertToCdcType(f.schema()));
+            }
+            final List<String> pkNames = new ArrayList<>();
+            final org.apache.kafka.connect.data.Struct keyStruct =
+                    (org.apache.kafka.connect.data.Struct) record.key();
+            if (keyStruct != null) {
+                for (final org.apache.kafka.connect.data.Field kf : keyStruct.schema().fields()) {
+                    pkNames.add(kf.name());
+                }
+            }
+            final Schema schema = schemaBuilder.primaryKey(pkNames).build();
+            final java.util.Map<String, String> colMap = new java.util.LinkedHashMap<>();
+            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+                colMap.put(f.name(), f.schema().type().name());
+            }
+            SharedSchemaState.schemas().put(tableName, colMap);
+            if (!pkNames.isEmpty()) {
+                SharedSchemaState.pks().put(tableName, pkNames.get(0));
+            }
+            out.collect(new CreateTableEvent(tid, schema));
+            LOG.info(
+                    "Emitted CreateTableEvent for {} ({} columns, pk={})",
+                    tableName,
+                    colMap.size(),
+                    pkNames);
+        } catch (final Exception e) {
+            LOG.warn("Failed to emit CreateTableEvent for {}: {}", tableName, e.getMessage());
         }
     }
 
@@ -420,6 +491,45 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             }
         }
         return columnNames;
+    }
+
+    /**
+     * Convert a Kafka Connect Schema type to a Flink CDC DataType. Handles the common MySQL types
+     * encountered in Debezium CDC events.
+     */
+    private static DataType convertToCdcType(final org.apache.kafka.connect.data.Schema schema) {
+        if (schema == null) {
+            return DataTypes.STRING();
+        }
+        final org.apache.kafka.connect.data.Schema.Type type = schema.type();
+        switch (type) {
+            case INT8:
+                return DataTypes.TINYINT();
+            case INT16:
+                return DataTypes.SMALLINT();
+            case INT32:
+                return DataTypes.INT();
+            case INT64:
+                return DataTypes.BIGINT();
+            case FLOAT32:
+                return DataTypes.FLOAT();
+            case FLOAT64:
+                return DataTypes.DOUBLE();
+            case BOOLEAN:
+                return DataTypes.BOOLEAN();
+            case BYTES:
+                return DataTypes.BYTES();
+            case STRING:
+                return DataTypes.STRING();
+            case ARRAY:
+                return DataTypes.STRING();
+            case MAP:
+                return DataTypes.STRING();
+            case STRUCT:
+                return DataTypes.STRING();
+            default:
+                return DataTypes.STRING();
+        }
     }
 
     @Override

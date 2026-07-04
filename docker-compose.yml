@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MySQL Source Database
   mysql-source:
-    image: mysql:8.4.0
+    image: mysql:8.0
     container_name: cdc-test-source
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -32,7 +32,7 @@ services:
 
   # MySQL Sink Database
   mysql-sink:
-    image: mysql:8.4.0
+    image: mysql:8.0
     container_name: cdc-test-sink
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -61,19 +61,19 @@ services:
     image: flink:1.20.1-scala_2.12-java11
     container_name: flink-jobmanager
     ports:
-      - "18081:8081"  # Web UI
-      - "6123:6123"   # RPC
+      - "18081:8081"
+      - "6123:6123"
     command: jobmanager
     environment:
       FLINK_PROPERTIES: |
-        jobmanager.rpc.address: jobmanager
+        jobmanager.rpc.address: flink-jobmanager
         state.backend: filesystem
         state.checkpoints.dir: file:///tmp/flink/checkpoints
         execution.checkpointing.interval: 1min
     volumes:
       - flink-jobmanager-checkpoints:/tmp/flink/checkpoints
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8081/cluster || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -90,7 +90,7 @@ services:
     scale: 1
     environment:
       FLINK_PROPERTIES: |
-        jobmanager.rpc.address: jobmanager
+        jobmanager.rpc.address: flink-jobmanager
         taskmanager.numberOfTaskSlots: 4
         state.backend: filesystem
         state.checkpoints.dir: file:///tmp/flink/checkpoints
@@ -100,7 +100,7 @@ services:
 
   # Test Data Loader (Optional)
   test-data-loader:
-    image: mysql:8.4.0
+    image: mysql:8.0
     container_name: test-data-loader
     depends_on:
       mysql-source:

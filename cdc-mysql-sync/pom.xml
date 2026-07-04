@@ -379,7 +379,95 @@
     
     <build>
         <plugins>
-            <!-- 使用 maven-assembly-plugin 打包所有依赖 -->
+            <!-- 使用 maven-shade-plugin 打包所有依赖（含 provided）用于 Docker 部署 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven-shade-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.flink:flink-connector-mysql-cdc</include>
+                                    <include>org.apache.flink:flink-connector-debezium</include>
+                                    <include>org.apache.flink:flink-cdc-common</include>
+                                    <include>org.apache.flink:flink-cdc-runtime</include>
+                                    <include>org.apache.flink:flink-cdc-flink1-compat</include>
+                                    <include>io.debezium:*</include>
+                                    <include>org.apache.kafka:connect-*</include>
+                                    <include>org.apache.kafka:kafka-clients</include>
+                                    <include>org.antlr:antlr4-runtime</include>
+                                    <include>com.zaxxer:HikariCP</include>
+                                    <include>com.esri.geometry:*</include>
+                                    <include>com.zendesk:mysql-binlog-connector-java</include>
+                                    <include>mysql:mysql-connector-java</include>
+                                    <include>com.mysql:mysql-connector-j</include>
+                                    <include>com.github.javafaker:javafaker</include>
+                                    <include>com.alibaba:fastjson</include>
+                                    <include>com.alibaba.fastjson2:*</include>
+                                    <include>org.apache.flink:flink-json</include>
+                                    <include>org.apache.flink:flink-statebackend-rocksdb</include>
+                                    <include>org.apache.flink:flink-connector-kafka</include>
+                                    <include>org.apache.commons:commons-configuration2</include>
+                                    <include>com.google.code.gson:gson</include>
+                                    <include>dnsjava:dnsjava</include>
+                                    <include>com.nimbusds:nimbus-jose-jwt</include>
+                                    <include>org.yaml:snakeyaml</include>
+                                    <include>org.apache.flink:flink-connector-jdbc</include>
+                                    <include>org.apache.flink:flink-connector-jdbc-core</include>
+                                    <include>org.apache.flink:flink-connector-jdbc-mysql</include>
+                                    <include>com.google.protobuf:protobuf-java</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>org.apache.flink:flink-shaded-*</exclude>
+                                    <exclude>org.apache.flink:flink-dist-*</exclude>
+                                    <exclude>org.apache.flink:flink-streaming-java</exclude>
+                                    <exclude>org.apache.flink:flink-java</exclude>
+                                    <exclude>org.apache.flink:flink-table-api-java-bridge</exclude>
+                                    <exclude>org.apache.flink:flink-table-planner_*</exclude>
+                                    <exclude>org.apache.flink:flink-table-common</exclude>
+                                    <exclude>org.apache.flink:flink-table-runtime</exclude>
+                                    <exclude>org.apache.flink:flink-table-api-java</exclude>
+                                    <exclude>org.apache.flink:flink-table-api-bridge-base</exclude>
+                                    <exclude>org.apache.flink:flink-connector-base</exclude>
+                                    <exclude>org.apache.flink:flink-runtime-web</exclude>
+                                    <exclude>org.apache.flink:flink-clients</exclude>
+                                    <exclude>org.apache.flink:flink-core</exclude>
+                                    <exclude>org.apache.flink:flink-runtime</exclude>
+                                    <exclude>org.apache.flink:flink-optimizer</exclude>
+                                    <exclude>org.apache.flink:flink-annotations</exclude>
+                                    <exclude>org.apache.flink:flink-metrics-core</exclude>
+                                    <exclude>org.apache.flink:flink-shaded-force-shading</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>org.apache.logging.log4j:*</exclude>
+                                    <exclude>ch.qos.reload4j:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 保留 assembly 插件用于本地测试 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -390,9 +478,9 @@
                             <mainClass>io.sophiadata.flink.sync.FlinkSqlWDS</mainClass>
                         </manifest>
                     </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+                    <descriptors>
+                        <descriptor>src/main/assembly/docker-jar.xml</descriptor>
+                    </descriptors>
                 </configuration>
                 <executions>
                     <execution>
