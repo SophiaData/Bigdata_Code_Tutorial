@@ -150,12 +150,17 @@ public class WindowWithProcessFunction extends BaseCode {
             all.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
             final StringBuilder sb = new StringBuilder();
-            sb.append("=== Top ").append(topN).append(" 传感器 ===\n");
+            sb.append("=== Top ").append(topN).append(" 传感器 ===").append(System.lineSeparator());
             final int limit = Math.min(topN, all.size());
             for (int i = 0; i < limit; i++) {
                 final Map.Entry<String, Double> entry = all.get(i);
-                sb.append(
-                        String.format("  #%d %s: %.2f\n", i + 1, entry.getKey(), entry.getValue()));
+                sb.append("  #")
+                        .append(i + 1)
+                        .append(" ")
+                        .append(entry.getKey())
+                        .append(": ")
+                        .append(String.format("%.2f", entry.getValue()))
+                        .append(System.lineSeparator());
             }
             out.collect(sb.toString());
         }
