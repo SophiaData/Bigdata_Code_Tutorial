@@ -323,6 +323,13 @@
             <artifactId>flink-test-utils</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-runtime</artifactId>
+            <version>${flink.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
         <!-- test dependencies on TestContainers -->
         
         <dependency>
