@@ -1,7 +1,7 @@
 # 项目可靠性分析报告
 
 > 生成时间：2026-06-29
-> 覆盖范围：flink-demo、cdc-mysql-sync、flink-demo 三个模块
+> 覆盖范围：flink-demo、cdc-mysql-sync、cdc-paimon-sync 三个模块
 
 ---
 
@@ -13,7 +13,7 @@
 |---|---|---|---|
 | flink-demo | 30 | 1 | 3.3% |
 | cdc-mysql-sync | 8 | 10 | **125%** |
-| flink-demo | 1 | 1 | 100% |
+| cdc-paimon-sync | 1 | 1 | 100% |
 | **合计** | **39** | **14** | **35.9%** |
 
 > cdc-mysql-sync 测试文件多是因为包含 testcontainers 基础设施类（MySqlContainer、UniqueDatabase 等），实际业务测试覆盖率仍偏低。

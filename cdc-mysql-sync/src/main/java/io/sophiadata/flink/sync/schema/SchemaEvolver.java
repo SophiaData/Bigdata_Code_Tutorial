@@ -48,9 +48,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -138,14 +139,14 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
         this.sinkPassword = sinkPassword;
         this.sinkTablePrefix = sinkTablePrefix;
         this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
-        this.executedAlters = new HashSet<>();
+        this.executedAlters = Collections.newSetFromMap(new ConcurrentHashMap<>());
     }
 
     private void readObject(final java.io.ObjectInputStream in)
             throws java.io.IOException, ClassNotFoundException {
         in.defaultReadObject();
         this.alterExecutor = Executors.newCachedThreadPool(new SchemaAlterThreadFactory());
-        this.executedAlters = new HashSet<>();
+        this.executedAlters = Collections.newSetFromMap(new ConcurrentHashMap<>());
     }
 
     // ------------------------------------------------------------------------
@@ -169,7 +170,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
 
         // Replay from checkpoint
         if (initContext.isRestored()) {
-            executedAlters = new HashSet<>();
+            executedAlters = Collections.newSetFromMap(new ConcurrentHashMap<>());
             int restoredCount = 0;
             for (final AlterRecord record : alterState.get()) {
                 executedAlters.add(record.sqlStatement);
@@ -177,7 +178,7 @@ public class SchemaEvolver implements java.io.Serializable, CheckpointedFunction
             }
             LOG.info("SchemaEvolver restored {} executed alters from checkpoint", restoredCount);
         } else {
-            executedAlters = new HashSet<>();
+            executedAlters = Collections.newSetFromMap(new ConcurrentHashMap<>());
             LOG.info("SchemaEvolver initialized with empty alter history (fresh job)");
         }
     }

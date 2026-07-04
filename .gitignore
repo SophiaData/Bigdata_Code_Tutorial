@@ -59,3 +59,4 @@ error/
 # (happens when CI runs e2e tests with the wrong working directory)
 /TEST-*.xml
 /*.txt
+dependency-tree*.txt
