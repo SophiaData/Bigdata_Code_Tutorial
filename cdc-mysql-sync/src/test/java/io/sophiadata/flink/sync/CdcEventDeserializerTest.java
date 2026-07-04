@@ -18,6 +18,7 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.cdc.common.event.CreateTableEvent;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.OperationType;
@@ -72,6 +73,8 @@ class CdcEventDeserializerTest {
     @BeforeEach
     void setUp() {
         deserializer = new CdcEventDeserializer();
+        SharedSchemaState.schemas().clear();
+        SharedSchemaState.pks().clear();
     }
 
     // --- convertValue tests ---
@@ -173,9 +176,11 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("c", 1L, null, "Alice");
         List<Event> events = collectEvents(record);
 
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof DataChangeEvent);
-        DataChangeEvent dce = (DataChangeEvent) events.get(0);
+        // First encounter emits CreateTableEvent + DataChangeEvent
+        assertEquals(2, events.size());
+        assertTrue(events.get(0) instanceof CreateTableEvent);
+        assertTrue(events.get(1) instanceof DataChangeEvent);
+        DataChangeEvent dce = (DataChangeEvent) events.get(1);
         assertEquals(OperationType.INSERT, dce.op());
         assertEquals("test_table", dce.tableId().getTableName());
     }
@@ -185,9 +190,10 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("r", 1L, null, "Bob");
         List<Event> events = collectEvents(record);
 
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof DataChangeEvent);
-        DataChangeEvent dce = (DataChangeEvent) events.get(0);
+        assertEquals(2, events.size());
+        assertTrue(events.get(0) instanceof CreateTableEvent);
+        assertTrue(events.get(1) instanceof DataChangeEvent);
+        DataChangeEvent dce = (DataChangeEvent) events.get(1);
         assertEquals(OperationType.INSERT, dce.op());
     }
 
@@ -196,9 +202,10 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("u", 1L, "Alice", "AliceUpdated");
         List<Event> events = collectEvents(record);
 
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof DataChangeEvent);
-        DataChangeEvent dce = (DataChangeEvent) events.get(0);
+        assertEquals(2, events.size());
+        assertTrue(events.get(0) instanceof CreateTableEvent);
+        assertTrue(events.get(1) instanceof DataChangeEvent);
+        DataChangeEvent dce = (DataChangeEvent) events.get(1);
         assertEquals(OperationType.UPDATE, dce.op());
     }
 
@@ -207,9 +214,10 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("d", 1L, "Alice", null);
         List<Event> events = collectEvents(record);
 
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof DataChangeEvent);
-        DataChangeEvent dce = (DataChangeEvent) events.get(0);
+        assertEquals(2, events.size());
+        assertTrue(events.get(0) instanceof CreateTableEvent);
+        assertTrue(events.get(1) instanceof DataChangeEvent);
+        DataChangeEvent dce = (DataChangeEvent) events.get(1);
         assertEquals(OperationType.DELETE, dce.op());
     }
 
@@ -218,8 +226,9 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("t", null, null, null);
         List<Event> events = collectEvents(record);
 
-        assertEquals(1, events.size());
-        assertTrue(events.get(0) instanceof TruncateTableEvent);
+        assertEquals(2, events.size());
+        assertTrue(events.get(0) instanceof CreateTableEvent);
+        assertTrue(events.get(1) instanceof TruncateTableEvent);
     }
 
     @Test

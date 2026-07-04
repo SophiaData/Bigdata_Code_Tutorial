@@ -53,9 +53,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * End-to-end integration test for whole-database CDC sync.
  *
- * <p>Spins up two MySQL 8.0 containers (source + sink), runs the FlinkSqlWDS pipeline, inserts
- * data into the source, and verifies that INSERT / UPDATE / DELETE operations are correctly synced
- * to the sink database with {@code sink_} prefix table names.
+ * <p>Spins up two MySQL 8.0 containers (source + sink), runs the FlinkSqlWDS pipeline, inserts data
+ * into the source, and verifies that INSERT / UPDATE / DELETE operations are correctly synced to
+ * the sink database with {@code sink_} prefix table names.
  *
  * <p>This test specifically covers the bug where SharedSchemaState serialization across Flink
  * operators caused schemas to be empty on the TaskManager side, resulting in all records being
@@ -120,7 +120,12 @@ public class WholeDatabaseSyncIT {
         sourceHost = sourceContainer.getHost();
         sourcePort = sourceContainer.getMappedPort(3306);
         sourceUrl =
-                "jdbc:mysql://" + sourceHost + ":" + sourcePort + "/" + SOURCE_DB
+                "jdbc:mysql://"
+                        + sourceHost
+                        + ":"
+                        + sourcePort
+                        + "/"
+                        + SOURCE_DB
                         + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
         sinkUrl =
                 "jdbc:mysql://"
@@ -137,7 +142,10 @@ public class WholeDatabaseSyncIT {
         // Create CDC user with replication privileges on source
         try (Connection c =
                         DriverManager.getConnection(
-                                "jdbc:mysql://" + sourceHost + ":" + sourcePort
+                                "jdbc:mysql://"
+                                        + sourceHost
+                                        + ":"
+                                        + sourcePort
                                         + "/?useSSL=false&allowPublicKeyRetrieval=true",
                                 "root",
                                 "root");
@@ -151,7 +159,8 @@ public class WholeDatabaseSyncIT {
         }
 
         // Create source tables
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate("DROP TABLE IF EXISTS orders");
             st.executeUpdate(
                     "CREATE TABLE orders ("
@@ -199,7 +208,8 @@ public class WholeDatabaseSyncIT {
         waitForSinkTable("sink_users", 60);
 
         // Insert data into source
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate(
                     "INSERT INTO users (name, email, age) VALUES "
                             + "('Alice', 'alice@example.com', 25),"
@@ -218,7 +228,8 @@ public class WholeDatabaseSyncIT {
         waitForSinkTable("sink_users", 60);
 
         // Step 1: Insert, then wait for it to sync before updating
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate(
                     "INSERT INTO users (name, email, age) VALUES ('Alice', 'alice@example.com', 25)");
         }
@@ -226,7 +237,8 @@ public class WholeDatabaseSyncIT {
         TimeUnit.SECONDS.sleep(3);
 
         // Step 2: Update
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate("UPDATE users SET age = 26 WHERE name = 'Alice'");
         }
 
@@ -234,10 +246,13 @@ public class WholeDatabaseSyncIT {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60);
         int age = 0;
         while (System.nanoTime() < deadline) {
-            try (Connection c = getSinkConnection(); Statement st = c.createStatement();
+            try (Connection c = getSinkConnection();
+                    Statement st = c.createStatement();
                     ResultSet rs =
                             st.executeQuery(
-                                    "SELECT age FROM " + SINK_DB + ".sink_users WHERE name = 'Alice'")) {
+                                    "SELECT age FROM "
+                                            + SINK_DB
+                                            + ".sink_users WHERE name = 'Alice'")) {
                 if (rs.next()) {
                     age = rs.getInt("age");
                     if (age == 26) break;
@@ -255,7 +270,8 @@ public class WholeDatabaseSyncIT {
         waitForSinkTable("sink_users", 60);
 
         // Step 1: Insert two rows, wait for sync
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate(
                     "INSERT INTO users (name, email, age) VALUES "
                             + "('Alice', 'alice@example.com', 25),"
@@ -265,7 +281,8 @@ public class WholeDatabaseSyncIT {
         TimeUnit.SECONDS.sleep(3);
 
         // Step 2: Delete Alice
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate("DELETE FROM users WHERE name = 'Alice'");
         }
 
@@ -273,7 +290,8 @@ public class WholeDatabaseSyncIT {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60);
         int remaining = 2;
         while (System.nanoTime() < deadline) {
-            try (Connection c = getSinkConnection(); Statement st = c.createStatement();
+            try (Connection c = getSinkConnection();
+                    Statement st = c.createStatement();
                     ResultSet rs =
                             st.executeQuery("SELECT COUNT(*) FROM " + SINK_DB + ".sink_users")) {
                 if (rs.next()) {
@@ -295,7 +313,8 @@ public class WholeDatabaseSyncIT {
         waitForSinkTable("sink_orders", 60);
 
         // Insert into both tables
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate(
                     "INSERT INTO users (name, email, age) VALUES ('Alice', 'alice@example.com', 25)");
             TimeUnit.SECONDS.sleep(1);
@@ -313,7 +332,8 @@ public class WholeDatabaseSyncIT {
     @Test
     public void testPreExistingDataSync() throws Exception {
         // Insert data BEFORE starting the pipeline (tests bootstrap path)
-        try (Connection c = getSourceConnection(); Statement st = c.createStatement()) {
+        try (Connection c = getSourceConnection();
+                Statement st = c.createStatement()) {
             st.executeUpdate(
                     "INSERT INTO users (name, email, age) VALUES "
                             + "('Alice', 'alice@example.com', 25),"
@@ -411,8 +431,7 @@ public class WholeDatabaseSyncIT {
             try (Connection c = getSinkConnection();
                     Statement st = c.createStatement();
                     ResultSet rs =
-                            st.executeQuery(
-                                    "SELECT COUNT(*) FROM " + SINK_DB + "." + table)) {
+                            st.executeQuery("SELECT COUNT(*) FROM " + SINK_DB + "." + table)) {
                 if (rs.next()) {
                     count = rs.getInt(1);
                     if (count >= expected) return;
@@ -442,9 +461,7 @@ public class WholeDatabaseSyncIT {
                                         + value
                                         + "'")) {
             assertTrue("row with " + column + "=" + value + " should exist", rs.next());
-            assertTrue(
-                    "expected at least 1 row with " + column + "=" + value,
-                    rs.getInt(1) >= 1);
+            assertTrue("expected at least 1 row with " + column + "=" + value, rs.getInt(1) >= 1);
         }
     }
 
