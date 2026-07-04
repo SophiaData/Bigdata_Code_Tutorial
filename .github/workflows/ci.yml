@@ -284,6 +284,50 @@ jobs:
           cat "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
+  # Job 2d: flink-demo E2E tests with Testcontainers (Kafka + Elasticsearch)
+  #         Requires Docker on the runner (ubuntu-latest has it)
+  # ---------------------------------------------------------------------------
+  flink-demo-e2e:
+    name: Flink-Demo E2E Tests (Kafka + ES)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v5
+        with:
+          java-version: '11'
+          distribution: temurin
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-jdk11-
+
+      - name: Build flink-demo (skip tests)
+        run: ./mvnw install -pl flink-demo -am -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
+
+      - name: Run Kafka + ES E2E tests
+        run: |
+          set +H
+          ./mvnw -pl flink-demo test \
+            -Dtest='MysqlCdcToKafkaPipelineE2E,ElasticsearchSinkExampleE2E'
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: surefire-flink-demo-e2e
+          path: flink-demo/target/surefire-reports
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
   # Job 3: package the runnable WDS jar (depends on lint-and-unit passing)
   # ---------------------------------------------------------------------------
   package-sync-database:
