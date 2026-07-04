@@ -56,6 +56,7 @@ import java.util.List;
  * <p>时间类型需要特殊处理：Debezium 可能返回 OffsetDateTime / ZonedDateTime 等， 需统一转换为 {@link java.sql.Timestamp}
  * 以匹配 JDBC sink 的类型期望。
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event> {
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CdcEventDeserializer.class);
