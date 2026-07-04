@@ -174,18 +174,21 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         }
         try {
             final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
-            if (after == null) {
+            final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
+            // Use after if available, fall back to before (e.g. DELETE events have no after)
+            final org.apache.kafka.connect.data.Struct row = after != null ? after : before;
+            if (row == null) {
                 return;
             }
             LOG.info(
-                    "after schema for {}: fields={}, after.class={}",
+                    "schema for {}: fields={}, row.class={}",
                     tableName,
-                    after.schema().fields().stream()
+                    row.schema().fields().stream()
                             .map(org.apache.kafka.connect.data.Field::name)
                             .collect(java.util.stream.Collectors.joining(",")),
-                    after.getClass().getName());
+                    row.getClass().getName());
             final Schema.Builder schemaBuilder = Schema.newBuilder();
-            for (final org.apache.kafka.connect.data.Field f : after.schema().fields()) {
+            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
                 schemaBuilder.physicalColumn(f.name(), convertToCdcType(f.schema()));
             }
             final List<String> pkNames = new ArrayList<>();
@@ -197,11 +200,8 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
                 }
             }
             final Schema schema = schemaBuilder.primaryKey(pkNames).build();
-            // Write directly to SharedSchemaState so CDBBatchSink (same JVM) can read it.
-            // The ProcessFunction closure captures a serialized copy of the map from the
-            // client JVM — writing to SharedSchemaState.schemas() bypasses that issue.
             final java.util.Map<String, String> colMap = new java.util.LinkedHashMap<>();
-            for (final org.apache.kafka.connect.data.Field f : after.schema().fields()) {
+            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
                 colMap.put(f.name(), f.schema().type().name());
             }
             SharedSchemaState.schemas().put(tableName, colMap);

@@ -226,9 +226,9 @@ class CdcEventDeserializerTest {
         SourceRecord record = createDMLRecord("t", null, null, null);
         List<Event> events = collectEvents(record);
 
-        assertEquals(2, events.size());
-        assertTrue(events.get(0) instanceof CreateTableEvent);
-        assertTrue(events.get(1) instanceof TruncateTableEvent);
+        // TRUNCATE has no before/after, so no CreateTableEvent is emitted
+        assertEquals(1, events.size());
+        assertTrue(events.get(0) instanceof TruncateTableEvent);
     }
 
     @Test
