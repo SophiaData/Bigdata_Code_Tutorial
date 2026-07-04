@@ -18,12 +18,12 @@
 
 package io.sophiadata.flink.sync.base;
 
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ExternalizedCheckpointRetention;
-import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
+import org.apache.flink.configuration.RestartStrategyOptions;
+import org.apache.flink.configuration.StateBackendOptions;
 import org.apache.flink.core.execution.CheckpointingMode;
 import org.apache.flink.core.fs.Path;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -87,30 +87,26 @@ public abstract class BaseCode {
             String[] args, StreamExecutionEnvironment env, StreamTableEnvironment tEnv)
             throws Exception;
 
-    @SuppressWarnings("deprecation")
     public void checkpoint(
             final StreamExecutionEnvironment env,
             final String ckPathAndJobId,
             final Boolean hashMap,
             final Boolean localpath) {
-        // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
-        // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
-        // also migrating the underlying state backend (HashMapStateBackend /
-        // EmbeddedRocksDBStateBackend) construction. Tracked for a follow-up refactor; suppressed
-        // here so the build stays warning-clean.
+        final Configuration config = new Configuration();
         if (hashMap) {
-            env.setStateBackend(new HashMapStateBackend());
+            config.set(StateBackendOptions.STATE_BACKEND, "hashmap");
         } else {
-            // EmbeddedRocksDBStateBackend supports Changelog-style incremental checkpoints.
-            env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+            config.set(StateBackendOptions.STATE_BACKEND, "rocksdb");
         }
+        env.configure(config);
+
         if (localpath) {
-            // TM-local storage; defaults to the working dir of each task manager. Suitable for
-            // throwaway test runs only — production should set an explicit file:// or hdfs:// path.
+            // TM-local storage; defaults to the working dir of each task manager.
+            // Suitable for throwaway test runs only — production should set an explicit
+            // file:// or hdfs:// path.
             env.enableCheckpointing(5 * 60 * 1000);
         } else {
             // Override via -DcheckpointStorage=file:///path or hdfs://nameservice/path
-            // (env.getCheckpointConfig().setCheckpointStorage(System.getProperty("checkpointStorage", ...))).
             env.getCheckpointConfig()
                     .setCheckpointStorage(new Path("hdfs://hadoop1:8020/flink/" + ckPathAndJobId));
             env.enableCheckpointing(60 * 1000);
@@ -125,16 +121,12 @@ public abstract class BaseCode {
                         ExternalizedCheckpointRetention.RETAIN_ON_CANCELLATION);
     }
 
-    @SuppressWarnings("deprecation")
     public void restartTask(final StreamExecutionEnvironment env) {
-        // fixedDelayRestart(int, java.time.Duration) replaces fixedDelayRestart(int, Time).
-        // Flink 1.18+ uses java.time.Duration throughout the public API.
-        //
-        // NOTE: RestartStrategies + setRestartStrategy() are deprecated in Flink 1.20; the new
-        // way is to construct RestartStrategy via Configuration / PipelineOptions.RESTART_STRATEGY
-        // and pass it via StreamExecutionEnvironment#configure(...). Tracked for follow-up; kept
-        // here because the simple two-line replacement here is far easier to audit than a full
-        // migration to Configuration-driven restart.
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Duration.ofSeconds(10)));
+        final Configuration config = new Configuration();
+        config.set(RestartStrategyOptions.RESTART_STRATEGY, "fixed-delay");
+        config.set(RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_ATTEMPTS, 10);
+        config.set(
+                RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_DELAY, Duration.ofSeconds(10));
+        env.configure(config);
     }
 }
