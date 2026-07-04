@@ -19,11 +19,11 @@
 package io.sophiadata.flink.base;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ExternalizedCheckpointRetention;
-import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
+import org.apache.flink.configuration.RestartStrategyOptions;
+import org.apache.flink.configuration.StateBackendOptions;
 import org.apache.flink.core.execution.CheckpointingMode;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import org.slf4j.Logger;
@@ -66,31 +66,23 @@ public abstract class BaseCode {
     public abstract void handle(final String[] args, final StreamExecutionEnvironment env)
             throws Exception;
 
-    @SuppressWarnings("deprecation")
     public void checkpoint(
             final StreamExecutionEnvironment env,
             final String ckPath,
             final Boolean hashMap,
             final Boolean localpath) {
-        // NOTE: setStateBackend(StateBackend) is deprecated in Flink 1.18+, replaced by
-        // StreamExecutionEnvironment#configure(ConfiguredStateBackend). The replacement requires
-        // also migrating the underlying state backend (HashMapStateBackend /
-        // EmbeddedRocksDBStateBackend) construction. Tracked for a follow-up refactor; suppressed
-        // here so the build stays warning-clean.
+        final Configuration config = new Configuration();
         if (hashMap) {
-            env.setStateBackend(new HashMapStateBackend());
+            config.set(StateBackendOptions.STATE_BACKEND, "hashmap");
         } else {
-            // 该类型 State Backend 支持 Changelog 增量检查点
-            env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+            config.set(StateBackendOptions.STATE_BACKEND, "rocksdb");
         }
+        env.configure(config);
+
         if (localpath) {
             env.enableCheckpointing(3000);
-            // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
-            // 测试任务如数据量较大请指定文件存储
         } else {
             env.getCheckpointConfig().setCheckpointStorage(ckPath);
-            // Hadoop HA 写法：
-            // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);
         }
         env.getCheckpointConfig().setCheckpointingConsistencyMode(CheckpointingMode.EXACTLY_ONCE);
@@ -103,10 +95,12 @@ public abstract class BaseCode {
                         ExternalizedCheckpointRetention.RETAIN_ON_CANCELLATION);
     }
 
-    @SuppressWarnings("deprecation")
     public void restartTask(final StreamExecutionEnvironment env) {
-        // RestartStrategies + setRestartStrategy() are deprecated in Flink 1.20; the new way is
-        // Configuration-driven restart via PipelineOptions.RESTART_STRATEGY. Kept as-is for now.
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Duration.ofSeconds(10)));
+        final Configuration config = new Configuration();
+        config.set(RestartStrategyOptions.RESTART_STRATEGY, "fixed-delay");
+        config.set(RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_ATTEMPTS, 10);
+        config.set(
+                RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_DELAY, Duration.ofSeconds(10));
+        env.configure(config);
     }
 }

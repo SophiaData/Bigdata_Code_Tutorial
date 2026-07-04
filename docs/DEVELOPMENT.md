@@ -13,7 +13,7 @@ If something here disagrees with what `mvn` actually does, update the doc — th
 ### 切到 JDK 11
 
 ```bash
-export JAVA_HOME=/Users/gaotingkai/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home
+export JAVA_HOME=/path/to/jdk-11
 export PATH="$JAVA_HOME/bin:$PATH"
 java -version   # 必须 11.x
 ```

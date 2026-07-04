@@ -23,7 +23,7 @@ Flink CDC → Apache Paimon 实时同步示例模块，支持 MySQL 和 MongoDB 
 
 ```bash
 # 切换 JDK 11
-export JAVA_HOME=/Users/gaotingkai/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home
+export JAVA_HOME=/path/to/jdk-11
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 编译
