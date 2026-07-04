@@ -20,6 +20,15 @@
 
 default_stages: [commit, push]
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: no-commit-to-branch
+        args: [--branch, master]
   - repo: local
     hooks:
       # Spotless: google-java-format AOSP + License header
