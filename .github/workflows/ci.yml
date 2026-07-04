@@ -77,12 +77,12 @@ jobs:
       - name: Run PMD complexity analysis
         run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
 
-      - name: Run unit tests (skip *IT and FlinkSqlWDSTest)
+      - name: Run unit tests (skip *IT, *E2E and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
         run: |
           set +H
           ./mvnw -pl ${{ matrix.module }} -am test \
-            -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
+            -Dtest='!*IT,!*E2E,!*IntegrationTest,!*FlinkSqlWDSTest'
 
       - name: Run flink-demo integration tests (MiniCluster, no Docker)
         if: matrix.module == 'flink-demo'
