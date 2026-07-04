@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>2.2.224</version>
+            <version>2.4.240</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -367,13 +367,13 @@
         <dependency>
             <groupId>dnsjava</groupId>
             <artifactId>dnsjava</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.5</version>
         </dependency>
         <!-- CVE-2023-52428/CVE-2025-53864: nimbus-jose-jwt 升级到 10.0.2 -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>10.0.2</version>
+            <version>10.9.1</version>
         </dependency>
     </dependencies>
     
@@ -471,7 +471,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.8.0</version>
                 <configuration>
                     <archive>
                         <manifest>
