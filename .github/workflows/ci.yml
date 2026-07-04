@@ -84,6 +84,13 @@ jobs:
           ./mvnw -pl ${{ matrix.module }} -am test \
             -Dtest='!*IT,!*IntegrationTest,!*FlinkSqlWDSTest'
 
+      - name: Run flink-demo integration tests (MiniCluster, no Docker)
+        if: matrix.module == 'flink-demo'
+        run: |
+          set +H
+          ./mvnw -pl flink-demo -am test \
+            -Dtest='ProcessFunctionStateExampleIT,WindowWithProcessFunctionIT,MysqlCdcToKafkaSqlPipelineIT,MysqlCdcToKafkaPipelineIT,ElasticsearchSinkExampleIT'
+
       - name: Collect JaCoCo coverage
         run: ./mvnw -pl ${{ matrix.module }} -am verify -Djacoco.skip=false -DskipTests
 
