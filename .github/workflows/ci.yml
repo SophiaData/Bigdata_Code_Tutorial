@@ -89,7 +89,7 @@ jobs:
         run: |
           set +H
           ./mvnw -pl flink-demo -am test \
-            -Dtest='ProcessFunctionStateExampleIT,WindowWithProcessFunctionIT,MysqlCdcToKafkaSqlPipelineIT,MysqlCdcToKafkaPipelineIT,ElasticsearchSinkExampleIT,KafkaSourceExampleIT,JdbcSinkExampleIT,AsyncIoExampleIT,BroadcastStateExampleIT,IntervalJoinExampleIT'
+            -Dtest='ProcessFunctionStateExampleIT,WindowWithProcessFunctionIT,MysqlCdcToKafkaSqlPipelineIT,MysqlCdcToKafkaPipelineIT,ElasticsearchSinkExampleIT,KafkaSourceExampleIT,JdbcSinkExampleIT,AsyncIoExampleIT,BroadcastStateExampleIT,IntervalJoinExampleIT,FlinkCdcSqlSourceExampleIT,TimerExampleIT,CoProcessFunctionExampleIT,DeadLetterQueueExampleIT,FlinkCepExampleIT'
 
       - name: Collect JaCoCo coverage
         run: ./mvnw -pl ${{ matrix.module }} -am verify -Djacoco.skip=false -DskipTests
