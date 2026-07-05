@@ -81,6 +81,11 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
 - `MysqlCdcToKafkaPipeline`：MySQL CDC → Kafka（DataStream API 版）
 - `ElasticsearchSinkExample`：数据写入 Elasticsearch 7.x
 - `JdbcSinkExample`：用 JdbcSink 写入 MySQL/PostgreSQL
+- `ExactlyOnceKafkaPipeline`：端到端 Exactly-Once Kafka 管道
+
+### SQL 示例
+- `FlinkCdcSqlSourceExample`：用 SQL DDL 读取 MySQL CDC
+- `FlinkCepExample`：Flink CEP 模式识别（连续登录失败检测）
 
 ### 高级 DataStream 示例
 - `ProcessFunctionStateExample`：ValueState / ListState / ReducingState 三种状态用法
@@ -88,6 +93,9 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
 - `AsyncIoExample`：异步查询外部系统（Async I/O）
 - `BroadcastStateExample`：动态规则引擎（Broadcast State）
 - `IntervalJoinExample`：流流时间区间关联（Window Join）
+- `TimerExample`：处理时间/事件时间定时器和超时检测
+- `CoProcessFunctionExample`：双流处理（配置热更新）
+- `DeadLetterQueueExample`：错误处理和死信队列模式
 
 ## flink-demo
 
