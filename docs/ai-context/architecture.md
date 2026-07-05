@@ -66,9 +66,21 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
 ## flink-demo 流水线
 
 主要是教学示例，不构成生产流水线：
+
+### 基础示例
 - `MockSourceFunction` 生成 APP 行为日志（启动/页面/曝光/动作）
 - `SQLTest` / `FlinkCDCDDL` 演示 Flink SQL + CDC DDL 写法
+- `WindowSQLExample` 演示 Tumble / Hop / Session 三种窗口
 - `streaming/WordCount` / `Sideout` / `IncrementMapFunction` 演示 DataStream API
+
+### Sink 示例
+- `MysqlCdcToKafkaSqlPipeline`：MySQL CDC → Kafka（Flink SQL 版）
+- `MysqlCdcToKafkaPipeline`：MySQL CDC → Kafka（DataStream API 版）
+- `ElasticsearchSinkExample`：数据写入 Elasticsearch 7.x
+
+### 高级 DataStream 示例
+- `ProcessFunctionStateExample`：ValueState / ListState / ReducingState 三种状态用法
+- `WindowWithProcessFunction`：窗口聚合 + TopN 实现
 
 ## flink-demo
 

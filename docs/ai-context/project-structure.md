@@ -31,15 +31,25 @@ flink-demo/
     │   ├── ddl/                     FlinkCDC DDL + Debezium 反序列化
     │   ├── function/                SplitFunction（TableFunction 示例）
     │   ├── glm/                     GLM API 测试（@Disabled）
+    │   ├── sink/                    Sink 示例
+    │   │   ├── MysqlCdcToKafkaSqlPipeline.java   MySQL CDC → Kafka（SQL 版）
+    │   │   ├── MysqlCdcToKafkaPipeline.java       MySQL CDC → Kafka（DataStream 版）
+    │   │   └── ElasticsearchSinkExample.java      Elasticsearch Sink 示例
     │   ├── source/                  MockSourceFunction、App* bean、配置
     │   │   └── utils/               ParamUtil、RandomNumString、ConfigUtil 等
-    │   ├── sql/                     SQLTest 入口
+    │   ├── sql/                     SQLTest / WindowSQLExample
     │   ├── streaming/               WordCount / Sideout / IncrementMapFunction
+    │   │   └── advanced/            高级 DataStream 示例
+    │   │       ├── ProcessFunctionStateExample.java  Keyed State 示例
+    │   │       └── WindowWithProcessFunction.java    Window + TopN 示例
     │   └── udf/                     UDF 示例
     └── test/java/io/sophiadata/flink/
         ├── function/                SplitFunctionTest
         ├── glm/                     GLMTest
-        └── streaming/               JUnit 5 测试
+        ├── sink/                    Sink 示例测试
+        └── streaming/
+            ├── JUnit 5 测试
+            └── advanced/            高级示例测试
 ```
 
 ## cdc-mysql-sync/
