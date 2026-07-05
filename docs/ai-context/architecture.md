@@ -73,14 +73,21 @@ CLI 始终胜出，文件/Nacos 仅填补缺失键。详细见 `NacosUtil.mergeI
 - `WindowSQLExample` 演示 Tumble / Hop / Session 三种窗口
 - `streaming/WordCount` / `Sideout` / `IncrementMapFunction` 演示 DataStream API
 
+### Source 示例
+- `KafkaSourceExample`：从 Kafka Topic 读取数据
+
 ### Sink 示例
 - `MysqlCdcToKafkaSqlPipeline`：MySQL CDC → Kafka（Flink SQL 版）
 - `MysqlCdcToKafkaPipeline`：MySQL CDC → Kafka（DataStream API 版）
 - `ElasticsearchSinkExample`：数据写入 Elasticsearch 7.x
+- `JdbcSinkExample`：用 JdbcSink 写入 MySQL/PostgreSQL
 
 ### 高级 DataStream 示例
 - `ProcessFunctionStateExample`：ValueState / ListState / ReducingState 三种状态用法
 - `WindowWithProcessFunction`：窗口聚合 + TopN 实现
+- `AsyncIoExample`：异步查询外部系统（Async I/O）
+- `BroadcastStateExample`：动态规则引擎（Broadcast State）
+- `IntervalJoinExample`：流流时间区间关联（Window Join）
 
 ## flink-demo
 
