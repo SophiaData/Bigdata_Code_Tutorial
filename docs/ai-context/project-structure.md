@@ -34,14 +34,19 @@ flink-demo/
     │   ├── sink/                    Sink 示例
     │   │   ├── MysqlCdcToKafkaSqlPipeline.java   MySQL CDC → Kafka（SQL 版）
     │   │   ├── MysqlCdcToKafkaPipeline.java       MySQL CDC → Kafka（DataStream 版）
-    │   │   └── ElasticsearchSinkExample.java      Elasticsearch Sink 示例
+    │   │   ├── ElasticsearchSinkExample.java      Elasticsearch Sink 示例
+    │   │   └── JdbcSinkExample.java               JDBC Sink 示例
     │   ├── source/                  MockSourceFunction、App* bean、配置
+    │   │   ├── KafkaSourceExample.java            Kafka Source 示例
     │   │   └── utils/               ParamUtil、RandomNumString、ConfigUtil 等
     │   ├── sql/                     SQLTest / WindowSQLExample
     │   ├── streaming/               WordCount / Sideout / IncrementMapFunction
     │   │   └── advanced/            高级 DataStream 示例
     │   │       ├── ProcessFunctionStateExample.java  Keyed State 示例
-    │   │       └── WindowWithProcessFunction.java    Window + TopN 示例
+    │   │       ├── WindowWithProcessFunction.java    Window + TopN 示例
+    │   │       ├── AsyncIoExample.java              Async I/O 示例
+    │   │       ├── BroadcastStateExample.java       Broadcast State 示例
+    │   │       └── IntervalJoinExample.java         Interval Join 示例
     │   └── udf/                     UDF 示例
     └── test/java/io/sophiadata/flink/
         ├── function/                SplitFunctionTest
