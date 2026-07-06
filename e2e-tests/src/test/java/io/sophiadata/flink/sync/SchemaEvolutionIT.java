@@ -18,17 +18,17 @@
 
 package io.sophiadata.flink.sync;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * End-to-end integration test: two MySQL 8 containers (source + sink) via Testcontainers, Flink CDC
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class SchemaEvolutionIT extends AbstractMysqlSyncIT {
 
-    @BeforeEach
+    @Before
     public void setUp() throws Exception {
         startMysqlContainers();
 
@@ -54,7 +54,7 @@ public class SchemaEvolutionIT extends AbstractMysqlSyncIT {
         }
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
         stopMysqlContainers();
     }
@@ -210,8 +210,8 @@ public class SchemaEvolutionIT extends AbstractMysqlSyncIT {
                                         + table
                                         + " WHERE id = "
                                         + id)) {
-            assertTrue(rs.next(), "row id=" + id + " should exist");
-            assertEquals(expectedProduct, rs.getString(1), "product mismatch for id=" + id);
+            assertTrue("row id=" + id + " should exist", rs.next());
+            assertEquals("product mismatch for id=" + id, expectedProduct, rs.getString(1));
         }
     }
 }

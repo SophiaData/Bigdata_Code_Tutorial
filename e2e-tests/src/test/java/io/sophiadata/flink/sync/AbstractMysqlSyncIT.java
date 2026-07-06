@@ -29,7 +29,7 @@ import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
@@ -44,8 +44,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Base class for MySQL CDC end-to-end integration tests.
@@ -60,7 +60,7 @@ public abstract class AbstractMysqlSyncIT {
     protected static final String SOURCE_DB = "flink_source";
     protected static final String SINK_DB = "flink_sink";
 
-    @RegisterExtension
+    @Rule
     public MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
@@ -242,7 +242,7 @@ public abstract class AbstractMysqlSyncIT {
             }
             Thread.sleep(1000);
         }
-        assertTrue(false, "Timed out waiting for sink table " + table);
+        assertTrue("Timed out waiting for sink table " + table, false);
     }
 
     @SuppressWarnings("BusyWait")
@@ -264,8 +264,8 @@ public abstract class AbstractMysqlSyncIT {
             Thread.sleep(2000);
         }
         assertTrue(
-                count >= expected,
-                "Expected at least " + expected + " rows in " + table + ", got " + count);
+                "Expected at least " + expected + " rows in " + table + ", got " + count,
+                count >= expected);
     }
 
     protected void assertSinkRow(String table, String column, String value) throws SQLException {
@@ -274,9 +274,9 @@ public abstract class AbstractMysqlSyncIT {
                 PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, value);
             try (ResultSet rs = ps.executeQuery()) {
-                assertTrue(rs.next(), "row with " + column + "=" + value + " should exist");
+                assertTrue("row with " + column + "=" + value + " should exist", rs.next());
                 assertTrue(
-                        rs.getInt(1) >= 1, "expected at least 1 row with " + column + "=" + value);
+                        "expected at least 1 row with " + column + "=" + value, rs.getInt(1) >= 1);
             }
         }
     }
@@ -291,11 +291,11 @@ public abstract class AbstractMysqlSyncIT {
                 PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, whereVal);
             try (ResultSet rs = ps.executeQuery()) {
-                assertTrue(rs.next(), "row with " + whereCol + "=" + whereVal + " should exist");
+                assertTrue("row with " + whereCol + "=" + whereVal + " should exist", rs.next());
                 if (expected instanceof Integer) {
-                    assertEquals(((Integer) expected).intValue(), rs.getInt(1), "value mismatch");
+                    assertEquals("value mismatch", ((Integer) expected).intValue(), rs.getInt(1));
                 } else {
-                    assertEquals(expected, rs.getObject(1), "value mismatch");
+                    assertEquals("value mismatch", expected, rs.getObject(1));
                 }
             }
         }
