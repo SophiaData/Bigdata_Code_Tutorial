@@ -25,11 +25,12 @@ import org.apache.flink.cdc.common.event.OperationType;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         return SharedSchemaState.pks();
     }
 
+    private transient HikariDataSource dataSource;
     private transient Connection conn;
     private transient List<Record> batch;
     private transient long lastFlush;
@@ -89,12 +91,22 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         this.batchIntervalMs = batchIntervalMs;
     }
 
-    /** 初始化 JDBC 连接，关闭自动提交以支持批量事务。 */
+    /** 初始化 JDBC 连接池，关闭自动提交以支持批量事务。 */
     @Override
     public void open(final Configuration parameters) throws Exception {
         super.open(parameters);
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
+        final HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(sinkJdbcUrl);
+        config.setUsername(sinkUser);
+        config.setPassword(sinkPassword);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource = new HikariDataSource(config);
+        conn = dataSource.getConnection();
         conn.setAutoCommit(false);
         // Verify connection is alive
         try (java.sql.Statement check = conn.createStatement();
@@ -104,7 +116,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
         }
         batch = new ArrayList<>();
         lastFlush = System.currentTimeMillis();
-        LOG.info("CDBBatchSink connected to sink");
+        LOG.info("CDBBatchSink connected to sink with connection pool");
     }
 
     /** Reconnect if the current connection is broken. */
@@ -117,7 +129,7 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
                 }
             } catch (SQLException ignored) {
             }
-            conn = DriverManager.getConnection(sinkJdbcUrl, sinkUser, sinkPassword);
+            conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             LOG.info("CDBBatchSink reconnected to sink");
         }
@@ -327,34 +339,57 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
     @SuppressWarnings("PMD.UseTryWithResources")
     public void close() {
         try {
-            if (batch != null && !batch.isEmpty()) {
-                try {
-                    flush();
-                } catch (Exception e) {
-                    LOG.warn("Final flush failed, attempting reconnect: {}", e.getMessage());
-                    try {
-                        ensureConnection();
-                        flush();
-                    } catch (Exception e2) {
-                        LOG.error("Final flush failed after reconnect", e2);
-                    }
-                }
-            }
+            flushWithRetry();
         } catch (Exception e) {
             LOG.error("Error during final flush", e);
         } finally {
+            closeResources();
+        }
+    }
+
+    private void flushWithRetry() throws Exception {
+        if (batch == null || batch.isEmpty()) {
+            return;
+        }
+        try {
+            flush();
+        } catch (Exception e) {
+            LOG.warn("Final flush failed, attempting reconnect: {}", e.getMessage());
             try {
-                if (conn != null && !conn.isClosed()) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                LOG.debug("Error closing connection (may already be closed)", e.getMessage());
+                ensureConnection();
+                flush();
+            } catch (Exception e2) {
+                LOG.error("Final flush failed after reconnect", e2);
             }
-            try {
-                super.close();
-            } catch (Exception e) {
-                LOG.debug("Error in super.close(): {}", e.getMessage());
-            }
+        }
+    }
+
+    private void closeResources() {
+        closeQuietly(
+                () -> {
+                    if (conn != null && !conn.isClosed()) {
+                        conn.close();
+                    }
+                });
+        closeQuietly(
+                () -> {
+                    if (dataSource != null && !dataSource.isClosed()) {
+                        dataSource.close();
+                    }
+                });
+        closeQuietly(() -> super.close());
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
+    }
+
+    private void closeQuietly(final ThrowingRunnable closeAction) {
+        try {
+            closeAction.run();
+        } catch (Exception e) {
+            LOG.debug("Error closing resource: {}", e.getMessage());
         }
     }
 

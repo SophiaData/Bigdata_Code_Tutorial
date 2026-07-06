@@ -26,6 +26,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * independently, so a local ConcurrentHashMap passed to both CdcEventDeserializer and CDBBatchSink
  * becomes two separate copies. By using a static holder, all operators in the same JVM share the
  * same map instance, and DDL-triggered schema updates (DROP/ADD column) are visible to the sink.
+ *
+ * <p><b>Limitation:</b> This solution only works in single-TaskManager deployments (parallelism=1).
+ * In multi-TaskManager setups, each TM maintains its own static map, so schema updates are not
+ * shared across TMs. For production multi-TM deployments, consider using Flink's {@code MapState}
+ * or {@code BroadcastState}, or an external state store (e.g., Redis, etcd).
+ *
+ * <p>This trade-off is intentional for a teaching project: simplicity over scalability.
  */
 final class SharedSchemaState {
     private static final Map<String, Map<String, String>> SCHEMAS = new ConcurrentHashMap<>();

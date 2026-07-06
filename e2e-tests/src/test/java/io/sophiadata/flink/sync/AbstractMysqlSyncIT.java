@@ -36,6 +36,7 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -268,38 +269,34 @@ public abstract class AbstractMysqlSyncIT {
     }
 
     protected void assertSinkRow(String table, String column, String value) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + SINK_DB + "." + table + " WHERE " + column + " = ?";
         try (Connection c = getSinkConnection();
-                Statement st = c.createStatement();
-                ResultSet rs =
-                        st.executeQuery(
-                                "SELECT COUNT(*) FROM "
-                                        + SINK_DB
-                                        + "."
-                                        + table
-                                        + " WHERE "
-                                        + column
-                                        + " = '"
-                                        + value
-                                        + "'")) {
-            assertTrue("row with " + column + "=" + value + " should exist", rs.next());
-            assertTrue("expected at least 1 row with " + column + "=" + value, rs.getInt(1) >= 1);
+                PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, value);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue("row with " + column + "=" + value + " should exist", rs.next());
+                assertTrue(
+                        "expected at least 1 row with " + column + "=" + value, rs.getInt(1) >= 1);
+            }
         }
     }
 
     protected void assertSinkValue(
             String table, String whereCol, String whereVal, String selectCol, Object expected)
             throws SQLException {
+        String sql =
+                "SELECT " + selectCol + " FROM " + SINK_DB + "." + table + " WHERE " + whereCol
+                        + " = ?";
         try (Connection c = getSinkConnection();
-                Statement st = c.createStatement();
-                ResultSet rs =
-                        st.executeQuery(
-                                "SELECT " + selectCol + " FROM " + SINK_DB + "." + table + " WHERE "
-                                        + whereCol + " = '" + whereVal + "'")) {
-            assertTrue("row with " + whereCol + "=" + whereVal + " should exist", rs.next());
-            if (expected instanceof Integer) {
-                assertEquals("value mismatch", ((Integer) expected).intValue(), rs.getInt(1));
-            } else {
-                assertEquals("value mismatch", expected, rs.getObject(1));
+                PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, whereVal);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue("row with " + whereCol + "=" + whereVal + " should exist", rs.next());
+                if (expected instanceof Integer) {
+                    assertEquals("value mismatch", ((Integer) expected).intValue(), rs.getInt(1));
+                } else {
+                    assertEquals("value mismatch", expected, rs.getObject(1));
+                }
             }
         }
     }

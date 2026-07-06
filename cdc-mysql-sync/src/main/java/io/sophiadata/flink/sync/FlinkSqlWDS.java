@@ -205,7 +205,12 @@ public class FlinkSqlWDS extends BaseCode {
         final SourceConfig srcConfig = new SourceConfig(h, port, u, pw, db);
         bootstrapSinkTables(srcConfig, finalSinkJdbcUrl, finalSku, finalSkp, schemas, pks);
 
-        env.execute("flink-cdc-wds-" + db);
+        try {
+            env.execute("flink-cdc-wds-" + db);
+        } finally {
+            schemaEvolver.shutdown();
+            LOG.info("SchemaEvolver shutdown completed");
+        }
     }
 
     private static void handleSchemaEvent(

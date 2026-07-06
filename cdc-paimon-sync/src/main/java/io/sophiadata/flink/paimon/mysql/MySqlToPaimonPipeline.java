@@ -23,6 +23,14 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * MySQL to Paimon whole-database sync example using Flink CDC Pipeline API.
  *
@@ -54,6 +62,7 @@ public class MySqlToPaimonPipeline {
         final String mysqlUsername = params.get("mysql.username", "root");
         final String mysqlPassword = params.get("mysql.password", "root");
         final String paimonPath = params.get("paimon.path", "file:///tmp/paimon/catalog");
+        final String includeTables = params.get("include_tables", null);
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
@@ -94,8 +103,17 @@ public class MySqlToPaimonPipeline {
         // 3. Create target database in Paimon
         tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS paimon_catalog." + mysqlDatabase);
 
-        // 4. Sync each table
-        final String[] tables = {"users", "orders", "products"};
+        // 4. Discover tables from MySQL
+        final String[] tables;
+        if (includeTables != null && !includeTables.isEmpty()) {
+            tables = includeTables.split(",");
+        } else {
+            tables =
+                    discoverTables(
+                            mysqlHost, mysqlPort, mysqlDatabase, mysqlUsername, mysqlPassword);
+        }
+
+        // 5. Sync each table
         for (final String table : tables) {
             // Create target table schema in Paimon
             tableEnv.executeSql(
@@ -133,5 +151,31 @@ public class MySqlToPaimonPipeline {
         }
 
         env.execute("MySQL to Paimon Sync - " + mysqlDatabase);
+    }
+
+    private static String[] discoverTables(
+            final String host,
+            final int port,
+            final String database,
+            final String username,
+            final String password)
+            throws SQLException {
+        final String url =
+                "jdbc:mysql://"
+                        + host
+                        + ":"
+                        + port
+                        + "/"
+                        + database
+                        + "?useSSL=false&allowPublicKeyRetrieval=true";
+        final List<String> tables = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery("SHOW TABLES")) {
+            while (rs.next()) {
+                tables.add(rs.getString(1));
+            }
+        }
+        return tables.toArray(new String[0]);
     }
 }
