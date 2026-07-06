@@ -29,7 +29,6 @@ import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Provides common infrastructure: Testcontainers MySQL (source + sink), Flink MiniCluster, CDC
  * user setup, pipeline lifecycle, and helper methods for assertions.
  */
-@ExtendWith(org.junit.jupiter.api.extension.Extension.class)
 public abstract class AbstractMysqlSyncIT {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractMysqlSyncIT.class);
