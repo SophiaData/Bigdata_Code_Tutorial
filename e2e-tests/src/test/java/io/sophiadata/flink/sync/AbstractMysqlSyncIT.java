@@ -29,13 +29,15 @@ import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import io.sophiadata.flink.utils.MySqlContainer;
 import io.sophiadata.flink.utils.MySqlVersion;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -43,8 +45,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Base class for MySQL CDC end-to-end integration tests.
@@ -52,6 +54,7 @@ import static org.junit.Assert.assertTrue;
  * <p>Provides common infrastructure: Testcontainers MySQL (source + sink), Flink MiniCluster, CDC
  * user setup, pipeline lifecycle, and helper methods for assertions.
  */
+@ExtendWith(org.junit.jupiter.api.extension.Extension.class)
 public abstract class AbstractMysqlSyncIT {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractMysqlSyncIT.class);
@@ -59,7 +62,7 @@ public abstract class AbstractMysqlSyncIT {
     protected static final String SOURCE_DB = "flink_source";
     protected static final String SINK_DB = "flink_sink";
 
-    @Rule
+    @RegisterExtension
     public MiniClusterWithClientResource miniClusterResource =
             new MiniClusterWithClientResource(
                     new MiniClusterResourceConfiguration.Builder()
@@ -241,7 +244,7 @@ public abstract class AbstractMysqlSyncIT {
             }
             Thread.sleep(1000);
         }
-        assertTrue("Timed out waiting for sink table " + table, false);
+        assertTrue(false, "Timed out waiting for sink table " + table);
     }
 
     @SuppressWarnings("BusyWait")
@@ -263,43 +266,39 @@ public abstract class AbstractMysqlSyncIT {
             Thread.sleep(2000);
         }
         assertTrue(
-                "Expected at least " + expected + " rows in " + table + ", got " + count,
-                count >= expected);
+                count >= expected,
+                "Expected at least " + expected + " rows in " + table + ", got " + count);
     }
 
     protected void assertSinkRow(String table, String column, String value) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + SINK_DB + "." + table + " WHERE " + column + " = ?";
         try (Connection c = getSinkConnection();
-                Statement st = c.createStatement();
-                ResultSet rs =
-                        st.executeQuery(
-                                "SELECT COUNT(*) FROM "
-                                        + SINK_DB
-                                        + "."
-                                        + table
-                                        + " WHERE "
-                                        + column
-                                        + " = '"
-                                        + value
-                                        + "'")) {
-            assertTrue("row with " + column + "=" + value + " should exist", rs.next());
-            assertTrue("expected at least 1 row with " + column + "=" + value, rs.getInt(1) >= 1);
+                PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, value);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next(), "row with " + column + "=" + value + " should exist");
+                assertTrue(
+                        rs.getInt(1) >= 1, "expected at least 1 row with " + column + "=" + value);
+            }
         }
     }
 
     protected void assertSinkValue(
             String table, String whereCol, String whereVal, String selectCol, Object expected)
             throws SQLException {
+        String sql =
+                "SELECT " + selectCol + " FROM " + SINK_DB + "." + table + " WHERE " + whereCol
+                        + " = ?";
         try (Connection c = getSinkConnection();
-                Statement st = c.createStatement();
-                ResultSet rs =
-                        st.executeQuery(
-                                "SELECT " + selectCol + " FROM " + SINK_DB + "." + table + " WHERE "
-                                        + whereCol + " = '" + whereVal + "'")) {
-            assertTrue("row with " + whereCol + "=" + whereVal + " should exist", rs.next());
-            if (expected instanceof Integer) {
-                assertEquals("value mismatch", ((Integer) expected).intValue(), rs.getInt(1));
-            } else {
-                assertEquals("value mismatch", expected, rs.getObject(1));
+                PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, whereVal);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next(), "row with " + whereCol + "=" + whereVal + " should exist");
+                if (expected instanceof Integer) {
+                    assertEquals(((Integer) expected).intValue(), rs.getInt(1), "value mismatch");
+                } else {
+                    assertEquals(expected, rs.getObject(1), "value mismatch");
+                }
             }
         }
     }

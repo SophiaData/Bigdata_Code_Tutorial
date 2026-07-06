@@ -18,15 +18,15 @@
 
 package io.sophiadata.flink.sync;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * End-to-end integration test for whole-database CDC sync.
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class WholeDatabaseSyncIT extends AbstractMysqlSyncIT {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         startMysqlContainers();
 
@@ -63,7 +63,7 @@ public class WholeDatabaseSyncIT extends AbstractMysqlSyncIT {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         stopMysqlContainers();
     }
@@ -160,7 +160,7 @@ public class WholeDatabaseSyncIT extends AbstractMysqlSyncIT {
             }
             Thread.sleep(2000);
         }
-        assertFalse("Alice should be deleted from sink", remaining > 1);
+        assertFalse(remaining > 1, "Alice should be deleted from sink");
         assertSinkRow("sink_users", "name", "Bob");
         LOG.info("=== testDeleteSync PASSED ===");
     }
@@ -209,6 +209,6 @@ public class WholeDatabaseSyncIT extends AbstractMysqlSyncIT {
     }
 
     private void assertEquals(String msg, int expected, int actual) {
-        org.junit.Assert.assertEquals(msg, expected, actual);
+        org.junit.jupiter.api.Assertions.assertEquals(expected, actual, msg);
     }
 }

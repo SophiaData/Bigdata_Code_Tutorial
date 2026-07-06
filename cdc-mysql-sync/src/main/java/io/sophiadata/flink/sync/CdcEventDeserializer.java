@@ -32,11 +32,27 @@ import org.apache.flink.cdc.common.types.DataTypes;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.connect.data.Field;
+import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.errors.DataException;
+import org.apache.kafka.connect.source.SourceRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 将 Kafka Connect（Debezium）的 {@code SourceRecord} 转换为 Flink CDC 的 {@link Event}。
@@ -65,36 +81,34 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      * Shared schemas cache. Transient — Flink serialization creates independent copies which break
      * DDL-triggered updates. Always access via schemas() → SharedSchemaState.
      */
-    private transient java.util.Map<String, java.util.Map<String, String>> schemas;
+    private transient Map<String, Map<String, String>> schemas;
 
     CdcEventDeserializer() {
         this.schemas = SharedSchemaState.schemas();
     }
 
-    private java.util.Map<String, java.util.Map<String, String>> schemas() {
+    private Map<String, Map<String, String>> schemas() {
         return SharedSchemaState.schemas();
     }
 
     @Override
     @SuppressWarnings("PMD.ImplicitSwitchFallThrough")
-    public void deserialize(
-            final org.apache.kafka.connect.source.SourceRecord record, final Collector<Event> out) {
+    public void deserialize(final SourceRecord record, final Collector<Event> out) {
         if (record == null) {
             return;
         }
-        final org.apache.kafka.connect.data.Struct valueStruct =
-                (org.apache.kafka.connect.data.Struct) record.value();
+        final Struct valueStruct = (Struct) record.value();
         if (valueStruct == null) {
             return;
         }
 
-        final org.apache.kafka.connect.data.Struct source = valueStruct.getStruct("source");
+        final Struct source = valueStruct.getStruct("source");
         if (source == null) {
             LOG.warn(
                     "Missing source info, skipping event. value fields: {}",
                     valueStruct.schema().fields().stream()
-                            .map(org.apache.kafka.connect.data.Field::name)
-                            .collect(java.util.stream.Collectors.toList()));
+                            .map(Field::name)
+                            .collect(Collectors.toList()));
             return;
         }
         final String dbName = source.getString("db");
@@ -103,7 +117,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         final String op;
         try {
             op = valueStruct.getString("op");
-        } catch (final org.apache.kafka.connect.errors.DataException e) {
+        } catch (final DataException e) {
             // DDL events (no "op" field) → parse schema changes so the schemas map
             // stays in sync with MySQL table evolution (ADD / DROP / ALTER columns).
             // Wrapped in try-catch so a DDL parsing failure never kills the pipeline.
@@ -125,8 +139,8 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return;
         }
 
-        final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
-        final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
+        final Struct before = valueStruct.getStruct("before");
+        final Struct after = valueStruct.getStruct("after");
 
         final Object[] beforeVals = extractValues(before);
         final Object[] afterVals = extractValues(after);
@@ -164,8 +178,8 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      * schemas cache on the TaskManager side.
      */
     private void emitCreateTableIfNeeded(
-            final org.apache.kafka.connect.source.SourceRecord record,
-            final org.apache.kafka.connect.data.Struct valueStruct,
+            final SourceRecord record,
+            final Struct valueStruct,
             final TableId tid,
             final String tableName,
             final Collector<Event> out) {
@@ -173,10 +187,10 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             return;
         }
         try {
-            final org.apache.kafka.connect.data.Struct after = valueStruct.getStruct("after");
-            final org.apache.kafka.connect.data.Struct before = valueStruct.getStruct("before");
+            final Struct after = valueStruct.getStruct("after");
+            final Struct before = valueStruct.getStruct("before");
             // Use after if available, fall back to before (e.g. DELETE events have no after)
-            final org.apache.kafka.connect.data.Struct row = after != null ? after : before;
+            final Struct row = after != null ? after : before;
             if (row == null) {
                 return;
             }
@@ -184,24 +198,23 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
                     "schema for {}: fields={}, row.class={}",
                     tableName,
                     row.schema().fields().stream()
-                            .map(org.apache.kafka.connect.data.Field::name)
-                            .collect(java.util.stream.Collectors.joining(",")),
+                            .map(Field::name)
+                            .collect(Collectors.joining(",")),
                     row.getClass().getName());
             final Schema.Builder schemaBuilder = Schema.newBuilder();
-            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+            for (final Field f : row.schema().fields()) {
                 schemaBuilder.physicalColumn(f.name(), convertToCdcType(f.schema()));
             }
             final List<String> pkNames = new ArrayList<>();
-            final org.apache.kafka.connect.data.Struct keyStruct =
-                    (org.apache.kafka.connect.data.Struct) record.key();
+            final Struct keyStruct = (Struct) record.key();
             if (keyStruct != null) {
-                for (final org.apache.kafka.connect.data.Field kf : keyStruct.schema().fields()) {
+                for (final Field kf : keyStruct.schema().fields()) {
                     pkNames.add(kf.name());
                 }
             }
             final Schema schema = schemaBuilder.primaryKey(pkNames).build();
-            final java.util.Map<String, String> colMap = new java.util.LinkedHashMap<>();
-            for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+            final Map<String, String> colMap = new LinkedHashMap<>();
+            for (final Field f : row.schema().fields()) {
                 colMap.put(f.name(), f.schema().type().name());
             }
             SharedSchemaState.schemas().put(tableName, colMap);
@@ -221,13 +234,13 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
 
     /** 从 Kafka Connect Struct 中提取所有字段值为 Object 数组。 */
     @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-    static Object[] extractValues(final org.apache.kafka.connect.data.Struct row) {
+    static Object[] extractValues(final Struct row) {
         if (row == null) {
             return null;
         }
         Object[] values = new Object[row.schema().fields().size()];
         int i = 0;
-        for (final org.apache.kafka.connect.data.Field f : row.schema().fields()) {
+        for (final Field f : row.schema().fields()) {
             values[i++] = convertValue(row.get(f.name()));
         }
         return values;
@@ -241,26 +254,26 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         if (value == null) {
             return null;
         }
-        if (value instanceof java.time.OffsetDateTime) {
-            return java.sql.Timestamp.from(((java.time.OffsetDateTime) value).toInstant());
+        if (value instanceof OffsetDateTime) {
+            return java.sql.Timestamp.from(((OffsetDateTime) value).toInstant());
         }
-        if (value instanceof java.time.ZonedDateTime) {
-            return java.sql.Timestamp.from(((java.time.ZonedDateTime) value).toInstant());
+        if (value instanceof ZonedDateTime) {
+            return java.sql.Timestamp.from(((ZonedDateTime) value).toInstant());
         }
-        if (value instanceof java.time.Instant) {
-            return java.sql.Timestamp.from((java.time.Instant) value);
+        if (value instanceof Instant) {
+            return java.sql.Timestamp.from((Instant) value);
         }
-        if (value instanceof java.time.LocalDateTime) {
-            return java.sql.Timestamp.valueOf((java.time.LocalDateTime) value);
+        if (value instanceof LocalDateTime) {
+            return java.sql.Timestamp.valueOf((LocalDateTime) value);
         }
-        if (value instanceof java.util.Date) {
-            return new java.sql.Timestamp(((java.util.Date) value).getTime());
+        if (value instanceof Date) {
+            return new java.sql.Timestamp(((Date) value).getTime());
         }
         if (value instanceof String) {
             final String s = (String) value;
             if (s.contains("T")) {
                 try {
-                    return java.sql.Timestamp.from(java.time.Instant.parse(s));
+                    return java.sql.Timestamp.from(Instant.parse(s));
                 } catch (Exception e) {
                     return s;
                 }
@@ -281,14 +294,12 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      */
     @SuppressWarnings("unchecked")
     private void emitSchemaChange(
-            final org.apache.kafka.connect.data.Struct valueStruct,
+            final Struct valueStruct,
             final String dbName,
             final String tableName,
             final Collector<Event> out) {
-        final java.util.Set<String> fieldNames =
-                valueStruct.schema().fields().stream()
-                        .map(org.apache.kafka.connect.data.Field::name)
-                        .collect(java.util.stream.Collectors.toSet());
+        final Set<String> fieldNames =
+                valueStruct.schema().fields().stream().map(Field::name).collect(Collectors.toSet());
 
         // Flink CDC 3.x: historyRecord is a JSON string with tableChanges
         if (fieldNames.contains("historyRecord")) {
@@ -306,33 +317,28 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
     /**
      * Extract column-name → column-struct map from a Debezium schema-change or table-change struct.
      */
-    private java.util.Map<String, org.apache.kafka.connect.data.Struct> extractColumnStructs(
-            final org.apache.kafka.connect.data.Struct change) {
-        final java.util.Map<String, org.apache.kafka.connect.data.Struct> result =
-                new java.util.LinkedHashMap<>();
-        final java.util.Set<String> fieldNames =
-                change.schema().fields().stream()
-                        .map(org.apache.kafka.connect.data.Field::name)
-                        .collect(java.util.stream.Collectors.toSet());
+    private Map<String, Struct> extractColumnStructs(final Struct change) {
+        final Map<String, Struct> result = new LinkedHashMap<>();
+        final Set<String> fieldNames =
+                change.schema().fields().stream().map(Field::name).collect(Collectors.toSet());
 
         Object columnsRaw = null;
         if (fieldNames.contains("columns")) {
             columnsRaw = change.get("columns");
         } else if (fieldNames.contains("table")) {
-            final org.apache.kafka.connect.data.Struct table = change.getStruct("table");
+            final Struct table = change.getStruct("table");
             if (table != null && table.schema().field("columns") != null) {
                 columnsRaw = table.get("columns");
             }
         }
-        if (!(columnsRaw instanceof java.util.List)) {
+        if (!(columnsRaw instanceof List)) {
             return result;
         }
-        for (final Object colObj : (java.util.List<?>) columnsRaw) {
-            if (!(colObj instanceof org.apache.kafka.connect.data.Struct)) {
+        for (final Object colObj : (List<?>) columnsRaw) {
+            if (!(colObj instanceof Struct)) {
                 continue;
             }
-            final org.apache.kafka.connect.data.Struct col =
-                    (org.apache.kafka.connect.data.Struct) colObj;
+            final Struct col = (Struct) colObj;
             final String name = col.getString("name");
             if (name != null) {
                 result.put(name, col);
@@ -346,29 +352,26 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      * DropColumnEvent to keep the schemas cache in sync.
      */
     private void emitAlterColumns(
-            final org.apache.kafka.connect.data.Struct change,
-            final TableId tid,
-            final Collector<Event> out) {
-        final java.util.Map<String, org.apache.kafka.connect.data.Struct> newColStructs =
-                extractColumnStructs(change);
+            final Struct change, final TableId tid, final Collector<Event> out) {
+        final Map<String, Struct> newColStructs = extractColumnStructs(change);
         if (newColStructs.isEmpty()) {
             return;
         }
 
-        final java.util.Map<String, String> existing = schemas().get(tid.getTableName());
+        final Map<String, String> existing = schemas().get(tid.getTableName());
         if (existing == null) {
             return;
         }
 
         // Detect dropped columns: present in old schemas but absent from the new DDL
-        final java.util.Set<String> oldNames = new java.util.HashSet<>(existing.keySet());
+        final Set<String> oldNames = new HashSet<>(existing.keySet());
         for (final String oldName : oldNames) {
             if (!newColStructs.containsKey(oldName)) {
                 LOG.info("Detected dropped column: {}.{}", tid.getTableName(), oldName);
                 // Directly update the static shared map — Flink serialization means
                 // ProcessFunction/CDBBatchSink each get separate copies otherwise.
                 schemas().get(tid.getTableName()).remove(oldName);
-                out.collect(new DropColumnEvent(tid, java.util.List.of(oldName)));
+                out.collect(new DropColumnEvent(tid, List.of(oldName)));
             }
         }
 
@@ -384,8 +387,8 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
 
     @SuppressWarnings("unchecked")
     private void emitFromStructChanges(
-            final org.apache.kafka.connect.data.Struct valueStruct,
-            final java.util.Set<String> fieldNames,
+            final Struct valueStruct,
+            final Set<String> fieldNames,
             final String dbName,
             final String tableName,
             final Collector<Event> out) {
@@ -395,17 +398,16 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         } else if (fieldNames.contains("tableChanges")) {
             changesRaw = valueStruct.get("tableChanges");
         }
-        if (!(changesRaw instanceof java.util.List)) {
+        if (!(changesRaw instanceof List)) {
             return;
         }
-        final java.util.List<?> changes = (java.util.List<?>) changesRaw;
+        final List<?> changes = (List<?>) changesRaw;
         final TableId tid = TableId.tableId(dbName, tableName);
         for (final Object changeObj : changes) {
-            if (!(changeObj instanceof org.apache.kafka.connect.data.Struct)) {
+            if (!(changeObj instanceof Struct)) {
                 continue;
             }
-            final org.apache.kafka.connect.data.Struct change =
-                    (org.apache.kafka.connect.data.Struct) changeObj;
+            final Struct change = (Struct) changeObj;
             final String type = change.getString("type");
             if ("ALTER".equals(type)) {
                 emitAlterColumns(change, tid, out);
@@ -424,18 +426,18 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
             final String dbName,
             final String tableName,
             final Collector<Event> out) {
-        final java.util.List<String> newColNames = parseHistoryRecord(historyRecordJson);
+        final List<String> newColNames = parseHistoryRecord(historyRecordJson);
         if (newColNames.isEmpty()) {
             return;
         }
 
-        final java.util.Map<String, String> existing = schemas().get(tableName);
+        final Map<String, String> existing = schemas().get(tableName);
         if (existing == null) {
             return;
         }
 
         final TableId tid = TableId.tableId(dbName, tableName);
-        final java.util.Set<String> oldNames = new java.util.HashSet<>(existing.keySet());
+        final Set<String> oldNames = new HashSet<>(existing.keySet());
 
         // Detect dropped columns
         for (final String oldName : oldNames) {
@@ -444,7 +446,7 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
                 // Directly update schemas map here — Flink serialization means the
                 // ProcessFunction's handleDropColumn operates on a different map copy.
                 existing.remove(oldName);
-                out.collect(new DropColumnEvent(tid, java.util.List.of(oldName)));
+                out.collect(new DropColumnEvent(tid, List.of(oldName)));
             }
         }
 
@@ -459,28 +461,27 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
         }
     }
 
-    private java.util.List<String> parseHistoryRecord(final String json) {
-        final java.util.List<String> columnNames = new java.util.ArrayList<>();
+    private List<String> parseHistoryRecord(final String json) {
+        final List<String> columnNames = new ArrayList<>();
         try {
-            final com.fasterxml.jackson.databind.ObjectMapper mapper =
-                    new com.fasterxml.jackson.databind.ObjectMapper();
-            final com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
-            final com.fasterxml.jackson.databind.JsonNode tableChanges = root.get("tableChanges");
+            final ObjectMapper mapper = new ObjectMapper();
+            final JsonNode root = mapper.readTree(json);
+            final JsonNode tableChanges = root.get("tableChanges");
             if (tableChanges == null || !tableChanges.isArray() || tableChanges.isEmpty()) {
                 return columnNames;
             }
             // Use the first (and usually only) change entry
-            final com.fasterxml.jackson.databind.JsonNode firstChange = tableChanges.get(0);
-            final com.fasterxml.jackson.databind.JsonNode tableNode = firstChange.get("table");
+            final JsonNode firstChange = tableChanges.get(0);
+            final JsonNode tableNode = firstChange.get("table");
             if (tableNode == null) {
                 return columnNames;
             }
-            final com.fasterxml.jackson.databind.JsonNode columns = tableNode.get("columns");
+            final JsonNode columns = tableNode.get("columns");
             if (columns == null || !columns.isArray()) {
                 return columnNames;
             }
-            for (final com.fasterxml.jackson.databind.JsonNode col : columns) {
-                final com.fasterxml.jackson.databind.JsonNode nameNode = col.get("name");
+            for (final JsonNode col : columns) {
+                final JsonNode nameNode = col.get("name");
                 if (nameNode != null) {
                     columnNames.add(nameNode.asText());
                 }
@@ -497,11 +498,12 @@ public class CdcEventDeserializer implements DebeziumDeserializationSchema<Event
      * Convert a Kafka Connect Schema type to a Flink CDC DataType. Handles the common MySQL types
      * encountered in Debezium CDC events.
      */
-    private static DataType convertToCdcType(final org.apache.kafka.connect.data.Schema schema) {
-        if (schema == null) {
+    private static DataType convertToCdcType(
+            final org.apache.kafka.connect.data.Schema kafkaSchema) {
+        if (kafkaSchema == null) {
             return DataTypes.STRING();
         }
-        final org.apache.kafka.connect.data.Schema.Type type = schema.type();
+        final org.apache.kafka.connect.data.Schema.Type type = kafkaSchema.type();
         switch (type) {
             case INT8:
                 return DataTypes.TINYINT();
