@@ -7,31 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] - 2026-07-07
+
 ### Added
-- **JaCoCo 覆盖率追踪**：在根 `pom.xml` 中配置 `jacoco-maven-plugin 0.8.12`，绑定 `verify` 阶段，生成 `target/site/jacoco/` 报告
-- **CI 强化**：`lint-and-unit` job 新增 Enforcer 依赖一致性检查和 JaCoCo 覆盖率收集
-- **MySQL testcontainers 版本固定**：`MySqlVersion.V8_0` 固定为 `8.0.36`，避免 CI 环境中版本漂移
-- **工程化文档**：`docs/reliability/` 目录新增可靠性分析报告、覆盖率报告、测试策略、发布流程四份文档
-- **单元测试**：为 `flink-demo` 新增 4 个测试类（`ParamUtilTest`、`RandomOptionGroupTest`、`RandomNumTest`、`ConfigUtilTest`），覆盖 `source/utils` 工具类
-- **checkstyle suppressions**：新增 `checkstyle/suppressions.xml`，对 CDC bean 类的 snake_case 字段豁免命名检查
+- **Flink DataStream 高级示例**：新增 Kafka Source、JDBC Sink、Async I/O、Broadcast State、Interval Join、CoProcess、Timer、Dead Letter Queue、Exactly-Once 等高级用法
+- **Flink SQL 高级示例**：新增 SQL CDC Source、CEP 复杂事件处理、Window 窗口、Lookup Join、去重等 SQL 示例
+- **Kafka/ES Sink 示例**：新增 Kafka Sink 和 Elasticsearch Sink 教学示例
+- **Pre-commit hooks**：新增 pre-commit 钩子，提交前自动执行 spotless 格式化检查
+- **测试基础设施**：提取 `AbstractMysqlSyncIT` 基类，新增单元测试覆盖工具类
+- **Flink SQL Window 示例**：新增 Flink SQL 窗口聚合示例
 
 ### Changed
-- **checkstyle failsOnError**：`pom.xml` 中从 `false` 改为 `true`，规范检查现在会阻断构建
-- **spotless phase**：`checkstyle` 从 `validate` 移至 `verify` 阶段（与 spotless 同一 phase）
-- **spotless ratchetFrom**：`pom.xml` 中移除 `ratchetFrom`，全量检查所有文件的格式规范
-- **google-java-format**：1.7 → 1.15.0（兼容 JDK 11+，修复 JVM 11+ 兼容性警告）
-- **jackson-annotations 版本**：`2.12.6` → `2.21`，解决与 `jackson-databind` 的版本冲突
+- **Flink API 迁移**：将已废弃的 `setStateBackend()`/`setRestartStrategy()` 迁移为新 API（Flink 1.20 兼容）
+- **代码质量修复**：跨多模块修复代码质量问题（#246）
+- **依赖升级**：升级多个依赖版本，修复兼容性问题
+- **文档修正**：修正文档中的错误配置和说明
 
 ### Fixed
-- **FlinkSqlWDS 语法错误**（3 处缺括号）：`insertEvent()`、`deleteEvent()` 调用、`String.join()` 参数缺 `)`
-- **WatermarkStrategy 导入路径**：`org.apache.flink.util.WatermarkStrategy` → `org.apache.flink.api.common.eventtime.WatermarkStrategy`（Flink 1.20 正确路径）
-- **CDBBatchSink 泛型不匹配**：`sinkTo()` → `addSink()` + `RichSinkFunction<Event>` 泛型匹配（Flink 1.20 sink API）
-- **SchemaEvolver checkstyle 违规**：修复 `mapToMysqlType()` 方法中 7 处 `if` 结构缺大括号
-- **JsonStringDebeziumDeserializationSchema**：修复 `else if` 前 `}` 未在同一行的 RightCurly 违规
-- **IncrementMapper 内部类**：提取为公开静态类，使单元测试可引用，提升覆盖率
-
-### Dependencies
-- 新增：`jacoco-maven-plugin 0.8.12`（test scope）
+- **Docker 测试环境 CDC 同步问题**：修复 Docker 环境下 CDC 同步测试失败的问题（#235）
+- **P0 Bug 修复**：修复关键 Bug，升级依赖，修正文档（#236）
 
 ---
 
