@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.sophiadata</groupId>
         <artifactId>bigdata_code_tutorial</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </parent>
     
     <artifactId>flink-demo</artifactId>
