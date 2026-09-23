@@ -59,6 +59,28 @@
         </dependency>
     </dependencies>
     
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                      This module holds the version shims, and CI runs every module with a narrowed
+                      -Dtest= filter (the unit-test phase excludes *IT/*E2E, and the integration-test
+                      phases name specific classes). A filter that matches nothing here makes Surefire
+                      fail the build with "No tests were executed!", which would break the -am builds of
+                      the modules that depend on this one before they run any test of their own.
+
+                      Surefire runs the tests that exist, so leaving this on keeps real failures
+                      visible while making an empty selection harmless.
+                    -->
+                    <failIfNoTests>false</failIfNoTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
     <profiles>
         <!--
           Source-set selection for the version-specific shims.
