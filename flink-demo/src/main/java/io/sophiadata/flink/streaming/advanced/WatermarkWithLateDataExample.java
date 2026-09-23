@@ -25,7 +25,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
@@ -92,7 +91,7 @@ public class WatermarkWithLateDataExample extends BaseCode {
         final SingleOutputStreamOperator<String> result =
                 source.assignTimestampsAndWatermarks(watermarkStrategy)
                         .keyBy(t -> "all")
-                        .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+                        .window(TumblingEventTimeWindows.of(Duration.ofSeconds(10)))
                         .allowedLateness(ALLOWED_LATENESS)
                         .sideOutputLateData(lateTag)
                         .process(

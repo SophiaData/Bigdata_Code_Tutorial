@@ -11,6 +11,7 @@
     <packaging>pom</packaging>
     
     <modules>
+        <module>flink-compat</module>
         <module>flink-demo</module>
         <module>cdc-mysql-sync</module>
         <module>cdc-paimon-sync</module>
@@ -29,6 +30,21 @@
         <flink-connector-kafka.version>3.3.0-1.20</flink-connector-kafka.version>
         <flink_cdc.version>3.6.0-1.20</flink_cdc.version>
         <scala.version>2.12</scala.version>
+        <!--
+          flink-java exists on Flink 1.20 but was removed in Flink 2.0 (the DataSet API was dropped).
+          Declarations use ${flink.java.artifact} so the Flink 2.x profile can substitute an artifact
+          that is already on the classpath instead of requesting a coordinate that no longer exists.
+          See the flink-2.2 profile.
+        -->
+        <flink.java.artifact>flink-java</flink.java.artifact>
+        <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
+        <!--
+          Shaded Guava. Flink's own runtime and the CDC connector each need a different shade, and both
+          are published under the same artifact id, so they cannot both be declared as ordinary
+          dependencies. See FLINK-39429 and the flink2-test-guava profile in flink-demo/pom.xml.
+        -->
+        <flink-shaded-guava.version>33.4.0-jre-20.0</flink-shaded-guava.version>
+        <flink-cdc-shaded-guava.version>31.1-jre-17.0</flink-cdc-shaded-guava.version>
         <hadoop.version>3.3.6</hadoop.version>
         <slf4j.version>1.7.15</slf4j.version>
         <gson.version>2.14.0</gson.version>
@@ -151,7 +167,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-java</artifactId>
+                <artifactId>${flink.java.artifact}</artifactId>
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -581,6 +597,17 @@
                                         <exclude>com.google.code.findbugs:jsr305</exclude>
                                         <exclude>org.slf4j:slf4j-api</exclude>
                                         <exclude>org.apache.commons:commons-lang3</exclude>
+                                        <!--
+                                          On the Flink 2.x line the CDC connector needs the guava31 shade
+                                          while Flink's own runtime needs guava33. Both live in the SAME
+                                          artifact (org.apache.flink:flink-shaded-guava), so this reads as
+                                          a version conflict but is unavoidable and harmless: the two jars
+                                          carry disjoint package trees (guava31/* vs guava33/*, zero
+                                          overlapping classes), so both can be on the classpath at once.
+
+                                          Upstream issue FLINK-39429. Remove once a CDC release fixes it.
+                                        -->
+                                        <exclude>org.apache.flink:flink-shaded-guava</exclude>
                                     </excludes>
                                     <message>依赖版本不一致，可能引入漏洞版本。请运行 'mvn dependency:tree' 检查。</message>
                                 </requireUpperBoundDeps>
@@ -875,5 +902,34 @@
         </repository>
     </repositories>
     
-    <profiles />
+    <profiles>
+        <!--
+          Flink 2.x version line. Activate with -Pflink-2.2 and -Pflink2 (the latter selects the matching
+          source set inside flink-compat; Maven cannot switch a child module's sources from here).
+
+          Both Flink 1.20 and 2.x use Flink CDC 3.x (org.apache.flink.cdc.*), so the CDC package is
+          unchanged. What Flink 2.0 changed is a set of API removals, all isolated in flink-compat:
+
+            * flink-java was deleted and ParameterTool moved to flink-core (org.apache.flink.util).
+            * CheckpointConfig#setCheckpointStorage was removed in favour of CheckpointingOptions.
+            * ParallelSourceFunction was removed; SourceFunction moved to the .legacy package.
+            * windowing.time.Time and api.common.time.Time were removed in favour of java.time.Duration.
+            * RichFunction#open now takes OpenContext only (Configuration overload dropped).
+
+          Only the coordinates below therefore need to differ per line.
+
+          Known limitation: cdc-paimon-sync depends on paimon-flink-1.20, a Paimon build pinned to Flink
+          1.20. Building that module against Flink 2.2 mixes two Flink majors on one classpath, which
+          compiles but makes the SpotBugs analysis in that module exceed its timeout. See the README.
+        -->
+        <profile>
+            <id>flink-2.2</id>
+            <properties>
+                <flink.version>2.2.0</flink.version>
+                <flink_cdc.version>3.6.0-2.2</flink_cdc.version>
+                <!-- flink-java no longer exists; flink-core is already on the classpath. -->
+                <flink.java.artifact>flink-core</flink.java.artifact>
+            </properties>
+        </profile>
+    </profiles>
 </project>

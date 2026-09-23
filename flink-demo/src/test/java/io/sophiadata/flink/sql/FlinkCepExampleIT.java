@@ -81,7 +81,7 @@ public class FlinkCepExampleIT {
                                     }
                                 })
                         .times(3)
-                        .within(org.apache.flink.streaming.api.windowing.time.Time.seconds(10));
+                        .within(java.time.Duration.ofSeconds(10));
 
         final PatternStream<Tuple3<String, String, Long>> patternStream =
                 CEP.pattern(loginStream.keyBy(t -> t.f0), pattern);

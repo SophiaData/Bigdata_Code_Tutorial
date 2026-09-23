@@ -18,18 +18,19 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.StateTtlConfig;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.base.BaseCode;
+
+import java.time.Duration;
 
 /**
  * State TTL 示例 —— 演示状态自动过期和清理策略。
@@ -91,9 +92,9 @@ public class StateTtlExample extends BaseCode {
         private transient ValueState<Long> lastActivity;
 
         @Override
-        public void open(final Configuration parameters) throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             final StateTtlConfig ttlConfig =
-                    StateTtlConfig.newBuilder(Time.seconds(TTL_SECONDS))
+                    StateTtlConfig.newBuilder(Duration.ofSeconds(TTL_SECONDS))
                             .setUpdateType(StateTtlConfig.UpdateType.OnReadAndWrite)
                             .setStateVisibility(StateTtlConfig.StateVisibility.NeverReturnExpired)
                             .cleanupFullSnapshot()

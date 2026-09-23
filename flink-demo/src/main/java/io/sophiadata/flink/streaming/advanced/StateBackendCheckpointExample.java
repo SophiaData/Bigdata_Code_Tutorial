@@ -18,10 +18,10 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ExternalizedCheckpointRetention;
 import org.apache.flink.core.execution.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -116,7 +116,7 @@ public class StateBackendCheckpointExample extends BaseCode {
         private transient ValueState<Long> sumState;
 
         @Override
-        public void open(final Configuration parameters) throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             countState =
                     getRuntimeContext().getState(new ValueStateDescriptor<>("count", Long.class));
             sumState = getRuntimeContext().getState(new ValueStateDescriptor<>("sum", Long.class));

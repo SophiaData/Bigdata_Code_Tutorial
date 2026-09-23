@@ -23,7 +23,6 @@ import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.OutputTag;
 
 import org.junit.jupiter.api.Test;
@@ -69,7 +68,7 @@ class WatermarkWithLateDataExampleTest {
                                 Tuple3.of("order_2", 200L, 2000L))
                         .assignTimestampsAndWatermarks(strategy)
                         .keyBy(t -> "all")
-                        .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+                        .window(TumblingEventTimeWindows.of(Duration.ofSeconds(10)))
                         .allowedLateness(Duration.ofSeconds(5))
                         .sideOutputLateData(lateTag)
                         .process(

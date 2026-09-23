@@ -18,9 +18,8 @@
 
 package io.sophiadata.flink.source;
 
-import org.apache.flink.streaming.api.functions.source.ParallelSourceFunction;
-
 import com.alibaba.fastjson.JSON;
+import io.sophiadata.flink.compat.MockSource;
 import io.sophiadata.flink.source.bean.AppAction;
 import io.sophiadata.flink.source.bean.AppCommon;
 import io.sophiadata.flink.source.bean.AppDisplay;
@@ -44,7 +43,7 @@ import java.util.Map;
 
 /** (@sophiadata) (@date 2023/8/2 11:23). */
 @SuppressWarnings("deprecation")
-public class MockSourceFunction implements ParallelSourceFunction<String> {
+public class MockSourceFunction implements MockSource<String> {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(MockSourceFunction.class);

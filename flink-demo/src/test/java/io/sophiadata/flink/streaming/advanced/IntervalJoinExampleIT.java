@@ -25,7 +25,6 @@ import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import org.junit.ClassRule;
@@ -81,7 +80,7 @@ public class IntervalJoinExampleIT {
                 .join(paymentStream)
                 .where(order -> order.f0)
                 .equalTo(payment -> payment.f0)
-                .window(TumblingEventTimeWindows.of(Time.seconds(5)))
+                .window(TumblingEventTimeWindows.of(Duration.ofSeconds(5)))
                 .apply(
                         new JoinFunction<
                                 Tuple3<String, String, Long>,

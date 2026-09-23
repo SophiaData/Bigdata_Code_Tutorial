@@ -19,7 +19,6 @@
 package io.sophiadata.flink.sync;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.common.event.AddColumnEvent;
 import org.apache.flink.cdc.common.event.CreateTableEvent;
 import org.apache.flink.cdc.common.event.DropColumnEvent;
@@ -32,6 +31,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 
+import io.sophiadata.flink.compat.ParameterTool;
 import io.sophiadata.flink.sync.base.BaseCode;
 import io.sophiadata.flink.sync.schema.SchemaEvolver;
 import io.sophiadata.flink.sync.util.MysqlUtil;

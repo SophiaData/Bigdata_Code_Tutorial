@@ -18,6 +18,7 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -27,12 +28,12 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.base.BaseCode;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class WindowWithProcessFunction extends BaseCode {
         // 窗口聚合 + TopN
         final DataStream<String> topNResult =
                 source.keyBy(value -> value.f0)
-                        .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
+                        .window(TumblingProcessingTimeWindows.of(Duration.ofSeconds(10)))
                         .process(new SensorAggregator())
                         .name("Sensor_Aggregator")
                         .keyBy(value -> 0)
@@ -128,8 +129,7 @@ public class WindowWithProcessFunction extends BaseCode {
         }
 
         @Override
-        public void open(final org.apache.flink.configuration.Configuration parameters)
-                throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             sensorState =
                     getRuntimeContext()
                             .getMapState(

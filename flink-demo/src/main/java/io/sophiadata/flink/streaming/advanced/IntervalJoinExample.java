@@ -24,7 +24,6 @@ import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 
 import io.sophiadata.flink.base.BaseCode;
 
@@ -88,7 +87,7 @@ public class IntervalJoinExample extends BaseCode {
                         .join(paymentStream)
                         .where(order -> order.f0)
                         .equalTo(payment -> payment.f0)
-                        .window(TumblingEventTimeWindows.of(Time.seconds(5)))
+                        .window(TumblingEventTimeWindows.of(Duration.ofSeconds(5)))
                         .apply(
                                 new JoinFunction<
                                         Tuple3<String, String, Long>,

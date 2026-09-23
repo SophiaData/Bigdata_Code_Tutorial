@@ -18,8 +18,8 @@
 
 package io.sophiadata.flink.sink;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -108,7 +108,7 @@ public class ElasticsearchSinkExample extends BaseCode {
         }
 
         @Override
-        public void open(final Configuration parameters) throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             // 创建 ES 客户端（在 RichFunction 的 open 中初始化）
             client =
                     new RestHighLevelClient(

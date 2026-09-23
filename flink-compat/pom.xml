@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.sophiadata</groupId>
+        <artifactId>bigdata_code_tutorial</artifactId>
+        <version>1.2.0</version>
+    </parent>
+    
+    <artifactId>flink-compat</artifactId>
+    <name>flink-compat</name>
+    <description>Flink version compatibility layer. Flink 2.0 removed several APIs this project uses and moved
+        ParameterTool to a different package; this module isolates those differences so the rest of
+        the codebase compiles unchanged against both Flink 1.20 and Flink 2.x.</description>
+    
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    
+    <dependencies>
+        <!-- The shims delegate to real Flink types, so the core APIs are needed to compile. -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-core</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-java</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+          flink-java exists on Flink 1.20 but was removed in Flink 2.x. The artifactId is switched by
+          the version profile so the 2.x build does not request a coordinate that no longer exists.
+        -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>${flink.java.artifact}</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- StreamExecutionEnvironment#getCheckpointConfig lives in flink-runtime. -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-runtime</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <profiles>
+        <!--
+          Source-set selection for the version-specific shims.
+
+          Exactly one of src/main/flink20/java and src/main/flink2/java may be compiled: both define
+          io.sophiadata.flink.compat.ParameterTool, each against a different Flink package. Neither
+          lives in the base <build>, because Maven would then always compile it and the two copies
+          would collide with a duplicate-class error.
+
+          flink20 is activeByDefault, so a plain build targets Flink 1.20. Naming -Pflink2 on the
+          command line deselects it and selects the Flink 2.x source set instead.
+        -->
+        <profile>
+            <id>flink20</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink20-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink20/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <!--
+          Flink 2.x source set. Activate with -Pflink2, which also deselects the activeByDefault
+          flink20 profile above.
+
+          Each file here mirrors one under src/main/flink20/java with the same fully-qualified name, so
+          application code imports a single stable class regardless of the Flink version in use.
+        -->
+        <profile>
+            <id>flink2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink2-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink2/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+</project>

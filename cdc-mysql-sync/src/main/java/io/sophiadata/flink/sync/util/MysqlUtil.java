@@ -18,12 +18,12 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.mysql.database.catalog.MySqlCatalog;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.TimestampType;
 import org.apache.flink.table.types.logical.VarBinaryType;
 
+import io.sophiadata.flink.compat.ParameterTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
