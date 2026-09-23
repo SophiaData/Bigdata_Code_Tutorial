@@ -754,6 +754,28 @@
                         <DOCKER_HOST>${docker.host}</DOCKER_HOST>
                         <TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
                     </environmentVariables>
+                    <!--
+                      Flink's serializer reflects into JDK internals (for example java.util.Arrays$ArrayList
+                      while handling collection types). JDK 11 only warned about that and let it through;
+                      JDK 17 enforces the module boundary and fails the run with
+                      InaccessibleObjectException: module java.base does not "opens java.util".
+
+                      These opens are the standard allowance for running Flink on a modular JDK. They
+                      affect the test JVM only and do not change the artifacts.
+                    -->
+                    <argLine>--add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.net=ALL-UNNAMED
+                        --add-opens=java.base/java.text=ALL-UNNAMED
+                        --add-opens=java.base/java.time=ALL-UNNAMED
+                        --add-opens=java.base/java.math=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             
