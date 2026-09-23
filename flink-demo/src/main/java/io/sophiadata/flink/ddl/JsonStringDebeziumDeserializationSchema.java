@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,11 +21,11 @@ package io.sophiadata.flink.ddl;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;
@@ -34,7 +35,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** (@SophiaData) (@date 2022/11/13 11:05). */
+/**
+ * Converts Debezium change events to JSON strings as {@code Tuple2<isInsert, json>}.
+ *
+ * <p>Implements Flink CDC 3.x's {@link DebeziumDeserializationSchema} directly; both supported
+ * version lines (Flink 1.20 and Flink 2.2) use CDC 3.x with the same {@code org.apache.flink.cdc.*}
+ * package.
+ *
+ * <p>(@SophiaData) (@date 2022/11/13 11:05).
+ */
 public class JsonStringDebeziumDeserializationSchema
         implements DebeziumDeserializationSchema<Tuple2<Boolean, String>> {
 

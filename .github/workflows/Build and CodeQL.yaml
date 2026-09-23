@@ -1,7 +1,20 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# Build the project against every supported Flink version line.
+#
+# The project supports two lines from a single source tree:
+#   - Flink 1.20.0 + Flink CDC 3.6.0-1.20
+#   - Flink 2.2.0  + Flink CDC 3.6.0-2.2
+#
+# Both use Flink CDC 3.x (package org.apache.flink.cdc.*), so no CDC shim is involved.
+#
+# Each line needs BOTH a version profile (-Pflink-1.20 / -Pflink-2.2) and a source-set profile
+# (-Pflink20 / -Pflink2), because Maven cannot switch a child module's source roots from the parent
+# and profile activation does not cascade. The 2.2 line additionally needs -Pflink2-test-guava to
+# work around upstream FLINK-39429 (the CDC connector needs the guava31 shade while Flink 2.2 ships
+# guava33, and both live in the same Maven artifact).
+#
+# JDK: the project targets Java 11 bytecode, and JDK 17 is used to run the tests.
 
-name: Build and CodeQL
+name: Build
 
 on:
   push:
@@ -15,41 +28,162 @@ concurrency:
 
 jobs:
   build:
-    name: Build
+    name: Build (${{ matrix.line }}, JDK ${{ matrix.java }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'java' ]
+        include:
+          - line: flink-1.20
+            profiles: -Pflink-1.20
+            java: 17
+          - line: flink-2.2
+            profiles: -Pflink-2.2 -Pflink2 -Pflink2-test-guava
+            java: 17
     env:
       MAVEN_OPTS: -Xmx2G -Xms2G
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
         with:
-          java-version: 8
-          distribution: 'adopt'
-      - name: Cache local Maven repository
-        uses: actions/cache@v3
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and run tests (${{ matrix.line }})
+        run: ./mvnw ${{ matrix.profiles }} --batch-mode --fail-at-end test
+
+      - name: Package (${{ matrix.line }})
+        run: ./mvnw ${{ matrix.profiles }} --batch-mode -DskipTests package
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          name: surefire-reports-${{ matrix.line }}
+          path: '**/target/surefire-reports/*'
+          if-no-files-found: ignore
+
+  # End-to-end CDC verification against a real MySQL.
+  #
+  # This is the only job that proves the CDC pipeline actually works. The unit tests check pure
+  # functions and object construction; they would still pass if the deserializer could not be
+  # serialized or the connector were misconfigured. Both version lines run here because a real job
+  # exercises classpath and connector wiring that unit tests never touch.
+  end-to-end:
+    name: End-to-end CDC (${{ matrix.line }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - line: flink-1.20
+            profiles: -Pflink-1.20
+          - line: flink-2.2
+            profiles: -Pflink-2.2 -Pflink2 -Pflink2-test-guava
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run CDC end-to-end test (${{ matrix.line }})
+        run: >
+          ./mvnw ${{ matrix.profiles }} --batch-mode
+          -pl sync_database_mysql -am
+          test -Ddocker.tests=true
+
+      - name: Upload end-to-end test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports-${{ matrix.line }}
+          path: '**/target/surefire-reports/*'
+          if-no-files-found: ignore
+
+  # Scan the resolved dependency tree for known CVEs.
+  #
+  # This is what turns "we raised a few versions once" into an ongoing guarantee: the build fails
+  # when a newly published advisory matches something already in the tree. Suppressions live in
+  # owasp-suppressions.xml and must be justified individually.
+  #
+  # NVD_API_KEY is optional but strongly recommended: without it the NVD feed download is rate
+  # limited and a full run can exceed the job timeout. Set it as a repository secret to enable it.
+  dependency-scan:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+
+      # Cache the NVD database between runs; re-downloading all ~400k records each time is the
+      # slowest part of the job.
+      - name: Cache NVD data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ github.run_id }}
+          restore-keys: nvd-
+
+      - name: OWASP dependency-check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          ./mvnw -Pflink-1.20 --batch-mode
+          org.owasp:dependency-check-maven:12.1.0:check
+          -DfailBuildOnCVSS=7
+          -DsuppressionFile=owasp-suppressions.xml
+          -DnvdApiKey="$NVD_API_KEY"
+
+      - name: Upload dependency-check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: '**/target/dependency-check-report.*'
+          if-no-files-found: ignore
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-      - name: Build and Run Tests
-        run: mvn test --batch-mode --fail-at-end
-      - name: Build and Package
-        run: |
-          ./mvnw -Pgoogle-mirror -B clean install \
-                 -Dmaven.test.skip=true \
-                 --no-snapshot-updates
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+          languages: java
+
+      - name: Build for CodeQL
+        run: ./mvnw -Pflink-1.20 --batch-mode -DskipTests package
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:java"

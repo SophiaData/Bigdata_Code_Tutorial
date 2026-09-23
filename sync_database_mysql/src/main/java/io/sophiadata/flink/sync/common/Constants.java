@@ -42,4 +42,12 @@ public class Constants {
     public static final Integer setParallelism = 2;
 
     public static final String cdcSourceName = "mysql-cdc-1";
+
+    /**
+     * Sink table naming pattern. {@code %s} is replaced with the source table name.
+     *
+     * <p>The same pattern is used for creating the sink table and for the INSERT that targets it,
+     * so overriding it via {@code --sinkPrefix} keeps both sides consistent.
+     */
+    public static final String sinkPrefix = "sink_%s";
 }

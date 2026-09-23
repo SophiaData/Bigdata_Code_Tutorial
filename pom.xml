@@ -11,59 +11,160 @@
     <packaging>pom</packaging>
     
     <modules>
+        <module>flink-compat</module>
         <module>flink-demo</module>
         <module>sync_database_mysql</module>
     </modules>
     
     <properties>
-        <java.version>1.8</java.version>
+        <!-- Java 11 bytecode. Flink 2.x requires Java 11+. -->
+        <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <testcontainers.version>1.15.3</testcontainers.version>
-        <flink.version>1.17.1</flink.version>
-        <flink_cdc.version>2.4.0</flink_cdc.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        
+        <!--
+          ============================ Version lines ============================
+
+            default (no profile)   Flink 1.20.0 + Flink CDC 3.6.0-1.20
+            -Pflink-2.2            Flink 2.2.0  + Flink CDC 3.6.0-2.2
+
+          Both lines use Flink CDC 3.x, whose Java package is org.apache.flink.cdc.* on either
+          Flink major. That is why this project needs no CDC compatibility shim: the only things
+          that vary between the lines are dependency coordinates and versions.
+
+          The two lines differ in more than the Flink version:
+            - CDC:     3.6.0-1.20            vs 3.6.0-2.2
+            - JDBC:    flink-connector-jdbc  vs flink-connector-jdbc-mysql
+                       (FLIP-449 split the JDBC connector into per-database artifacts; the
+                        aggregate flink-connector-jdbc coordinate stopped at 3.4.0-1.20)
+        -->
+        <flink.version>1.20.0</flink.version>
+        <flink.cdc.version>3.6.0-1.20</flink.cdc.version>
+        <!--
+          JDBC connector coordinates. Flink 1.20 uses the aggregate artifact; Flink 2.x must use the
+          per-database artifact. Both artifactId and version are switched by the profile.
+        -->
+        <flink.jdbc.artifact>flink-connector-jdbc</flink.jdbc.artifact>
+        <flink.jdbc.version>3.4.0-1.20</flink.jdbc.version>
+        <!--
+          flink-java exists on Flink 1.20 but was removed in Flink 2.x (the DataSet API was dropped
+          in 2.0). The 2.2 profile substitutes flink-core, which is already on the classpath, so the
+          declaration stays valid without pulling a non-existent artifact.
+        -->
+        <flink.java.artifact>flink-java</flink.java.artifact>
+        <!--
+          Flink shades Guava under a version-specific package (guava30 on 1.20, guava33 on 2.2) and
+          publishes it as a separate artifact. Only the test scope needs it explicitly.
+        -->
+        <flink.shaded.guava.version>31.1-jre-17.0</flink.shaded.guava.version>
+        <!-- The CDC 3.x connector shades Guava independently; same version on both lines. -->
+        <flink.cdc.shaded.guava.version>31.1-jre-17.0</flink.cdc.shaded.guava.version>
+        <!-- flink-connector-base tracks the Flink version; it must never be pinned independently. -->
+        <flink.connector.base.version>${flink.version}</flink.connector.base.version>
+        <!--
+          hudi-flink 0.12.1 bundles a Flink 1.15.x runtime. It is unusable on both supported lines
+          (1.20 and 2.2), so it is excluded by default; see flink-demo/pom.xml.
+        -->
+        <flink.demo.hudi.skip>true</flink.demo.hudi.skip>
+        
+        <!--
+          Testcontainers 1.21.x is required for the newer Docker Engine API. 1.20.4 (the previous
+          pin) ships a docker-java that cannot parse the response from Docker Engine 29.x (API
+          1.55) and fails with "Could not find a valid Docker environment ... Status 400" even
+          though the daemon is healthy.
+        -->
+        <testcontainers.version>1.21.4</testcontainers.version>
+        <!--
+          JUnit 5.8.1 is deliberate: flink-test-utils (Flink 1.17.1) pins junit-platform 1.8.x, and
+          forcing a newer junit-jupiter (5.10.x pulls junit-platform 1.10.x) breaks the platform
+          contract at runtime with:
+            NoSuchMethodError: java.util.Set TestDescriptor.getAncestors()
+          Keep this aligned with the Flink version line rather than tracking the newest JUnit.
+        -->
+        <junit.jupiter.version>5.8.1</junit.jupiter.version>
+        <mysql.connector.version>8.4.0</mysql.connector.version>
+        <!--
+          Surefire tag filtering. Default: skip the Docker-backed tests, include everything else.
+          `-Ddocker.tests=true` flips both properties to run only the Docker tests.
+        -->
+        <test.excluded.groups>docker</test.excluded.groups>
+        <test.included.groups />
         <scala.version>2.12</scala.version>
         <hadoop.version>3.1.3</hadoop.version>
         <log4j.version>2.25.3</log4j.version>
-        <slf4j.version>1.7.15</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <gson.version>2.8.9</gson.version>
-        <fastjson.version>1.2.83</fastjson.version>
-        <jedis.version>3.3.0</jedis.version>
         <guava.version>32.1.1-jre</guava.version>
         <json-path.version>2.9.0</json-path.version>
-        <ikanalyzer.version>2012_u6</ikanalyzer.version>
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
-        <spotless.version>2.23.0</spotless.version>
-        <lombok.version>1.18.20</lombok.version>
-        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
-        <maven-compiler-plugin.version>3.10.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <!--
+          ===================== Vulnerability overrides =====================
+          Versions forced onto transitive dependencies that ship inside the fat jar but resolve to
+          releases carrying known CVEs. Each was chosen because OSV reports zero advisories for it:
+
+            snakeyaml 1.32 / "android" 1.23  (via nacos-client and hadoop-common)  -> 2.4
+            commons-compress 1.24.0                                                -> 1.27.1
+            nimbus-jose-jwt 4.41.1                                                 -> 9.37.4
+
+          snakeyaml is a MAJOR bump (1.x -> 2.x). Neither this project nor its code references
+          snakeyaml directly (verified by grep across all sources), and it is used only by
+          nacos/hadoop internals for their own configuration parsing, so the 2.x behavioural change
+          (safer default constructors) does not affect our code paths.
+
+          Re-evaluate these whenever nacos or hadoop is upgraded: a newer upstream release may make an
+          override unnecessary.
+        -->
+        <snakeyaml.version>2.4</snakeyaml.version>
+        <commons-compress.version>1.27.1</commons-compress.version>
+        <nimbus-jose-jwt.version>9.37.4</nimbus-jose-jwt.version>
+        <!--
+          commons-lang3 must be >= 3.13: commons-compress 1.27.1 (raised above) references
+          org.apache.commons.lang3.ArrayFill, which does not exist in older releases. Without this
+          pin Hadoop's 3.12.0 wins by nearest-wins and the end-to-end test fails with
+            NoClassDefFoundError: org/apache/commons/lang3/ArrayFill
+          3.18.0 is also the first release with no known advisories, so it clears a CVE too.
+        -->
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <!--
+          fastjson 1.2.83 was the terminal 1.x release and carries an unfixable autoType
+          deserialization history (CVE-2022-25845 and the 1.2.24-1.2.80 series); there is no
+          1.x version to bump to, which is why Dependabot never flagged it. fastjson2 is the
+          maintained line and is source-compatible for the JSON/JSONObject usage in this repo.
+        -->
+        <fastjson2.version>2.0.53</fastjson2.version>
+        <spotless.version>2.43.0</spotless.version>
+        <!--
+          Lombok must be >= 1.18.30 to run as an annotation processor on JDK 21+.
+          1.18.20 (the previous pin) silently produces no getters/builders on modern JDKs,
+          which made the whole project fail to compile.
+        -->
+        <lombok.version>1.18.48</lombok.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
+        <extra-enforcer-rules.version>1.9.0</extra-enforcer-rules.version>
+        <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
         <nacos.version>2.1.2</nacos.version>
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <jackson-annotations.version>2.12.6</jackson-annotations.version>
-        <maven-shade-plugin>3.1.0</maven-shade-plugin>
+        <maven-shade-plugin>3.5.1</maven-shade-plugin>
         <confluent.version>7.2.0</confluent.version>
-        <jackson-databind.version>2.13.5</jackson-databind.version>
-        <jackson-core.version>2.18.6</jackson-core.version>
-        <druid.version>1.1.16</druid.version>
+        <jackson.version>2.18.11</jackson.version>
+        <druid.version>1.2.23</druid.version>
         <joda-time.version>2.10.2</joda-time.version>
         <hudi-flink.version>0.12.1</hudi-flink.version>
-        <phoenix-core.version>5.0.0-HBase-2.0</phoenix-core.version>
-        <hbase-server.version>2.1.0-cdh6.3.2</hbase-server.version>
-        <ojdbc8.version>21.1.0.0</ojdbc8.version>
         <protobuf-java.version>3.25.5</protobuf-java.version>
-        <ikanalyzer.version>2012_u6</ikanalyzer.version>
-        <clickhouse-jdbc.version>0.4.6</clickhouse-jdbc.version>
-        <flink-doris-connector-1.16.version>1.3.0</flink-doris-connector-1.16.version>
         <scala-library.version>2.12.7</scala-library.version>
         <flink-shaded-jackson.version>2.13.4-16.0</flink-shaded-jackson.version>
+        <kafka-clients.version>3.4.0</kafka-clients.version>
+        <debezium.version>1.9.8.Final</debezium.version>
         <mockito.version>4.6.1</mockito.version>
         <javax.el-api.version>3.0.0</javax.el-api.version>
         <org.glassfish.web.javax.el.version>2.2.4</org.glassfish.web.javax.el.version>
         <org.glassfish.javax.el.version>3.0.1-b11</org.glassfish.javax.el.version>
-        <javafaker.version>1.0.2</javafaker.version>
         <versions-maven-plugin.version>2.14.2</versions-maven-plugin.version>
     </properties>
     
@@ -72,20 +173,33 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
-                <version>1.17.6</version>
+                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
-                <version>5.8.1</version>
+                <version>${junit.jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!--
+              MySQL JDBC driver, needed by the schema reader, the JDBC sink and the Testcontainers
+              end-to-end test. com.mysql:mysql-connector-j is the maintained coordinate;
+              mysql:mysql-connector-java is the retired one.
+            -->
             <dependency>
-                <groupId>com.ververica</groupId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.connector.version}</version>
+            </dependency>
+            <!--
+              Flink CDC 3.x MySQL source connector. The package is org.apache.flink.cdc.* on both
+              supported Flink majors (1.20 and 2.2); only the version suffix changes.
+            -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
                 <artifactId>flink-connector-mysql-cdc</artifactId>
-                <version>${flink_cdc.version}</version>
-                <scope>provided</scope>
+                <version>${flink.cdc.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hudi</groupId>
@@ -102,6 +216,12 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java</artifactId>
                 <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-connector-base</artifactId>
+                <version>${flink.connector.base.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -126,17 +246,23 @@
                 <artifactId>flink-json</artifactId>
                 <version>${flink.version}</version>
             </dependency>
+            <!--
+              flink-java is REMOVED in Flink 2.x (the DataSet API was dropped in 2.0), so it is only
+              declared on the 1.20 line via ${flink.java.artifact}. The one type this project used
+              from it, ParameterTool, moved to flink-core under a new package in 2.x; see
+              io.sophiadata.flink.compat.ParameterTool.
+            -->
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-java</artifactId>
+                <artifactId>${flink.java.artifact}</artifactId>
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
-            <!-- fastjson -->
+            <!-- fastjson2 -->
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -168,10 +294,15 @@
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!--
+              JDBC connector. The artifactId itself is version-line specific: Flink 1.20 has the
+              aggregate flink-connector-jdbc, while Flink 2.x only ships the per-database artifacts
+              (flink-connector-jdbc-mysql) after the FLIP-449 reorganization.
+            -->
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-connector-jdbc</artifactId>
-                <version>3.1.1-1.17</version>
+                <artifactId>${flink.jdbc.artifact}</artifactId>
+                <version>${flink.jdbc.version}</version>
                 <scope>provided</scope>
             </dependency>
             <!-- flink-rocksdb -->
@@ -191,11 +322,6 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
                 <version>${druid.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>redis.clients</groupId>
-                <artifactId>jedis</artifactId>
-                <version>${jedis.version}</version>
             </dependency>
             
             <!--如果保存检查点到hdfs上，需要引入此依赖-->
@@ -247,46 +373,6 @@
                 <scope>compile</scope>
             </dependency>
             
-            <!--Guava工程包含了若干被Google的Java项目广泛依赖的核心库,方便开发-->
-            <dependency>
-                <groupId>org.apache.phoenix</groupId>
-                <artifactId>phoenix-core</artifactId>
-                <version>${phoenix-core.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.glassfish</groupId>
-                        <artifactId>javax.el</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hbase</groupId>
-                        <artifactId>hbase-zookeeper</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-server</artifactId>
-                <version>${hbase-server.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.glassfish</groupId>
-                        <artifactId>javax.el</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.database.jdbc</groupId>
-                <artifactId>ojdbc8</artifactId>
-                <version>${ojdbc8.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
@@ -298,48 +384,35 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.janeluo</groupId>
-                <artifactId>ikanalyzer</artifactId>
-                <version>${ikanalyzer.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.clickhouse</groupId>
-                <artifactId>clickhouse-jdbc</artifactId>
-                <version>${clickhouse-jdbc.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-core</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>${scala-library.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-connector-kafka</artifactId>
-                <version>${flink.version}</version>
-                <scope>compile</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.kafka</groupId>
-                        <artifactId>kafka-clients</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka-clients.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>connect-api</artifactId>
+                <version>${kafka-clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.debezium</groupId>
+                <artifactId>debezium-core</artifactId>
+                <version>${debezium.version}</version>
+            </dependency>
+            <!--
+              NOTE: the flink-connector-kafka dependency was removed. No source file in this project
+              referenced it, and Flink 2.x publishes no Kafka connector under that coordinate, so it
+              was dead weight that also blocked the 2.x build.
+            -->
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.doris</groupId>
-                <artifactId>flink-doris-connector-1.16</artifactId>
-                <version>${flink-doris-connector-1.16.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -386,23 +459,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${jackson-annotations.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-schema-registry-client</artifactId>
-                <version>${confluent.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-json-schema-provider</artifactId>
-                <version>${confluent.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.embeddedkafka</groupId>
-                <artifactId>embedded-kafka-schema-registry_2.12</artifactId>
-                <version>${confluent.version}</version>
-                <scope>test</scope>
+                <version>${jackson.version}</version>
             </dependency>
             <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-jackson -->
             <dependency>
@@ -425,7 +482,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
-                <version>${mockitor.version}</version>
+                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -446,23 +503,25 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson-databind.version}</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>${jackson-core.version}</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>${joda-time.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.github.javafaker</groupId>
-                <artifactId>javafaker</artifactId>
-                <version>${javafaker.version}</version>
-            </dependency>
+            <!--
+              NOTE: com.github.javafaker:javafaker was removed from this project. It was declared but
+              never used by any source file, and its POM pins snakeyaml to the non-existent version
+              "android", which resolved to org.yaml:snakeyaml:jar:android:1.23 and dragged 8 known
+              advisories into the shaded jar. Because "android" is not a real release,
+              dependencyManagement could not override it; removing the unused dependency is the fix.
+            -->
             <!-- test containers -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
@@ -488,6 +547,37 @@
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
+            
+            <!--
+              ==== Vulnerability overrides ====
+              dependencyManagement wins over transitive resolution for the whole reactor, which is the
+              supported way to lift a vulnerable transitive dependency without touching the library
+              that drags it in. See the property comments above for why each version was chosen.
+            -->
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+            <!--
+              Must move together with commons-compress: see the property comment above. Pinning it here
+              stops Hadoop's older 3.12.0 from winning nearest-wins and removing ArrayFill.
+            -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     
@@ -507,40 +597,155 @@
                     <target>${java.version}</target>
                     <testSource>${java.version}</testSource>
                     <testTarget>${java.version}</testTarget>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <!--
+                      Lombok runs on the annotation processor path. Without this, JDK 23+ no longer
+                      implicitly enables annotation processing and Lombok would silently generate
+                      nothing (the failure mode that previously broke this build outright).
+                    -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
-<!--            &lt;!&ndash; 指定编译scala的插件 &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>net.alchim31.maven</groupId>-->
-<!--                <artifactId>scala-maven-plugin</artifactId>-->
-<!--                <version>3.2.2</version>-->
-<!--                <configuration>-->
-<!--                    <scalaVersion>2.12.12</scalaVersion>-->
-<!--                </configuration>-->
-<!--                -->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>compile-scala</id>-->
-<!--                        <goals>-->
-<!--                            <goal>add-source</goal>-->
-<!--                            <goal>compile</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>process-resources</phase>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>scala-compile-first</id>-->
-<!--                        <goals>-->
-<!--                            <goal>add-source</goal>-->
-<!--                            <goal>testCompile</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>compile</phase>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer-plugin.version}</version>
+                <dependencies>
+                    <!-- banDuplicateClasses lives in the extra-rules artifact, not the core plugin. -->
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>${extra-enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <!--
+                                  Fail the build on the dependency problems that actually cause runtime
+                                  breakage in a Flink project, rather than on every version skew.
+
+                                  dependencyConvergence is deliberately NOT enabled: this tree has ~27
+                                  benign convergence differences coming from Hadoop's internal helpers
+                                  (it pulls its own 2.10.0 hadoop-* modules alongside 3.1.3), and
+                                  enforcing it would be pure noise.
+                                -->
+                                <!--
+                                  Fail the build on dependency problems that cause real runtime
+                                  breakage, instead of on every version skew in the tree.
+
+                                  What is deliberately NOT enabled, and why:
+
+                                  * dependencyConvergence — this tree has ~27 convergence differences
+                                    that all come from Hadoop pulling its own 2.10.0 helper modules
+                                    alongside 3.1.3. They are benign and enforcing them is pure noise.
+
+                                  * banDuplicateClasses — Flink's own artifacts duplicate classes
+                                    between each other by design (flink-cdc-runtime and
+                                    flink-table-planner both bundle Calcite; flink-connector-mysql-cdc
+                                    vendors Debezium's MySQL classes), and every one of those is
+                                    provided scope, so it never reaches this project's shaded jar.
+                                    Suppressing them all would mean tracking Flink internals release
+                                    by release for no safety gain.
+
+                                  The rules kept below are the ones that fail for a reason a developer
+                                  can act on.
+                                -->
+                                <!-- Dependency cycles make builds and upgrades unpredictable. -->
+                                <banCircularDependencies />
+                                <!--
+                                  Every class on the classpath must be runnable on the Java version this
+                                  project targets. Without this, a dependency built for a newer JDK
+                                  fails at runtime with UnsupportedClassVersionError instead of here.
+                                -->
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>11</maxJdkVersion>
+                                    <ignoreClasses>
+                                        <!-- Flink itself compiles parts of its runtime for newer JDKs. -->
+                                        <ignoreClass>org.apache.flink.*</ignoreClass>
+                                        <ignoreClass>org.apache.calcite.*</ignoreClass>
+                                    </ignoreClasses>
+                                </enforceBytecodeVersion>
+                                <!--
+                                  Enforce the Java version the code is written for, so a JDK mismatch
+                                  fails fast with a clear message instead of an obscure compile error.
+                                -->
+                                <requireJavaVersion>
+                                    <version>[11,)</version>
+                                </requireJavaVersion>
+                                <!-- Maven itself must be recent enough for the plugins used here. -->
+                                <requireMavenVersion>
+                                    <version>[3.8.0,)</version>
+                                </requireMavenVersion>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <!--
+                      Tests tagged `docker` (Testcontainers) are excluded from the default run so a
+                      plain `mvn verify` works on machines without Docker. Enable them with:
+
+                        mvn verify -Ddocker.tests=true
+
+                      which clears the exclusion and selects the tag instead. Using a property rather
+                      than only `-Dgroups=docker` matters because a hard <excludedGroups> would win
+                      over -Dgroups and silently skip nothing.
+                    -->
+                    <excludedGroups>${test.excluded.groups}</excludedGroups>
+                    <groups>${test.included.groups}</groups>
+                    <!--
+                      Surefire's default includes are *Test / Test* / *Tests / *TestCase, so a class
+                      named *IT is never discovered and would silently run zero tests. Both naming
+                      conventions are accepted here; the `docker` tag is what actually gates them.
+                    -->
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                    <!--
+                      Flink's Kryo serializer reflects into JDK internals, which JDK 16+ blocks by
+                      default. Without these add-opens flags a job fails at runtime with:
+                        InaccessibleObjectException: Unable to make field ... accessible:
+                        module java.base does not "opens java.util" to unnamed module
+                      These mirror the opens that Flink itself documents for running on JDK 17.
+                      (Note: the flag prefix cannot be spelled inside an XML comment, because a
+                      double hyphen is illegal there.)
+                    -->
+                    <argLine>--add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.net=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.time=ALL-UNNAMED
+                        --add-opens=java.base/java.text=ALL-UNNAMED
+                        --add-opens=java.base/java.math=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED</argLine>
+                    <trimStackTrace>false</trimStackTrace>
+                </configuration>
             </plugin>
             
             <plugin>
@@ -548,40 +753,21 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless.version}</version>
                 <configuration>
-                    <!-- optional: limit format enforcement to just the files changed by this feature branch -->
                     <ratchetFrom>HEAD</ratchetFrom>
                     <java>
+                        <!-- google-java-format 1.7 predates JDK 16+; modern versions are required. -->
                         <googleJavaFormat>
-                            <version>1.7</version>
+                            <version>1.22.0</version>
                             <style>AOSP</style>
                         </googleJavaFormat>
                         <removeUnusedImports />
                         <importOrder>
                             <order>org.apache.flink,org.apache.flink.shaded,,javax,java,scala,\#</order>
                         </importOrder>
-                        <replaceRegex>
-                            <name>Remove wildcard imports</name>
-                            <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
-                            <replacement>$1</replacement>
-                        </replaceRegex>
                         <licenseHeader>
                             <file>tool/license.header</file>
                         </licenseHeader>
                     </java>
-<!--                    <scala>-->
-<!--                        &lt;!&ndash; These are the defaults, you can override if you want &ndash;&gt;-->
-<!--                        <includes>-->
-<!--                            <include>src/main/scala/**/*.scala</include>-->
-<!--                            <include>src/test/scala/**/*.scala</include>-->
-<!--                            <include>src/main/scala/**/*.sc</include>-->
-<!--                            <include>src/test/scala/**/*.sc</include>-->
-<!--                        </includes>-->
-<!--                        <scalafmt>-->
-<!--                            <version>3.1.1</version>-->
-<!--                            <file>.scalafmt.conf</file>-->
-<!--                        </scalafmt>-->
-<!--                        &lt;!&ndash; has its own section below &ndash;&gt;-->
-<!--                    </scala>-->
                     <pom>
                         <includes>
                             <include>pom.xml</include>
@@ -599,46 +785,95 @@
                             <expandEmptyElements>false</expandEmptyElements>
                             <sortProperties>false</sortProperties>
                         </sortPom>
-                        <replace>
-                            <name>Leading blank line</name>
-                            <search>project</search>
-                            <replacement>project</replacement>
-                        </replace>
                     </pom>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>spotless-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <!-- Binding to `compile` broke builds on unformatted files; verify is the right phase. -->
+                        <phase>verify</phase>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
     
+    <!--
+      Repositories are declared but no longer pull snapshots implicitly: the previous
+      `snapshot-repos` entry had snapshots enabled, which let unreleased artifacts leak
+      into resolution. The Cloudera repo was only needed by the now-removed HBase/Phoenix
+      management entries and has been dropped.
+    -->
     <repositories>
-        <repository>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>snapshot-repos</id>
-            <name>Apache Snapshot Repository</name>
-            <url>https://repository.apache.org/snapshots/</url>
-            <layout>default</layout>
-        </repository>
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
-        <repository>
-            <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-        </repository>
     </repositories>
     
     <profiles>
+        <!--
+          ============================ Version lines ============================
+          Each profile pins a coherent (Flink, Flink CDC, JDBC connector) triple.
+
+            default (no profile)     Flink 1.20.0 + CDC 3.6.0-1.20 + flink-connector-jdbc 3.4.0-1.20
+            -Pflink-2.2              Flink 2.2.0  + CDC 3.6.0-2.2  + flink-connector-jdbc-mysql 4.1.0-2.2
+
+          Both lines use Flink CDC 3.x (org.apache.flink.cdc.*), so no CDC shim is needed.
+          Only dependency coordinates and versions change between them.
+        -->
+        
+        <profile>
+            <id>docker-tests</id>
+            <activation>
+                <property>
+                    <name>docker.tests</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <!-- Clear the exclusion and select only the Docker-backed end-to-end tests. -->
+                <test.excluded.groups />
+                <test.included.groups>docker</test.included.groups>
+            </properties>
+        </profile>
+        
+        <profile>
+            <id>flink-1.20</id>
+            <properties>
+                <flink.version>1.20.0</flink.version>
+                <flink.cdc.version>3.6.0-1.20</flink.cdc.version>
+                <!-- Flink 1.20 still publishes the aggregate JDBC connector artifact. -->
+                <flink.jdbc.artifact>flink-connector-jdbc</flink.jdbc.artifact>
+                <flink.jdbc.version>3.4.0-1.20</flink.jdbc.version>
+            </properties>
+        </profile>
+        
+        <profile>
+            <id>flink-2.2</id>
+            <properties>
+                <flink.version>2.2.0</flink.version>
+                <flink.cdc.version>3.6.0-2.2</flink.cdc.version>
+                <!--
+                  Flink 2.x only ships the per-database JDBC connector: FLIP-449 split the aggregate
+                  artifact, whose last release is 3.4.0-1.20.
+                -->
+                <flink.jdbc.artifact>flink-connector-jdbc-mysql</flink.jdbc.artifact>
+                <flink.jdbc.version>4.1.0-2.2</flink.jdbc.version>
+                <!--
+                  flink-java was removed in Flink 2.x. Substitute flink-core (already required), so
+                  the shared dependency declaration remains resolvable. ParameterTool now lives in
+                  flink-core, which is exactly what the compat shim provides.
+                -->
+                <flink.java.artifact>flink-core</flink.java.artifact>
+                <flink.shaded.guava.version>33.4.0-jre-20.0</flink.shaded.guava.version>
+                <!-- Required at test runtime; the transitive copy is provided-scoped. -->
+            </properties>
+        </profile>
+        
         <profile>
             <id>google-mirror</id>
             <properties>

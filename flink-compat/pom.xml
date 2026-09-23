@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.sophiadata</groupId>
+        <artifactId>bigdata_code_tutorial</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    
+    <artifactId>flink-compat</artifactId>
+    
+    <name>flink-compat</name>
+    <description>Minimal Flink version-compatibility shim. Flink 2.0 removed the flink-java artifact and moved
+        ParameterTool from org.apache.flink.api.java.utils to org.apache.flink.util; this module
+        absorbs that rename so the rest of the project imports a single stable class. Contains
+        nothing else.</description>
+    
+    <dependencies>
+        <!-- The shim delegates to the real ParameterTool, so Flink core APIs are required. -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-core</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- flink-java only exists on the Flink 1.20 line; see ${flink.java.artifact}. -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>${flink.java.artifact}</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- FlinkCompat configures StreamExecutionEnvironment, which lives in flink-streaming-java. -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-java</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+          The Flink 1.20 implementation selects a state backend by class, so the RocksDB backend (and
+          the hash-map backend in flink-runtime) must be resolvable. On the Flink 2.x line the backend
+          is named by a string in configuration, so these are unused there but harmless.
+        -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-statebackend-rocksdb</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-runtime</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <profiles>
+        <!--
+          Source-set selection. Flink 2.0 moved ParameterTool from org.apache.flink.api.java.utils
+          (flink-java) to org.apache.flink.util (flink-core); a package rename cannot be expressed as
+          a dependency property, so one tiny implementation per line is compiled here.
+
+            default / -Pflink-1.20  -> src/main/flink20/java
+            -Pflink-2.2             -> src/main/flink2/java
+        -->
+        <profile>
+            <id>flink20</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink20-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink20/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>flink2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink2-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink2/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
+</project>

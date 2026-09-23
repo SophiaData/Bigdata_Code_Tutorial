@@ -1,0 +1,39 @@
+# Keep dependencies current. The repository previously had no dependabot configuration, so updates
+# relied entirely on GitHub defaults even though the workflow already ran a dependency review.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      # Flink and its connectors must move together; a partial bump breaks the build.
+      flink:
+        patterns:
+          - "org.apache.flink:*"
+      logging:
+        patterns:
+          - "org.slf4j:*"
+          - "org.apache.logging.log4j:*"
+      test:
+        patterns:
+          - "org.junit.jupiter:*"
+          - "org.testcontainers:*"
+          - "org.mockito:*"
+    ignore:
+      # fastjson 1.2.x has no patched successor (the project uses fastjson2 instead).
+      - dependency-name: "com.alibaba:fastjson"
+      # hudi-flink is pinned to a Flink 1.15.x runtime on purpose; see the flink-demo POM.
+      - dependency-name: "org.apache.hudi:hudi-flink"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns:
+          - "*"

@@ -24,13 +24,11 @@ import io.sophiadata.flink.source.utils.RanOpt;
 import io.sophiadata.flink.source.utils.RandomNum;
 import io.sophiadata.flink.source.utils.RandomOptionGroup;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 /** (@sophiadata) (@date 2023/8/2 11:06). */
 @Data
 @AllArgsConstructor
-@Builder(builderClassName = "Builder")
 public class AppCommon {
 
     private String mid; // (String) 设备唯一标识

@@ -19,7 +19,6 @@
 package io.sophiadata.flink.source.utils;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.Random;
 
 /** (@sophiadata) (@date 2023/8/2 11:19). */
 @AllArgsConstructor
-@Builder(builderClassName = "Builder")
 public class RandomOptionGroup<T> {
 
     int totalWeight = 0;
@@ -38,6 +36,12 @@ public class RandomOptionGroup<T> {
         return new Builder<T>();
     }
 
+    /**
+     * Hand-written builder. This deliberately does NOT use Lombok's {@code @Builder}: Lombok
+     * rejects {@code builderClassName = "Builder"} when the generated builder would collide with
+     * this nested class (Lombok >= 1.18.30 fails the build outright), and the custom {@code add}
+     * method below carries weight logic Lombok cannot express.
+     */
     public static class Builder<T> {
 
         List<RanOpt> optList = new ArrayList();

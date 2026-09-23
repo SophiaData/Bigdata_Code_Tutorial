@@ -20,13 +20,13 @@ package io.sophiadata.flink.ddl;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
+import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import io.sophiadata.flink.base.BaseCode;
+import io.sophiadata.flink.compat.ParameterTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,9 @@ public class FlinkCDCDDL extends BaseCode {
     public void handle(String[] args, StreamExecutionEnvironment env) {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
-        env.getConfig().setGlobalJobParameters(params);
+        // setGlobalJobParameters only accepts the real Flink type (its Map overload is private), so
+        // hand it the underlying ParameterTool, which extends GlobalJobParameters on both lines.
+        env.getConfig().setGlobalJobParameters(params.asGlobalJobParameters());
 
         String hostname = params.get("hostname", "localhost");
         int port = params.getInt("port", 3306);
@@ -61,25 +63,22 @@ public class FlinkCDCDDL extends BaseCode {
         // decimal 设置为 string 避免转换异常
         properties.put("decimal.handling.mode", "string");
 
-        MySqlSource<Tuple2<Boolean, String>> sourceFunction =
-                MySqlSource.<Tuple2<Boolean, String>>builder()
-                        .hostname(hostname)
-                        .port(port)
-                        .username(username)
-                        .password(password)
-                        .databaseList(databaseList)
-                        .tableList(tableList)
-                        .deserializer(new JsonStringDebeziumDeserializationSchema())
-                        .includeSchemaChanges(true)
-                        // 由于发生了 schema change 2.3 新增的 earliest，specificOffset，timestamp 可能不可用
-                        // 详情参照 flink cdc 官网启动模式章节
-                        .startupOptions(StartupOptions.initial())
-                        .debeziumProperties(properties)
-                        .build();
-
         DataStreamSource<Tuple2<Boolean, String>> mysql =
-                env.fromSource(sourceFunction, WatermarkStrategy.noWatermarks(), "mysql")
-                        .setParallelism(1);
+                env.fromSource(
+                        MySqlSource.<Tuple2<Boolean, String>>builder()
+                                .hostname(hostname)
+                                .port(port)
+                                .username(username)
+                                .password(password)
+                                .databaseList(databaseList)
+                                .tableList(tableList)
+                                .deserializer(new JsonStringDebeziumDeserializationSchema())
+                                .includeSchemaChanges(true)
+                                .startupOptions(StartupOptions.initial())
+                                .debeziumProperties(properties)
+                                .build(),
+                        WatermarkStrategy.noWatermarks(),
+                        "mysql");
 
         mysql.print().setParallelism(1);
     }

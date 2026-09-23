@@ -18,14 +18,11 @@
 
 package io.sophiadata.flink.base;
 
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
-import org.apache.flink.api.common.time.Time;
-import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
-import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+
+import io.sophiadata.flink.compat.FlinkCompat;
 
 /** (@SophiaData) (@date 2022/10/25 10:58). */
 public abstract class BaseSql {
@@ -61,12 +58,9 @@ public abstract class BaseSql {
 
     public void checkpoint(
             StreamExecutionEnvironment env, String ckPath, Boolean hashMap, Boolean localpath) {
-        if (hashMap) {
-            env.setStateBackend(new HashMapStateBackend());
-        } else {
-            // 该类型 State Backend 支持 Changelog 增量检查点
-            env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
-        }
+        // Flink 2.0 removed setStateBackend; the shim picks the right mechanism per version line.
+        // The RocksDB backend supports Changelog incremental checkpoints.
+        FlinkCompat.configureStateBackend(env, !hashMap);
         if (localpath) {
             env.enableCheckpointing(3000);
             // 注意这里默认把状态存储在内存中，如内存打满将导致 checkpoint 失败
@@ -74,7 +68,7 @@ public abstract class BaseSql {
             // env.getCheckpointConfig()
             //    .setCheckpointStorage("file:///user/flink/" + ckPathAndJobId);
         } else {
-            env.getCheckpointConfig().setCheckpointStorage(ckPath);
+            FlinkCompat.setCheckpointStorage(env, ckPath);
             // Hadoop HA 写法：
             // hdfs://nameService_id/path/file
             env.enableCheckpointing(60 * 1000);
@@ -87,12 +81,12 @@ public abstract class BaseSql {
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
         env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
         env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);
-        env.getCheckpointConfig()
-                .setExternalizedCheckpointCleanup(
-                        CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        FlinkCompat.retainCheckpointsOnCancellation(env);
     }
 
     public void restartTask(StreamExecutionEnvironment env) {
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, Time.seconds(10)));
+        // Flink 2.0 removed the programmatic restart-strategy API; the shim picks the right
+        // mechanism for the active version line.
+        FlinkCompat.fixedDelayRestart(env, 10, 10);
     }
 }

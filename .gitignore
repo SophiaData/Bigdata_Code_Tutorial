@@ -28,9 +28,17 @@ hs_err_pid*
 docs/build
 target
 tmp
+# Maven Shade writes this next to the POM when the build runs.
+dependency-reduced-pom.xml
 *.classpath
-*.idea
+# IntelliJ project files. The previous pattern was `*.idea`, a suffix glob that happened to match
+# most files inside the directory but is not the intended rule and had let .idea/vcs.xml slip into
+# version control.
+.idea/
+*.iml
 *.metadata
 *.settings
 *.cache
-*.iml
+# Local audit notes. SCAN_REPORT.md records an internal review of this repository, including open
+# limitations and remediation items that are not meant to be published with the code.
+SCAN_REPORT.md

@@ -18,8 +18,7 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.apache.flink.api.java.utils.ParameterTool;
-
+import io.sophiadata.flink.compat.ParameterTool;
 import io.sophiadata.flink.sync.common.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -31,17 +30,17 @@ public class ParameterUtilTest {
     public void testValidParameters() {
         // Create a ParameterTool instance with valid parameters
         String[] args = {
-                "--sinkUrl", "jdbc:mysql://localhost:3306/mydb",
-                "--sinkUsername", "user",
-                "--sinkPassword", "password",
-                "--hostname", "localhost",
-                "--port", "5432",
-                "--username", "user",
-                "--password", "password",
-                "--databaseName", "mydb",
-                "--tableList", "table1,table2",
-                "--setParallelism", "4",
-                "--cdcSourceName", "source"
+            "--sinkUrl", "jdbc:mysql://localhost:3306/mydb",
+            "--sinkUsername", "user",
+            "--sinkPassword", "password",
+            "--hostname", "localhost",
+            "--port", "5432",
+            "--username", "user",
+            "--password", "password",
+            "--databaseName", "mydb",
+            "--tableList", "table1,table2",
+            "--setParallelism", "4",
+            "--cdcSourceName", "source"
         };
         ParameterTool params = ParameterTool.fromArgs(args);
 

@@ -17,36 +17,91 @@
     </properties>
     
     <dependencies>
+        <!--
+          Flink version-compatibility shim: provides a stable io.sophiadata.flink.compat.ParameterTool
+          across Flink 1.20 and Flink 2.x, where the real class moved package.
+        -->
+        <dependency>
+            <groupId>io.sophiadata</groupId>
+            <artifactId>flink-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--
+          Testcontainers modules must all be on the same release; mixing versions (e.g. 1.15.3 for
+          mysql and 1.17.6 for junit-jupiter, as this POM previously did) risks NoSuchMethodError at
+          runtime. All of them inherit ${testcontainers.version} from the parent.
+        -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mysql</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.17.6</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.8.1</version>
-            <scope>test</scope>
         </dependency>
+        <!--
+          MySQL JDBC driver. Required at test scope for the schema reader and end-to-end test, and at
+          runtime for the JDBC sink connector (which is declared `provided`).
+        -->
         <dependency>
-            <groupId>com.github.javafaker</groupId>
-            <artifactId>javafaker</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
+        <!--
+          NOTE: com.github.javafaker:javafaker was removed. No source file referenced it, and its POM
+          declares snakeyaml with the bogus version "android", resolving to
+          org.yaml:snakeyaml:jar:android:1.23 with 8 known advisories. dependencyManagement cannot
+          override that entry because the version string is not a real release.
+        -->
+        <!--
+          Version-neutral Flink CDC access. The compat module owns the CDC dependency and the
+          cdc2/cdc3 source sets, so this module contains no CDC-version-specific code.
+        -->
+        <!--
+          Flink CDC 3.x MySQL source connector. Both supported version lines (Flink 1.20 and Flink
+          2.2) use CDC 3.x with the same org.apache.flink.cdc.* package, so the connector is
+          referenced directly; only its version changes between lines.
+        -->
         <dependency>
-            <groupId>com.ververica</groupId>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-mysql-cdc</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+          Debezium and Kafka Connect types appear in the deserializer SPI signatures. Declared
+          explicitly because a `provided` dependency is not inherited from the connector.
+        -->
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-core</artifactId>
+            <version>${debezium.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>${kafka-clients.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+          The CDC source implements Flink's Source API, which lives in flink-connector-base. It is a
+          transitive dependency of most connectors, but is declared explicitly here because tests
+          that construct a source need it on the test classpath (a `provided` transitive dependency
+          is not propagated to the test scope).
+        -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-base</artifactId>
+            <version>${flink.connector.base.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -58,15 +113,21 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-json</artifactId>
         </dependency>
+        <!--
+          flink-java exists only on the Flink 1.20 line (the DataSet API was removed in Flink 2.0).
+          The artifactId comes from ${flink.java.artifact} so the 2.x line can substitute a
+          placeholder; the project's only flink-java usage, ParameterTool, moved to flink-core in 2.x
+          and is reached through io.sophiadata.flink.compat.ParameterTool.
+        -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-java</artifactId>
+            <artifactId>${flink.java.artifact}</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- fastjson -->
+        <!-- fastjson2 -->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -84,9 +145,14 @@
             <artifactId>flink-table-planner_${scala.version}</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--
+          JDBC connector. The artifactId is version-line specific (Flink 1.20 uses the aggregate
+          flink-connector-jdbc; Flink 2.x only publishes the per-database flink-connector-jdbc-mysql),
+          so it comes from ${flink.jdbc.artifact} rather than being written literally here.
+        -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-jdbc</artifactId>
+            <artifactId>${flink.jdbc.artifact}</artifactId>
             <scope>provided</scope>
         </dependency>
         
@@ -119,10 +185,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
+        <!--
+          Only ONE SLF4J binding may be present. slf4j-log4j12 (SLF4J 1.x -> log4j 1.2) was
+          removed because log4j-slf4j-impl (SLF4J -> log4j2) is the binding we actually want;
+          having both made SLF4J log a "multiple bindings" warning and pick one arbitrarily.
+          log4j-1.2-api already provides the legacy log4j 1.x bridge.
+        -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -158,18 +226,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka</artifactId>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka-clients</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -235,5 +291,144 @@
             </plugin>
         </plugins>
     </build>
+    
+    <profiles>
+        <!--
+          Source-set selection for the ParameterTool shim.
+
+          Flink 2.0 moved ParameterTool from org.apache.flink.api.java.utils (flink-java, removed in
+          2.0) to org.apache.flink.util (flink-core). A package rename cannot be absorbed by a
+          dependency property, so exactly one of these two tiny implementations is compiled:
+
+            default / -Pflink-1.20  -> src/main/flink20/java  (api.java.utils)
+            -Pflink-2.2             -> src/main/flink2/java   (util)
+
+          Maven cannot switch a child module's source roots from the parent, and
+          <activation><property> only matches -D properties, so this uses activeByDefault plus an
+          explicit -P selector. build.sh / build.cmd pass both flags.
+        -->
+        <profile>
+            <id>flink20</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink20-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink20/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>flink2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>add-flink2-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/flink2/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--
+          Flink 2.x shaded-Guava workaround — upstream FLINK-39429, still Open and unfixed.
+
+          The Flink 2.2 stack needs flink-shaded-guava 33.4.0 (package guava33), while the CDC 3.6.0
+          connector's IncrementalSourceStreamFetcher hard-references the guava31 shade. Both are the
+          SAME Maven artifact (org.apache.flink:flink-shaded-guava), so Maven resolves only one
+          version and the other package goes missing:
+            NoClassDefFoundError: org/apache/flink/shaded/guava33/.../Lists               (Flink core)
+            NoClassDefFoundError: org/apache/flink/shaded/guava31/.../ThreadFactoryBuilder (CDC)
+
+          The two jars hold disjoint package trees (verified: 0 overlapping classes), so both can sit
+          on the classpath safely. This profile therefore:
+            1. declares guava33 as a normal test dependency, and
+            2. copies the guava31 jar and appends it to the Surefire classpath,
+          working around the packaging conflict without patching the connector.
+
+          Remove this profile once FLINK-39429 is fixed and a CDC release carries the fix.
+        -->
+        <profile>
+            <id>flink2-test-guava</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-shaded-guava</artifactId>
+                    <version>${flink.shaded.guava.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.7.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-cdc-shaded-guava</id>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.apache.flink</groupId>
+                                            <artifactId>flink-shaded-guava</artifactId>
+                                            <version>${flink.cdc.shaded.guava.version}</version>
+                                            <outputDirectory>${project.build.directory}/cdc-shaded-guava</outputDirectory>
+                                            <destFileName>flink-shaded-guava31.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.directory}/cdc-shaded-guava/flink-shaded-guava31.jar</additionalClasspathElement>
+                            </additionalClasspathElements>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     
 </project>

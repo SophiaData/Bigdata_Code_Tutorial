@@ -19,42 +19,35 @@
 # See https://pre-commit.com/hooks.html for more hooks
 
 default_stages: [commit, push]
-default_language_version:
-  # force all python hooks to run python3
-  python: python3
+
 repos:
-  # Python API Hooks
-  - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+  # This is a Java/Maven repository; the previous configuration installed four Python linters
+  # (isort, black, flake8, autoflake) that could never match a file, since the repo contains no
+  # .py sources. The generic file hygiene hooks below are language-agnostic and actually apply.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
-      - id: isort
-        name: isort (python)
-  - repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-      - id: black
-  - repo: https://github.com/pycqa/flake8
-    rev: 4.0.1
-    hooks:
-      - id: flake8
-        additional_dependencies: [
-          'flake8-docstrings>=1.6',
-          'flake8-black>=0.2',
-        ]
-  - repo: https://github.com/pycqa/autoflake
-    rev: v1.4
-    hooks:
-      - id: autoflake
-        args: [
-          --remove-all-unused-imports,
-          --ignore-init-module-imports,
-          --in-place
-        ]
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-xml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      # NOTE: `mixed-line-ending` / `line-ending` hooks are deliberately NOT enabled.
+      # This repository is developed on Windows with core.autocrlf=true, so a hook that forces LF
+      # would rewrite every file and make spotless's sortPom report a whole-file "format violation"
+      # on pom.xml (the same trap that a `* text=auto eol=lf` .gitattributes rule falls into).
+      # Line endings are left to git's autocrlf setting.
+
   - repo: local
     hooks:
-      # Spotless Hooks
+      # Java formatting. spotless:apply rewrites files in place, matching the previous behaviour.
+      # Requires a JDK on PATH.
       - id: spotless
-        name: spotless lint
+        name: spotless (java formatting)
         entry: ./mvnw spotless:apply
-        language: script
+        language: system
+        files: '\.java$|pom\.xml$'
         pass_filenames: false

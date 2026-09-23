@@ -18,24 +18,38 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.junit.Test;
-import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class PropertiesUtilTest {
+/**
+ * Tests {@link PropertiesUtil}.
+ *
+ * <p>Previously this class mixed a JUnit 4 {@code @Test} annotation with JUnit 5 assertions, which
+ * meant the JUnit Platform could silently skip it (JUnit 4's {@code @Test} is not discoverable
+ * without the vintage engine). It is now uniformly JUnit 5.
+ */
+class PropertiesUtilTest {
+
     @Test
-    public void testLoadSuccess() {
+    void testLoadSuccess() {
         String content = "k1=v1\nk2=v2";
         Properties props = PropertiesUtil.load(content);
-        assertEquals("v1", props.get("k1"));
+        assertEquals("v1", props.getProperty("k1"));
+        assertEquals("v2", props.getProperty("k2"));
     }
 
     @Test
-    public void testLoadWithNullContent() {
-        Executable exec = () -> PropertiesUtil.load(null);
-        assertThrows(IllegalArgumentException.class, exec);
+    void testLoadWithNullContent() {
+        assertThrows(IllegalArgumentException.class, () -> PropertiesUtil.load(null));
+    }
+
+    @Test
+    void testLoadWithEmptyContent() {
+        Properties props = PropertiesUtil.load("");
+        assertEquals(0, props.size());
     }
 }

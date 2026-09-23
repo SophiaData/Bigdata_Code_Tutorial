@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,6 +21,9 @@ package io.sophiadata.flink.sync.table;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.flink.cdc.debezium.table.DeserializationRuntimeConverter;
+import org.apache.flink.cdc.debezium.utils.TemporalConversions;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
@@ -30,11 +34,6 @@ import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Collector;
 
-import org.apache.flink.shaded.guava30.com.google.common.collect.Maps;
-
-import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
-import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
-import com.ververica.cdc.debezium.utils.TemporalConversions;
 import io.debezium.data.Envelope;
 import io.debezium.data.SpecialValueDecimal;
 import io.debezium.data.VariableScaleDecimal;
@@ -57,14 +56,29 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-/** (@SophiaData) (@date 2023/5/31 19:06). */
+/**
+ * Converts Debezium change events into {@code Tuple2<tableName, Row>} pairs.
+ *
+ * <p>Implements Flink CDC 3.x's {@link DebeziumDeserializationSchema} directly. Both supported
+ * version lines (Flink 1.20 and Flink 2.2) use CDC 3.x with the {@code org.apache.flink.cdc.*}
+ * package, so no compatibility layer is required.
+ *
+ * <p>The class is {@link java.io.Serializable} through that interface, which matters because Flink
+ * serializes the source, and therefore this deserializer, before shipping it to task managers.
+ *
+ * <p>(@SophiaData) (@date 2023/5/31 19:06).
+ */
 public class CustomDebeziumDeserializer
         implements DebeziumDeserializationSchema<Tuple2<String, Row>> {
+
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOG = LoggerFactory.getLogger(CustomDebeziumDeserializer.class);
 
     private final Map<String, DeserializationRuntimeConverter> physicalConverterMap =
-            Maps.newConcurrentMap();
+            new ConcurrentHashMap<>();
 
     public CustomDebeziumDeserializer(Map<String, RowType> tableRowTypeMap) {
         for (String tableName : tableRowTypeMap.keySet()) {
@@ -77,12 +91,22 @@ public class CustomDebeziumDeserializer
     @Override
     public void deserialize(SourceRecord record, Collector<Tuple2<String, Row>> out)
             throws Exception {
+
         Envelope.Operation op = Envelope.operationFor(record);
         Struct value = (Struct) record.value();
         Schema valueSchema = record.valueSchema();
         Struct source = value.getStruct("source");
         String tableName = source.get("table").toString();
         DeserializationRuntimeConverter physicalConverter = physicalConverterMap.get(tableName);
+        if (physicalConverter == null) {
+            // A table present in the binlog but not registered in tableRowTypeMap. Previously this
+            // produced a NullPointerException deep in convert(); fail with an actionable message.
+            throw new IllegalStateException(
+                    "Received a change event for table '"
+                            + tableName
+                            + "' but no schema was registered for it. Registered tables: "
+                            + physicalConverterMap.keySet());
+        }
         if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
             Row insert = extractAfterRow(value, valueSchema, physicalConverter);
             insert.setKind(RowKind.INSERT);

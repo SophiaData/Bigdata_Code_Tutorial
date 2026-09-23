@@ -18,8 +18,7 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.apache.flink.api.java.utils.ParameterTool;
-
+import io.sophiadata.flink.compat.ParameterTool;
 import io.sophiadata.flink.sync.common.Constants;
 
 /** (@SophiaData) (@date 2023/5/31 19:05). */
@@ -67,5 +66,47 @@ public class ParameterUtil {
 
     public static String cdcSourceName(ParameterTool params) {
         return params.get("cdcSourceName", Constants.cdcSourceName);
+    }
+
+    /**
+     * Sink table name pattern. Must contain {@code %s}, which is replaced with the source table
+     * name. The same value is used when creating the sink table and when inserting into it.
+     */
+    public static String sinkPrefix(ParameterTool params) {
+        String prefix = params.get("sinkPrefix", Constants.sinkPrefix);
+        if (!prefix.contains("%s")) {
+            throw new IllegalArgumentException(
+                    "sinkPrefix must contain '%s' as the table-name placeholder, but was: "
+                            + prefix);
+        }
+        return prefix;
+    }
+
+    /**
+     * Normalises a table list into the {@code database.table} form the CDC connector requires.
+     *
+     * <p>A bare table name is qualified with the database, {@code .*} becomes {@code database.*},
+     * and already-qualified entries pass through unchanged.
+     *
+     * @param databaseName the source database
+     * @param tableList comma-separated table list, or {@code .*}
+     * @return a connector-ready table list
+     */
+    public static String normalizeTableList(String databaseName, String tableList) {
+        if (tableList == null || tableList.trim().isEmpty() || ".*".equals(tableList.trim())) {
+            return databaseName + ".*";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String raw : tableList.split(",")) {
+            String table = raw.trim();
+            if (table.isEmpty()) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            sb.append(table.contains(".") ? table : databaseName + "." + table);
+        }
+        return sb.length() == 0 ? databaseName + ".*" : sb.toString();
     }
 }

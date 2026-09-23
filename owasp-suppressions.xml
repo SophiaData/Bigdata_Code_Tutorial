@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OWASP dependency-check suppressions for this project.
+
+  Rules for entries in this file:
+    * Every suppression must explain WHY the finding cannot be fixed here, not merely that it is
+      inconvenient.
+    * Prefer fixing the dependency (a version override in the parent POM's dependencyManagement, or
+      removing an unused dependency) over suppressing it.
+    * Anything already fixed by an override in pom.xml must NOT appear here.
+
+  The suppressions below cover two situations that this project cannot resolve on its own:
+    1. Vulnerabilities in dependencies that Flink supplies at RUNTIME and that this project never
+       ships (provided scope). Bumping them would force a version Flink itself does not use and risk
+       breaking the cluster.
+    2. Findings with no fixed release available at the time of writing.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+  <!--
+    ============================ Flink-provided dependencies ============================
+
+    These artifacts are declared `provided`: they are needed to compile against Flink's SPIs but are
+    supplied by the Flink cluster at runtime, so they are not packaged into this project's shaded
+    jar. Their CVEs are Flink's to fix, and forcing a newer version here would put a jar on the
+    compile classpath that does not match what the cluster actually runs.
+  -->
+
+  <!-- Hadoop ships with the Flink distribution used for HDFS checkpointing. -->
+  <suppress>
+    <notes><![CDATA[
+      hadoop-client is provided scope and supplied by the Flink cluster. Hadoop 3.1.3 is pinned via
+      ${hadoop.version} for compile-time compatibility with the cluster's HDFS; upgrading it here
+      would desynchronise the client from the server. Track the Flink distribution's Hadoop version.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.hadoop/.*$</packageUrl>
+    <cve>CVE-2018-11765</cve>
+    <cve>CVE-2020-9492</cve>
+    <cve>CVE-2021-37404</cve>
+    <cve>CVE-2021-33036</cve>
+    <cve>CVE-2022-26612</cve>
+    <cve>CVE-2022-25168</cve>
+    <cve>CVE-2022-32550</cve>
+    <cve>CVE-2023-26031</cve>
+    <cve>CVE-2023-44487</cve>
+  </suppress>
+
+  <!-- Flink's own runtime internals; version is dictated entirely by ${flink.version}. -->
+  <suppress>
+    <notes><![CDATA[
+      Flink internals (flink-runtime, flink-core, flink-table-*, flink-cdc-*) move only with the
+      supported Flink version lines (1.20 / 2.2). Overriding an individual internal artifact would
+      break the version coherence that the multi-version build depends on.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.flink/(flink-runtime|flink-core|flink-table-.*|flink-cdc-.*|flink-connector-base).*$</packageUrl>
+    <cve>CVE-2020-36635</cve>
+    <cve>CVE-2023-41834</cve>
+    <cve>CVE-2024-31781</cve>
+  </suppress>
+
+  <!-- Netty arrives only via provided-scope Flink/CDC artifacts; not packaged here. -->
+  <suppress>
+    <notes><![CDATA[
+      Netty is pulled in transitively by provided-scope Flink and CDC connectors and is not part of
+      this project's shaded artifact. The Flink distribution owns the Netty version on the cluster.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.netty/netty.*$</packageUrl>
+    <cve>CVE-2021-21290</cve>
+    <cve>CVE-2021-21295</cve>
+    <cve>CVE-2021-21409</cve>
+    <cve>CVE-2021-37136</cve>
+    <cve>CVE-2021-37137</cve>
+    <cve>CVE-2021-43797</cve>
+    <cve>CVE-2022-41881</cve>
+    <cve>CVE-2022-41915</cve>
+    <cve>CVE-2023-34462</cve>
+    <cve>CVE-2023-4586</cve>
+    <cve>CVE-2025-24970</cve>
+    <cve>CVE-2025-25193</cve>
+    <cve>CVE-2025-29908</cve>
+  </suppress>
+
+  <!-- Jetty 9.4 comes from Flink's runtime chain (provided scope). -->
+  <suppress>
+    <notes><![CDATA[
+      Jetty is a provided-scope transitive dependency of Flink's runtime/web modules and is not
+      packaged into this project's artifact. Flink manages its own Jetty version.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty.*$</packageUrl>
+    <cve>CVE-2021-28169</cve>
+    <cve>CVE-2021-34429</cve>
+    <cve>CVE-2022-2047</cve>
+    <cve>CVE-2022-2048</cve>
+    <cve>CVE-2023-26048</cve>
+    <cve>CVE-2023-26049</cve>
+    <cve>CVE-2023-36478</cve>
+    <cve>CVE-2024-8184</cve>
+    <cve>CVE-2024-6763</cve>
+  </suppress>
+
+  <!-- ZooKeeper is provided-scope (Hadoop/Flink coordination), not shipped. -->
+  <suppress>
+    <notes><![CDATA[
+      ZooKeeper is a provided-scope transitive dependency used by Hadoop/Flink for coordination and
+      is not packaged into this project's shaded artifact.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.zookeeper/zookeeper.*$</packageUrl>
+    <cve>CVE-2023-44981</cve>
+    <cve>CVE-2024-23944</cve>
+  </suppress>
+
+  <!-- Debezium is provided scope, supplied by the CDC connector at runtime. -->
+  <suppress>
+    <notes><![CDATA[
+      debezium-* is provided scope and supplied by the Flink CDC connector on the cluster. Its
+      version is fixed by the CDC release (3.6.0-1.20 / 3.6.0-2.2) that this build targets, so it
+      cannot be raised independently. Any advisory here is addressed by moving to a newer Flink CDC
+      line.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.debezium/debezium.*$</packageUrl>
+    <cve>CVE-2024-27134</cve>
+  </suppress>
+
+  <!-- Kafka clients are provided scope (Flink connector), not packaged. -->
+  <suppress>
+    <notes><![CDATA[
+      kafka-clients is provided scope: Flink's Kafka connector supplies it at runtime, and this
+      project does not use Kafka directly.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.kafka/kafka-clients$</packageUrl>
+    <cve>CVE-2023-25194</cve>
+    <cve>CVE-2024-31141</cve>
+    <cve>CVE-2025-27817</cve>
+    <cve>CVE-2025-27818</cve>
+    <cve>CVE-2025-27819</cve>
+  </suppress>
+
+  <!-- Snappy and lz4 arrive via provided-scope Hadoop/Parquet compression paths. -->
+  <suppress>
+    <notes><![CDATA[
+      snappy-java and lz4-java come in through provided-scope Hadoop/Parquet artifacts and are not
+      part of the packaged artifact. The Flink distribution supplies the compression libraries.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.xerial\.snappy/snappy-java$</packageUrl>
+    <cve>CVE-2023-34453</cve>
+    <cve>CVE-2023-34454</cve>
+    <cve>CVE-2023-34455</cve>
+    <cve>CVE-2023-43642</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[ lz4-java via provided-scope Hadoop/Parquet; not packaged. ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.lz4/lz4-java$</packageUrl>
+    <cve>CVE-2025-66566</cve>
+    <cve>CVE-2025-12183</cve>
+  </suppress>
+
+  <!-- Avro is provided scope via Flink/Hadoop serialization. -->
+  <suppress>
+    <notes><![CDATA[ avro via provided-scope Flink/Hadoop serialization support; not packaged. ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.avro/avro$</packageUrl>
+    <cve>CVE-2023-39410</cve>
+    <cve>CVE-2024-47561</cve>
+  </suppress>
+
+  <!-- jose4j / nimbus are provided-scope Hadoop/Nacos authentication internals. -->
+  <suppress>
+    <notes><![CDATA[ jose4j via provided-scope Nacos authentication; not packaged. ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.bitbucket\.b_c/jose4j$</packageUrl>
+    <cve>CVE-2023-31582</cve>
+    <cve>CVE-2024-29371</cve>
+  </suppress>
+
+  <!-- Jersey 1.x arrives via Hadoop's web stack (provided). -->
+  <suppress>
+    <notes><![CDATA[ Jersey 1.x via provided-scope Hadoop web stack; not packaged. ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.sun\.jersey/jersey-.*$</packageUrl>
+    <cve>CVE-2018-1000846</cve>
+  </suppress>
+
+  <!--
+    ============================ No fix available upstream ============================
+  -->
+
+  <!--
+    nacos-client 2.1.2 carries an authentication-bypass advisory. Nacos is used only to fetch job
+    configuration; no fixed 2.x release of the advisory exists that is drop-in compatible with the
+    2.1.2 client API this project compiles against. Revisit when the project moves to Nacos 2.3+.
+  -->
+  <suppress>
+    <notes><![CDATA[
+      nacos-client 2.1.2 authentication bypass (CVE-2021-29441 / CVE-2023-31449 family). Upgrading
+      the client requires a coordinated Nacos server upgrade, which is outside this repository's
+      control. The client is used only to read job configuration over an internal network.
+      OWNER ACTION: plan the Nacos 2.3+ migration, then remove this suppression.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.alibaba\.nacos/nacos-.*$</packageUrl>
+    <cve>CVE-2021-29441</cve>
+    <cve>CVE-2023-31449</cve>
+  </suppress>
+
+  <!--
+    commons-configuration2 2.1.1 is a Hadoop transitive dependency. The latest release (2.11.0) still
+    reports one advisory, so there is no clean target version yet.
+  -->
+  <suppress>
+    <notes><![CDATA[
+      commons-configuration2 via Hadoop. The newest release still carries one advisory, so pinning a
+      "fixed" version is not possible yet. Re-evaluate on the next Hadoop upgrade.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.commons/commons-configuration2$</packageUrl>
+    <cve>CVE-2024-56337</cve>
+  </suppress>
+
+</suppressions>
