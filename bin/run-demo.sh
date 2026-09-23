@@ -21,10 +21,13 @@ fi
 # Force JDK 11 regardless of what the caller has JAVA_HOME set to. The shell often has
 # JAVA_HOME=zulu-8 from older setups, and using JDK 8 causes NoClassDefFoundError at
 # startup (Flink classes are compiled to class file 55.0).
+#
+# This is a RUNTIME choice: the artifacts target Java 11, so a Java 11 (or newer) runtime is
+# required. The build itself uses JDK 17 — see .mvn/jvm.config.
 DEFAULT_JAVA_HOME=""
 if [ ! -x "$DEFAULT_JAVA_HOME/bin/java" ]; then
-    echo "error: default JDK 11 not found at $DEFAULT_JAVA_HOME" >&2
-    echo "       export JAVA_HOME=/path/to/jdk11 before running this script" >&2
+    echo "error: default JDK not found at $DEFAULT_JAVA_HOME" >&2
+    echo "       export JAVA_HOME=/path/to/jdk-11-or-newer before running this script" >&2
     exit 2
 fi
 export JAVA_HOME="$DEFAULT_JAVA_HOME"

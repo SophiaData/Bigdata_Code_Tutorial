@@ -21,6 +21,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!--
+          Output target: every artifact is compiled to Java 11 bytecode (class file version 55) and
+          stays runnable on a Java 11 runtime. This is independent of the JDK used to run the build,
+          which is 17 — see .mvn/jvm.config and the CI workflow. Keeping this at 11 is what makes the
+          newer toolchain usable without dropping Java 11 support for consumers.
+        -->
         <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -700,13 +706,35 @@
                     <testSource>${java.version}</testSource>
                     <testTarget>${java.version}</testTarget>
                     <!--
-                        Error Prone 2.31.0 (latest JDK 11-compatible version).
-                        Blocks the build on ERROR-level checks.
+                        Error Prone, run as a javac plugin. Blocks the build on ERROR-level checks.
                         See: https://errorprone.info/docs/installation
                     -->
                     <compilerArgs>
                         <arg>-XDcompilePolicy=simple</arg>
-                        <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode</arg>
+                        <!--
+                          Required by ErrorProne on JDK 16+. javac's default should-stop policy is
+                          INIT, which ErrorProne does not support; FLOW makes it analyse after flow
+                          analysis instead, and the plugin refuses to start without the flag.
+                          The matching add-exports flags live in .mvn/jvm.config, because ErrorProne
+                          runs inside the Maven JVM rather than the compiler process.
+                        -->
+                        <arg>--should-stop=ifError=FLOW</arg>
+                        <!--
+                          SameNameButDifferent is disabled because the check itself crashes rather
+                          than reporting anything: it hits a NullPointerException inside
+                          FindIdentifiers.findIdent while walking a compilation unit, which fails the
+                          build with "An unhandled exception was thrown by the Error Prone static
+                          analysis plugin".
+
+                          This is an upstream defect, not a finding about this code - it reproduces on
+                          this codebase regardless of the Error Prone version (2.31.0 through 2.50.0)
+                          and has been open upstream since 2022:
+                          https://github.com/google/error-prone/issues/3245
+
+                          Every other check stays enabled. Re-enable this one once the upstream issue
+                          is fixed.
+                        -->
+                        <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -Xep:SameNameButDifferent:OFF</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>

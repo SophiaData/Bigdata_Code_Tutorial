@@ -27,6 +27,8 @@ import org.apache.flink.util.OutputTag;
 
 import io.sophiadata.flink.base.BaseCode;
 
+import java.util.Locale;
+
 /** (@SophiaData) (@date 2022/10/29 19:12). */
 @SuppressWarnings("deprecation")
 public class Sideout extends BaseCode {
@@ -47,7 +49,8 @@ public class Sideout extends BaseCode {
                                     public void flatMap(
                                             final String value, final Collector<String> out)
                                             throws Exception {
-                                        for (final String split : value.toLowerCase().split(",")) {
+                                        for (final String split :
+                                                value.toLowerCase(Locale.ROOT).split(",")) {
                                             if (!split.isEmpty()) {
                                                 out.collect(split);
                                             }

@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -273,7 +274,11 @@ public final class MysqlUtil {
      * 带精度的类型（如 "DECIMAL(10,2)"）会保留原始精度。
      */
     public static String mapType(final String cdcType) {
-        final String upper = cdcType.toUpperCase();
+        // Locale.ROOT: the type name is an ASCII protocol token, so the result must not depend on
+        // the
+        // default locale. Without it, a Turkish locale maps "i" to "İ" and the comparisons below
+        // silently stop matching. ErrorProne's StringCaseLocaleUsage flags this too.
+        final String upper = cdcType.toUpperCase(Locale.ROOT);
         if (containsWithPrecision(upper, "VARCHAR") || containsWithPrecision(upper, "CHAR")) {
             return withDefaultLength(cdcType, 255);
         }

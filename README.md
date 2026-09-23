@@ -51,8 +51,8 @@ chmod +x test-cdc.sh
 #### 构建
 
 ```bash
-# 切换到 JDK 11
-export JAVA_HOME=/path/to/jdk-11
+# 切换到 JDK 17（构建用；产物仍是 Java 11 字节码）
+export JAVA_HOME=/path/to/jdk-17
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 编译（跳过测试）

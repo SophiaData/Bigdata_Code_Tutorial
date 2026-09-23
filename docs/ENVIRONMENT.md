@@ -6,20 +6,24 @@
 
 | 软件 | 版本 | 必需 | 说明 |
 |------|------|------|------|
-| JDK | 11 | **是** | 项目使用 `<java.version>11</java.version>`，JDK 8 无法编译（class file version 55.0） |
+| JDK | **17**（构建） / **11**（产物目标） | **是** | 产物目标是 11（`<java.version>11</java.version>`，class file version 55.0）；**构建 JDK 用 17**，因为 ErrorProne / JUnit / spotless 的新版本都是 Java 17 字节码，JDK 11 的构建 JVM 加载不了 |
 | Maven | 3.8+ | **是** | 使用项目自带的 `./mvnw`，无需单独安装 |
 | Docker | 20.10+ | 可选 | 仅运行集成测试（`*IT`、`FlinkSqlWDSTest`）时需要 |
 
-### JDK 11 配置
+### JDK 17 配置（构建）
 
 ```bash
-# macOS 示例（使用 Corretto）
-export JAVA_HOME=/path/to/jdk-11
+# macOS 示例
+export JAVA_HOME=/path/to/jdk-17
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 验证版本
 java -version
-# 期望输出：openjdk version "11.0.x"
+# 期望输出：openjdk version "17.0.x"
+
+# 确认产物仍是 Java 11 字节码（构建后）
+javap -verbose -classpath flink-demo/target/classes io.sophiadata.flink.base.BaseCode | grep 'major version'
+# 应输出 55（= Java 11）
 ```
 
 > 如果使用 `direnv`，可以把上述 export 写入 `.envrc` 实现自动切换。
@@ -179,7 +183,7 @@ export MYSQL_SINK_PASSWORD=root
 
 **原因**：使用了 JDK 8 编译项目。
 
-**解决**：切换到 JDK 11。
+**解决**：切换到 JDK 17（构建 JDK）。产物目标仍是 Java 11。
 
 ### 2. 集成测试报 `assumeTrue` 失败
 
