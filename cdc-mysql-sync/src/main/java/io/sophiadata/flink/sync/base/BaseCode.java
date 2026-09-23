@@ -23,9 +23,10 @@ import org.apache.flink.configuration.ExternalizedCheckpointRetention;
 import org.apache.flink.configuration.RestartStrategyOptions;
 import org.apache.flink.configuration.StateBackendOptions;
 import org.apache.flink.core.execution.CheckpointingMode;
-import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+
+import io.sophiadata.flink.compat.FlinkCompat;
 
 import java.time.Duration;
 
@@ -107,8 +108,7 @@ public abstract class BaseCode {
             env.enableCheckpointing(5 * 60 * 1000);
         } else {
             // Override via -DcheckpointStorage=file:///path or hdfs://nameservice/path
-            env.getCheckpointConfig()
-                    .setCheckpointStorage(new Path("hdfs://hadoop1:8020/flink/" + ckPathAndJobId));
+            FlinkCompat.setCheckpointStorage(env, "hdfs://hadoop1:8020/flink/" + ckPathAndJobId);
             env.enableCheckpointing(60 * 1000);
         }
         env.getCheckpointConfig().setCheckpointingConsistencyMode(CheckpointingMode.EXACTLY_ONCE);

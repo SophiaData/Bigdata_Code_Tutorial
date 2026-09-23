@@ -26,6 +26,8 @@ import org.apache.flink.core.execution.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import io.sophiadata.flink.compat.FlinkCompat;
+
 import java.time.Duration;
 
 /** (@SophiaData) (@date 2022/10/25 10:58). */
@@ -82,7 +84,7 @@ public abstract class BaseSql {
         if (localpath) {
             env.enableCheckpointing(3000);
         } else {
-            env.getCheckpointConfig().setCheckpointStorage(ckPath);
+            FlinkCompat.setCheckpointStorage(env, ckPath);
             env.enableCheckpointing(60 * 1000);
         }
         env.getCheckpointConfig().setCheckpointingConsistencyMode(CheckpointingMode.EXACTLY_ONCE);

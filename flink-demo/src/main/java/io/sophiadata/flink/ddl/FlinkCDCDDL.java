@@ -20,13 +20,13 @@ package io.sophiadata.flink.ddl;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import io.sophiadata.flink.base.BaseCode;
+import io.sophiadata.flink.compat.ParameterTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

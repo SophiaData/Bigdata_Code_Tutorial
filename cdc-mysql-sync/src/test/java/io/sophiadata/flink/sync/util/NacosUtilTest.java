@@ -18,8 +18,7 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.apache.flink.api.java.utils.ParameterTool;
-
+import io.sophiadata.flink.compat.ParameterTool;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

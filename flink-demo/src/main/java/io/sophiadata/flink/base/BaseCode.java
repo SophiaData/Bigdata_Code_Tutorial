@@ -26,6 +26,7 @@ import org.apache.flink.configuration.StateBackendOptions;
 import org.apache.flink.core.execution.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import io.sophiadata.flink.compat.FlinkCompat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public abstract class BaseCode {
         if (localpath) {
             env.enableCheckpointing(3000);
         } else {
-            env.getCheckpointConfig().setCheckpointStorage(ckPath);
+            FlinkCompat.setCheckpointStorage(env, ckPath);
             env.enableCheckpointing(60 * 1000);
         }
         env.getCheckpointConfig().setCheckpointingConsistencyMode(CheckpointingMode.EXACTLY_ONCE);

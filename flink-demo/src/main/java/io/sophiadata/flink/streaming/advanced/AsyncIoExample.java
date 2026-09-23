@@ -18,7 +18,7 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
-import org.apache.flink.configuration.Configuration;
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.streaming.api.datastream.AsyncDataStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -80,7 +80,7 @@ public class AsyncIoExample extends BaseCode {
         private transient ExecutorService executor;
 
         @Override
-        public void open(final Configuration parameters) {
+        public void open(final OpenContext openContext) {
             executor = Executors.newFixedThreadPool(10);
         }
 

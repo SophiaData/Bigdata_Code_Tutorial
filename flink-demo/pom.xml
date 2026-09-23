@@ -15,6 +15,15 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
     <dependencies>
+        <!--
+          Flink version compatibility layer: a stable ParameterTool and helpers for the APIs Flink 2.0
+          removed, so this module compiles unchanged against Flink 1.20 and Flink 2.x.
+        -->
+        <dependency>
+            <groupId>io.sophiadata</groupId>
+            <artifactId>flink-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-mysql-cdc</artifactId>
@@ -90,9 +99,10 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- flink-java exists only on the 1.20 line; see ${flink.java.artifact} in the root POM. -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-java</artifactId>
+            <artifactId>${flink.java.artifact}</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- fastjson -->
@@ -456,5 +466,76 @@
             </plugin>
         </plugins>
     </build>
+    
+    <profiles>
+        <!--
+          Flink 2.x test-runtime workaround for upstream FLINK-39429 (still Open).
+
+          Two shaded Guava builds are needed at once: Flink's runtime code reflects into
+          org.apache.flink.shaded.guava33, while the CDC connector needs
+          org.apache.flink.shaded.guava31. Both live in the SAME artifact
+          (org.apache.flink:flink-shaded-guava), so Maven resolves only one version and the other
+          package goes missing at test time:
+
+            NoClassDefFoundError: org/apache/flink/shaded/guava33/.../Lists
+
+          The two jars carry disjoint package trees (guava31/* vs guava33/*, zero overlapping classes),
+          so both can sit on the classpath safely. This profile declares guava33 as a normal test
+          dependency (the version Maven resolves) and appends the guava31 jar to the Surefire
+          classpath, working around the packaging conflict without patching the connector.
+
+          Only needed on the Flink 2.x line; Flink 1.20 has no such split. Remove once FLINK-39429 is
+          fixed and a CDC release carries the fix.
+        -->
+        <profile>
+            <id>flink2-test-guava</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-shaded-guava</artifactId>
+                    <version>${flink-shaded-guava.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.7.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-cdc-shaded-guava</id>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.apache.flink</groupId>
+                                            <artifactId>flink-shaded-guava</artifactId>
+                                            <version>${flink-cdc-shaded-guava.version}</version>
+                                            <outputDirectory>${project.build.directory}/cdc-shaded-guava</outputDirectory>
+                                            <destFileName>flink-shaded-guava31.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.directory}/cdc-shaded-guava/flink-shaded-guava31.jar</additionalClasspathElement>
+                            </additionalClasspathElements>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     
 </project>

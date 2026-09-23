@@ -18,9 +18,10 @@
 
 package io.sophiadata.flink.paimon.mysql;
 
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+
+import io.sophiadata.flink.compat.ParameterTool;
 
 /**
  * MySQL to Paimon sync using pure SQL (Flink SQL Client compatible).

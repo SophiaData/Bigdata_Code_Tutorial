@@ -17,6 +17,15 @@
     </properties>
     
     <dependencies>
+        <!--
+          Flink version compatibility layer: a stable ParameterTool and helpers for the APIs Flink 2.0
+          removed, so this module compiles unchanged against Flink 1.20 and Flink 2.x.
+        -->
+        <dependency>
+            <groupId>io.sophiadata</groupId>
+            <artifactId>flink-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- CVE-2024-25710/CVE-2024-26308: 排除 commons-compress 旧版本 -->
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -140,9 +149,10 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-json</artifactId>
         </dependency>
+        <!-- flink-java exists only on the 1.20 line; see ${flink.java.artifact} in the root POM. -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-java</artifactId>
+            <artifactId>${flink.java.artifact}</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- fastjson -->

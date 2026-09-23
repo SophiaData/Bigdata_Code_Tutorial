@@ -18,10 +18,10 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -86,7 +86,7 @@ public class CoProcessFunctionExample extends BaseCode {
         private transient ValueState<Double> thresholdState;
 
         @Override
-        public void open(final Configuration parameters) throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             thresholdState =
                     getRuntimeContext()
                             .getState(new ValueStateDescriptor<>("threshold", Double.class));

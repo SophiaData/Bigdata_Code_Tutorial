@@ -18,11 +18,10 @@
 
 package io.sophiadata.flink.sync.util;
 
-import org.apache.flink.api.java.utils.ParameterTool;
-
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
+import io.sophiadata.flink.compat.ParameterTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

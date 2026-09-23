@@ -18,11 +18,11 @@
 
 package io.sophiadata.flink.sync;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.cdc.common.data.GenericRecordData;
 import org.apache.flink.cdc.common.event.DataChangeEvent;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.event.OperationType;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -93,8 +93,8 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
 
     /** 初始化 JDBC 连接池，关闭自动提交以支持批量事务。 */
     @Override
-    public void open(final Configuration parameters) throws Exception {
-        super.open(parameters);
+    public void open(final OpenContext openContext) throws Exception {
+        super.open(openContext);
         final HikariConfig config = new HikariConfig();
         config.setJdbcUrl(sinkJdbcUrl);
         config.setUsername(sinkUser);

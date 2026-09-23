@@ -27,7 +27,6 @@ import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.SimpleCondition;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.time.Time;
 
 import io.sophiadata.flink.base.BaseCode;
 
@@ -89,7 +88,7 @@ public class FlinkCepExample extends BaseCode {
                                     }
                                 })
                         .times(3)
-                        .within(Time.seconds(10));
+                        .within(Duration.ofSeconds(10));
 
         // 2. 应用 CEP 模式
         final PatternStream<Tuple3<String, String, Long>> patternStream =

@@ -13,6 +13,15 @@
     <description>Integration and end-to-end tests requiring external services (MySQL, MongoDB, Docker)</description>
     
     <dependencies>
+        <!--
+          Flink version compatibility layer: a stable ParameterTool and helpers for the APIs Flink 2.0
+          removed, so this module compiles unchanged against Flink 1.20 and Flink 2.x.
+        -->
+        <dependency>
+            <groupId>io.sophiadata</groupId>
+            <artifactId>flink-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Source modules under test -->
         <dependency>
             <groupId>io.sophiadata</groupId>

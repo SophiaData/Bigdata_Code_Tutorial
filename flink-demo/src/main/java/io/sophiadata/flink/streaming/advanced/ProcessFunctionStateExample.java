@@ -18,6 +18,7 @@
 
 package io.sophiadata.flink.streaming.advanced;
 
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.ReducingState;
@@ -105,8 +106,7 @@ public class ProcessFunctionStateExample extends BaseCode {
         private transient ValueState<Long> countState;
 
         @Override
-        public void open(final org.apache.flink.configuration.Configuration parameters)
-                throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             countState =
                     getRuntimeContext().getState(new ValueStateDescriptor<>("count", Long.class));
         }
@@ -132,8 +132,7 @@ public class ProcessFunctionStateExample extends BaseCode {
         private transient ListState<Long> recentState;
 
         @Override
-        public void open(final org.apache.flink.configuration.Configuration parameters)
-                throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             recentState =
                     getRuntimeContext()
                             .getListState(new ListStateDescriptor<>("recent", Long.class));
@@ -163,8 +162,7 @@ public class ProcessFunctionStateExample extends BaseCode {
         private transient ReducingState<Long> sumState;
 
         @Override
-        public void open(final org.apache.flink.configuration.Configuration parameters)
-                throws Exception {
+        public void open(final OpenContext openContext) throws Exception {
             sumState =
                     getRuntimeContext()
                             .getReducingState(

@@ -23,7 +23,6 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 
 import org.junit.ClassRule;
@@ -66,7 +65,7 @@ public class WindowWithProcessFunctionIT {
                                 .withTimestampAssigner(
                                         (event, timestamp) -> System.currentTimeMillis()))
                 .keyBy(value -> value.f0)
-                .window(TumblingEventTimeWindows.of(Time.minutes(5)))
+                .window(TumblingEventTimeWindows.of(Duration.ofMinutes(5)))
                 .process(new WindowWithProcessFunction.SensorAggregator())
                 .name("Test_Aggregator")
                 .map(t -> t.f0 + ":" + t.f1)

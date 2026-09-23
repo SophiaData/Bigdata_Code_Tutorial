@@ -19,7 +19,6 @@
 package io.sophiadata.flink.sink;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
@@ -29,6 +28,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import com.alibaba.fastjson.JSONObject;
 import io.sophiadata.flink.base.BaseCode;
+import io.sophiadata.flink.compat.ParameterTool;
 
 import java.util.Properties;
 
