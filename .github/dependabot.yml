@@ -30,6 +30,15 @@ updates:
           - "org.testcontainers:*"
           - "org.mockito:*"
           - "io.opentelemetry:*"
+      # Jackson core/databind/annotations must move together: they share a
+      # dependency tree and the enforcer's requireUpperBoundDeps fails the build
+      # when only one of them moves. Batching them keeps the versions aligned.
+      jackson:
+        patterns:
+          - "com.fasterxml.jackson.core:*"
+          - "com.fasterxml.jackson.dataformat:*"
+          - "com.fasterxml.jackson.datatype:*"
+          - "com.fasterxml.jackson.module:*"
       # Generic batch for everything else.
       other-deps:
         patterns:
@@ -44,11 +53,37 @@ updates:
           - "org.testcontainers:*"
           - "org.mockito:*"
           - "io.opentelemetry:*"
+          - "com.fasterxml.jackson.core:*"
+          - "com.fasterxml.jackson.dataformat:*"
+          - "com.fasterxml.jackson.datatype:*"
+          - "com.fasterxml.jackson.module:*"
     # Ignore major version bumps for Flink (likely breaking) — bump manually.
     ignore:
       - dependency-name: "org.apache.flink:*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.apache.flink:flink-shaded-*"
+        update-types: ["version-update:semver-major"]
+      # The build runs on JDK 11 (see CLAUDE.md). JUnit 6 is compiled for Java 17
+      # (class file version 61 vs the 55 the JDK 11 compiler accepts), so a major
+      # bump cannot even be compiled — it fails with "cannot access
+      # org.junit.jupiter.api.Test". Nothing below 6 needs newer than Java 11.
+      - dependency-name: "org.junit*:*"
+        update-types: ["version-update:semver-major"]
+      # Same JDK 11 constraint: spotless 3.x is built for Java 17 and fails to
+      # load on JDK 11 with ComponentLookupException (SpotlessCheckMojo is class
+      # file version 61.0). The 2.x line stays on Java 11.
+      - dependency-name: "com.diffplug.spotless:*"
+        update-types: ["version-update:semver-major"]
+      # Build plugins that are JDK-version sensitive. The versions in use are
+      # pinned to the JDK 11 toolchain, so major bumps need a manual decision
+      # alongside a JDK upgrade rather than an automatic PR.
+      - dependency-name: "org.apache.maven.plugins:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.github.spotbugs:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.jacoco:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.codehaus.mojo:*"
         update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
