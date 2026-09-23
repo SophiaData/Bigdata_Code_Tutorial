@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.sophiadata</groupId>
@@ -58,9 +58,18 @@
         <json-path.version>2.9.0</json-path.version>
         <commons-beanutils.version>1.11.0</commons-beanutils.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
-        <spotless.version>2.23.0</spotless.version>
-        <!-- Error Prone: bring IDEA-style static findings into the compile step. -->
-        <errorprone.version>2.31.0</errorprone.version>
+        <!--
+          spotless 3.x is the current line; 2.x stops at 2.46.1. Both run on JDK 17, which the build
+          now uses. 3.x only reformats the xsi:schemaLocation continuation indent in the POMs.
+        -->
+        <spotless.version>3.10.2</spotless.version>
+        <!--
+          Error Prone: bring IDEA-style static findings into the compile step.
+          This is the highest version usable on the JDK 17 build: 2.31.0 is the last for JDK 11,
+          2.36.0 through 2.41.0 require JDK 17, and 2.44.0 onwards requires JDK 21
+          (ErrorProneJavacPlugin is class file version 61, then 65).
+        -->
+        <errorprone.version>2.41.0</errorprone.version>
         <!-- SpotBugs: bytecode-level analysis that mirrors IDEA's bug-level inspections. -->
         <spotbugs.version>4.8.6.6</spotbugs.version>
         <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
