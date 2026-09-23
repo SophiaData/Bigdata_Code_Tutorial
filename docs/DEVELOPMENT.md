@@ -6,29 +6,36 @@ If something here disagrees with what `mvn` actually does, update the doc — th
 
 | Tool   | Version | 何时需要 |
 |--------|---------|------|
-| JDK    | **11**  | 永远。父 POM `<java.version>11</java.version>`，JDK 8 跑不动（class 文件 55.0） |
+| JDK    | **17**（构建） / **11**（产物目标） | 永远。产物目标是 11（父 POM `<java.version>11</java.version>`，class 文件 55.0），但**构建 JDK 用 17**：ErrorProne / JUnit / spotless 的新版本都编译为 Java 17 字节码，JDK 11 的构建 JVM 加载不了 |
 | Maven  | 3.8+    | 永远。用仓库自带的 `./mvnw` |
 | Docker | optional | 只跑 `*IT` / `FlinkSqlWDSTest` 时需要 |
 
-### 切到 JDK 11
+### 切到 JDK 17
 
 ```bash
-export JAVA_HOME=/path/to/jdk-11
+export JAVA_HOME=/path/to/jdk-17
 export PATH="$JAVA_HOME/bin:$PATH"
-java -version   # 必须 11.x
+java -version   # 17.x
+
+# 产物仍是 Java 11 字节码，可用以下命令确认：
+javap -verbose -classpath flink-demo/target/classes io.sophiadata.flink.base.BaseCode | grep 'major version'
+# 应输出 55（= Java 11）
 ```
+
+> JDK 11 下也能构建（实测通过），所以不是硬性要求；但只有 JDK 17 才能用上新版 ErrorProne / JUnit / spotless。
+> ErrorProne 在 JDK 16+ 需要 `.mvn/jvm.config` 里的 `--add-exports`，以及 POM 里的 `--should-stop=ifError=FLOW`。
 
 > 上面这台机器上的 Azul 17 / Corretto 11 / Zulu 8 都装着。如果用 `direnv` 或 `.envrc` 想自动切，把这两行 export 放进去。
 
 ### IDEA 项目设置
 
-`pom.xml` 设了 `<java.version>11</java.version>`，但 IDEA 自己存的 `.idea/misc.xml` 还有 `languageLevel` 和 `project-jdk-name`，**两边不一致就会出现 "源发行版 11 需要目标发行版 11" 警告**。
+`pom.xml` 的**产物目标**是 `<java.version>11</java.version>`，而**构建 JDK 是 17**。IDEA 自己存的 `.idea/misc.xml` 还有 `languageLevel` 和 `project-jdk-name`，两边不一致会出现 "源发行版 11 需要目标发行版 11" 之类的警告。
 
 第一次打开项目时手动设一次：
 
 1. **File → Project Structure → Project**
-   - Project SDK: 选 `Corretto 11.0.21`（或任何 JDK 11）
-   - Project language level: `11`
+   - Project SDK: 选 **JDK 17**（构建用）
+   - Project language level: `11`（对齐产物目标，不是 17）
 2. **File → Project Structure → Modules → 每个模块 → Sources tab**
    - Language level: `11`
 3. **Build → Rebuild Project**（触发 IDEA 重读设置）
@@ -65,7 +72,7 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 ```
 
 脚本会：
-1. 强制切到 JDK 11（忽略外层 `JAVA_HOME`，因为经常是 zulu-8）
+1. 强制切到 JDK 17（忽略外层 `JAVA_HOME`，因为经常是旧的 zulu-8）
 2. 通过 `dependency:build-classpath` 拿全 test scope 的 jar（含 provided）
 3. 用绝对路径 java + 全 classpath 跑
 
@@ -147,7 +154,7 @@ CLI 始终胜出。`Constants` 是兜底，读取 `MYSQL_USERNAME` / `MYSQL_PASS
 
 ### `class file version 55.0, only recognizes up to 52.0`
 
-JDK 8。切到 JDK 11。
+JDK 8。切到 JDK 17（构建 JDK）。产物目标仍是 Java 11。
 
 ### spotless 失败
 

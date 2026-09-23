@@ -30,6 +30,7 @@ import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.base.BaseCode;
 
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -109,7 +110,7 @@ public class BroadcastStateExample extends BaseCode {
                     ruleState = ctx.getBroadcastState(RULE_DESCRIPTOR);
 
             for (final Map.Entry<String, String> entry : ruleState.immutableEntries()) {
-                if (value.f1.toLowerCase().contains(entry.getValue())) {
+                if (value.f1.toLowerCase(Locale.ROOT).contains(entry.getValue())) {
                     out.collect(
                             "User "
                                     + value.f0

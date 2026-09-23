@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /** (@sophiadata) (@date 2023/8/2 11:15). */
@@ -55,7 +56,11 @@ public final class ParamUtil {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
             final LocalDate date = LocalDate.parse(dateString, dateFormatter);
-            final LocalDateTime combined = LocalDateTime.of(date, LocalTime.now());
+            // Pass the zone explicitly. LocalTime.now() without one reads the JVM default
+            // implicitly,
+            // which ErrorProne's JavaTimeDefaultTimeZone check rejects; the behaviour is unchanged.
+            final LocalDateTime combined =
+                    LocalDateTime.of(date, LocalTime.now(ZoneId.systemDefault()));
             LOG.debug("parsed {} -> {}", dateString, combined.format(datetimeFormatter));
             return combined;
         } catch (Exception e) {

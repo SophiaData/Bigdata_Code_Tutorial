@@ -5,7 +5,11 @@
 Flink 1.20 大数据代码教程仓库，演示基于 flink-cdc 3.x 的 MySQL 整库实时同步。
 
 - **GroupId**: `io.sophiadata`，版本 `1.1.0`
-- **JDK**: 11（必须，class 文件版本 55.0）
+- **JDK**: 产物目标 **11**（`<java.version>11</java.version>`，class 文件版本 55.0，用户侧仍可在 Java 11 运行）；**构建 JDK 用 17**
+
+  > 两者是独立的。工具链（ErrorProne / JUnit / spotless）的新版本都编译为 Java 17 字节码，JDK 11 的构建 JVM 无法加载，因此构建改用 JDK 17，而 `maven.compiler.release` 保持 11 以保证产物兼容性。CI 与本地均使用 JDK 17 构建；JDK 11 下也能构建（实测通过），因此不是硬性要求，但新工具版本需要 17。
+  >
+  > ErrorProne 需要 `.mvn/jvm.config` 中的 `--add-exports`（见该文件），以及 POM 里的 `--should-stop=ifError=FLOW`。
 - **构建**: Maven（仓库根 `./mvnw`）
 - **持久上下文**: 详细模块说明见 [`docs/ai-context/`](docs/ai-context/)，开发流程见 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
 
@@ -21,8 +25,8 @@ Flink 1.20 大数据代码教程仓库，演示基于 flink-cdc 3.x 的 MySQL �
 ## 常用命令
 
 ```bash
-# 切换 JDK 11（必须）
-export JAVA_HOME=/path/to/jdk-11
+# 切换 JDK 17（构建用；产物仍是 Java 11 字节码）
+export JAVA_HOME=/path/to/jdk-17
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # 编译（跳过测试）

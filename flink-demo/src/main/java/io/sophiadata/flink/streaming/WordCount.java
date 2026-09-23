@@ -27,6 +27,8 @@ import org.apache.flink.util.Collector;
 
 import io.sophiadata.flink.base.BaseCode;
 
+import java.util.Locale;
+
 /** (@SophiaData) (@date 2022/10/29 13:50). */
 @SuppressWarnings("deprecation")
 public class WordCount extends BaseCode {
@@ -47,7 +49,8 @@ public class WordCount extends BaseCode {
                                     final String value,
                                     final Collector<Tuple2<String, Integer>> out)
                                     throws Exception {
-                                for (final String word : value.toLowerCase().split(",")) {
+                                for (final String word :
+                                        value.toLowerCase(Locale.ROOT).split(",")) {
                                     if (!word.isEmpty()) {
                                         out.collect(new Tuple2<>(word, 1));
                                     }

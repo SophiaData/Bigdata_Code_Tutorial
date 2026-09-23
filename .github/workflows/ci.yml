@@ -31,7 +31,14 @@ permissions:
 
 env:
   MAVEN_OPTS: -Xmx2g -Xms512m
-  # Always run JDK 11 — matches the project's <java.version>11</java.version> in the parent POM.
+  # Build on JDK 17 while still producing Java 11 bytecode.
+  #
+  # The parent POM keeps <java.version>11</java.version> / <maven.compiler.release>11, so every
+  # artifact stays at class file version 55 and remains runnable on a Java 11 runtime. Building with
+  # a newer JDK is what lets the toolchain move forward: ErrorProne 2.36+, JUnit 6 and spotless 3.x
+  # are all compiled for Java 17+ and cannot be loaded by a JDK 11 build JVM.
+  #
+  # ErrorProne reaching into javac internals needs the --add-exports flags in .mvn/jvm.config.
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -49,10 +56,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
@@ -60,9 +67,9 @@ jobs:
         with:
           path: ~/.m2/repository
           # Invalidate when any pom.xml changes; fall back to partial cache on miss.
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Install local modules
         run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
@@ -116,19 +123,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
         uses: actions/cache@v6
         with:
           path: ~/.m2/repository
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Run cdc-mysql-sync unit tests + CreateMysqlLSinkTableIT
         env:
@@ -187,19 +194,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
         uses: actions/cache@v6
         with:
           path: ~/.m2/repository
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Build all modules (skip tests)
         run: |
@@ -233,19 +240,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
         uses: actions/cache@v6
         with:
           path: ~/.m2/repository
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Compile under Error Prone (errors block the build)
         run: ./mvnw -B -ntp -pl flink-demo,cdc-mysql-sync,cdc-paimon-sync -am clean compile -DskipTests
@@ -295,19 +302,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
         uses: actions/cache@v6
         with:
           path: ~/.m2/repository
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Build flink-demo (skip tests)
         run: ./mvnw install -pl flink-demo -am -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
@@ -339,19 +346,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Cache local Maven repository
         uses: actions/cache@v6
         with:
           path: ~/.m2/repository
-          key: m2-${{ runner.os }}-jdk11-${{ hashFiles('**/pom.xml') }}
+          key: m2-${{ runner.os }}-jdk17-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            m2-${{ runner.os }}-jdk11-
+            m2-${{ runner.os }}-jdk17-
 
       - name: Build runnable jar
         run: ./mvnw -pl cdc-mysql-sync -am clean package -DskipTests
@@ -378,10 +385,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Initialize CodeQL
