@@ -28,8 +28,23 @@
           newer toolchain usable without dropping Java 11 support for consumers.
         -->
         <java.version>11</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <!--
+          Use release rather than source/target.
+
+          source/target only control the bytecode version and the language level; they do NOT check
+          which JDK APIs the code calls. Building on JDK 17 with source/target=11 therefore accepts
+          Java 16 API such as Stream.toList(), emits a class file marked version 55, and lets it
+          through - the failure only appears later as NoSuchMethodError on a Java 11 runtime.
+
+          Verified on this codebase: with source/target=11 a Java 16 API call compiles (exit 0), while
+          release=11 rejects it ("cannot find symbol: method toList()").
+
+          release=11 additionally links against the Java 11 API signatures, so a call to anything newer
+          fails the build instead of shipping. This matters more now that the build JDK (17) is newer
+          than the target (11), because the two lines share one artifact: the Flink 1.20 line runs it
+          on a Java 11 runtime.
+        -->
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <testcontainers.version>1.21.4</testcontainers.version>
         <junit.version>5.14.4</junit.version>
         <flink.version>1.20.5</flink.version>
@@ -710,10 +725,12 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <testSource>${java.version}</testSource>
-                    <testTarget>${java.version}</testTarget>
+                    <!--
+                      release (not source/target) so calls to APIs newer than Java 11 fail the build;
+                      see the note on maven.compiler.release above.
+                    -->
+                    <release>${java.version}</release>
+                    <testRelease>${java.version}</testRelease>
                     <!--
                         Error Prone, run as a javac plugin. Blocks the build on ERROR-level checks.
                         See: https://errorprone.info/docs/installation
