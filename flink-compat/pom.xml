@@ -15,8 +15,6 @@
         the codebase compiles unchanged against both Flink 1.20 and Flink 2.x.</description>
     
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     

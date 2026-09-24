@@ -10,10 +10,6 @@
     
     <artifactId>flink-demo</artifactId>
     
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
     <dependencies>
         <!--
           Flink version compatibility layer: a stable ParameterTool and helpers for the APIs Flink 2.0
