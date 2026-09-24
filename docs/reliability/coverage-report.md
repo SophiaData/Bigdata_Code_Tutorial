@@ -1,102 +1,92 @@
-# 测试覆盖率报告
+﻿# 娴嬭瘯瑕嗙洊鐜囨姤鍛?
 
-> 生成时间：2026-06-29
-> 工具：JaCoCo Maven Plugin 0.8.12
-> 门槛：`minimum 0.00`（基线建立，尚未设置实际目标）
+> 鐢熸垚鏃堕棿锛?026-06-29锛?*2026-09-24 閲嶆柊娴嬮噺**锛?
+> 宸ュ叿锛欽aCoCo Maven Plugin 0.8.12
+> 闂ㄦ锛歚jacoco.line.min=0.15` / `jacoco.branch.min=0.25`锛堟杞紡涓嬮檺锛岄槻姝㈠€掗€€锛?
 
 ---
 
-## 一、各模块覆盖率
+## 0. 閲嶈鏇存锛氭鍓嶇殑瑕嗙洊鐜囨暟瀛楁槸鏃犳晥鐨?
 
-| 模块 | LINE 覆盖 | BRANCH 覆盖 | 状态 |
+鏈姤鍛婂師鍏堣褰曠殑 `cdc-mysql-sync 10.1%`銆乣flink-demo 100%`銆乣cdc-paimon-sync 0%` **骞堕潪鐪熷疄娴嬮噺缁撴灉**銆?
+
+鍘熷洜锛歋urefire 鐨?`<argLine>` 閲岀‖缂栫爜浜?`--add-opens`锛岃繖浼?*鏁翠綋瑕嗙洊** JaCoCo 閫氳繃 `argLine` 灞炴€ф敞鍏ョ殑 `-javaagent`锛屽鑷磋鐩栫巼 agent 浠庢湭鎸傝浇銆傛瀯寤烘棩蹇椾腑鐨勮〃鐜版槸锛?
+
+```
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+```
+
+鍗筹細**娴嬭瘯姝ｅ父璺戙€佸叏閮ㄩ€氳繃锛屼絾瑕嗙洊鐜囨暟鎹竴鐩存槸绌虹殑**锛宍check` 鐩爣涔熷洜涓烘棤鏁版嵁鑰岄潤榛樿烦杩囷紙闂ㄦ褰㈠悓铏氳锛夈€?
+
+淇锛歚<argLine>@{argLine} --add-opens=...</argLine>` 鈥斺€?鐢ㄥ睘鎬ф彃鍊兼妸 JaCoCo 鐨?agent 鎷煎洖鏉ャ€備慨澶嶅悗 `target/jacoco.exec` 姝ｅ父鐢熸垚锛堢害 39KB锛夈€?
+
+CI 渚ц繕鏈変竴涓嫭绔嬬己闄凤細鏀堕泦瑕嗙洊鐜囩殑姝ラ鏄?
+`./mvnw ... verify -Djacoco.skip=false -DskipTests`
+鈥斺€?甯︿簡 `-DskipTests`锛屽悓鏍锋案杩滄嬁涓嶅埌鏁版嵁銆傚凡鏀逛负鍦ㄨ窇鍗曟祴鏃朵竴骞舵敹闆嗭紝鍐嶇敤 `jacoco:report` 鐢熸垚鎶ュ憡銆?
+
+---
+
+## 涓€銆佸悇妯″潡瑕嗙洊鐜囷紙2026-09-24 瀹炴祴锛?
+
+| 妯″潡 | LINE 瑕嗙洊 | BRANCH 瑕嗙洊 | 璇存槑 |
 |---|---|---|---|
-| `cdc-mysql-sync` | **10.1%** (69/683) | 9.5% (26/273) | ⚠️ 基线已建立 |
-| `flink-demo` | **100.0%** (6/6) | 100.0% | ✅ 充分覆盖 |
-| `cdc-paimon-sync` | **0.0%** (0/656) | — | 🔴 无覆盖 |
-
-### 解读
-
-- **cdc-mysql-sync**：主业务逻辑（`FlinkSqlWDS`、`SchemaEvolver`、`CdcEventDeserializer`）为 0%，被测试的仅是工具类（`MysqlUtil`、`NacosUtil` 等）
-- **flink-demo**：虽然 `IncrementMapFunctionTest` 运行成功（1 passed），但主代码（`MockSourceFunction`、`AppConfig`、`RandomOptionGroup` 等）均未被测试覆盖
-- **flink-demo**：小模块，SplitFunction 有测试，完全覆盖
+| `flink-compat` | **79.5%** (35/44) | 鈥?| 灏忔ā鍧楋紝鍏煎灞傛祴璇曞厖鍒?|
+| `cdc-mysql-sync` | **32.2%** (331/1028) | 28.3% (115/406) | 宸ュ叿绫昏鐩栬緝濂斤紝涓绘祦绋嬩粛鍋忚杽 |
+| `flink-demo` | **27.7%** (486/1752) | 28.5% (111/390) | 绀轰緥绫诲锛屾祴璇曢泦涓湪灏戞暟妯″潡 |
+| `cdc-paimon-sync` | **15.5%** (34/220) | 36.0% (27/75) | 鏈€浣庯紝浣嗗垎鏀鐩栧弽鑰屼笉宸?|
 
 ---
 
-## 二、cdc-mysql-sync 包级覆盖率
+## 浜屻€侀棬妲涚瓥鐣ワ細妫樿疆鑰岄潪鐩爣
 
-| 包 | 覆盖率 | 说明 |
-|---|---|---|
-| `io.sophiadata.flink.sync` | **0.0%** | FlinkSqlWDS 主类，无测试 |
-| `io.sophiadata.flink.sync.schema` | **0.0%** | SchemaEvolver，无测试 |
-| `io.sophiadata.flink.sync.util` | **45.3%** | MysqlUtil 等工具类部分覆盖 |
-| `io.sophiadata.flink.sync.sink` | **低** | CreateMysqlLSinkTable，无测试 |
-
----
-
-## 三、覆盖率门槛建议
-
-当前 `jacoco-maven-plugin` 配置 `minimum 0.00`（零门槛，用于建立基线）。建议按阶段设定目标：
-
-| 阶段 | 目标 LINE 覆盖 | 说明 |
-|---|---|---|
-| **当前基线** | 10% | 记录现状 |
-| **阶段一（1个月）** | 25% | 补充 FlinkSqlWDS 工具方法测试 |
-| **阶段二（2个月）** | 40% | 补充 SchemaEvolver、CDBBatchSink 测试 |
-| **阶段三（3个月）** | 50% | 补充 flink-demo 核心 MockSourceFunction 测试 |
-
-修改 `pom.xml` 中的 JaCoCo `minimum` 值即可收紧门槛：
+闂ㄦ鍊艰鍦?*褰撳墠瀹炴祴鍊肩暐涓嬫柟**锛屼綔鐢ㄦ槸**鎷︿綇鍊掗€€**锛堜緥濡傛柊绫昏惤鍦板嵈娌￠厤娴嬭瘯锛夛紝鑰屼笉鏄瀹氭彁鍗囩洰鏍囷細
 
 ```xml
-<!-- 从 0.00 改为目标值，例如 0.25 表示 25% -->
-<minimum>0.25</minimum>
+<jacoco.line.min>0.15</jacoco.line.min>
+<jacoco.branch.min>0.25</jacoco.branch.min>
+```
+
+**涓轰粈涔堢敤缁熶竴鍊艰€屼笉鏄瘡妯″潡涓€涓?*锛欽aCoCo 鐨?`BUNDLE` 瑙勫垯鎸夋ā鍧楃敓鏁堬紝鑰屽悇妯″潡瑕嗙洊鐜囩浉宸?5 鍊嶏紙15.5% ~ 79.5%锛夈€傜粺涓€鍙栦笅闄愶紙15%锛夊彲淇濊瘉褰撳墠鎵€鏈夋ā鍧楅兘鑳介€氳繃锛屼箣鍚庡彧鑳戒笂璋冦€傛煇涓ā鍧楄鐩栫巼鏄捐憲鎻愬崌鍚庯紝鍙湪鑷繁鐨?POM 閲岃鐩?`jacoco.line.min`銆?
+
+宸插疄娴嬮獙璇侀棬妲?*纭疄鐢熸晥**锛氭妸闂ㄦ涓存椂璁句负 0.90 鍚庢瀯寤哄け璐ュ苟缁欏嚭
+
+```
+Rule violated for bundle flink-compat: lines covered ratio is 0.79, but expected minimum is 0.90
 ```
 
 ---
 
-## 四、JaCoCo Maven 命令参考
+## 涓夈€佸浣曞鐜?
 
 ```bash
-# 本地生成覆盖率报告（HTML）
-./mvnw verify -Djacoco.skip=false -pl cdc-mysql-sync
+# 1) 璺戝崟娴嬪苟鏀堕泦瑕嗙洊鐜囷紙娉ㄦ剰涓嶈兘甯?-DskipTests锛?
+./mvnw -pl cdc-mysql-sync -am test -Djacoco.skip=false \
+  -Dtest='!*IT,!*E2E,!*IntegrationTest,!*FlinkSqlWDSTest'
 
-# 查看报告（浏览器打开）
-open cdc-mysql-sync/target/site/jacoco/index.html
+# 2) 鐢熸垚 HTML/XML 鎶ュ憡
+./mvnw -pl cdc-mysql-sync -am jacoco:report -Djacoco.skip=false
 
-# 仅检查覆盖率门槛（不生成报告）
-./mvnw verify -Djacoco.skip=false
-
-# CI 中覆盖率不通过则构建失败
-# （需在 pom.xml 中设置 <minimum>0.25</minimum> 或更高）
+# 3) 鎶ュ憡浣嶇疆
+# cdc-mysql-sync/target/site/jacoco/index.html
 ```
+
+CI 鐨?`lint-and-unit` job 鐜板凡鍖呭惈杩欎笁姝ワ紝骞舵妸鎶ュ憡浣滀负 `jacoco-<module>` 鍒跺搧涓婁紶锛堜繚鐣?7 澶╋級銆?
 
 ---
 
-## 五、JaCoCo 报告位置
+## 鍥涖€佸悗缁柟鍚戯紙鎸夋€т环姣旀帓搴忥級
 
-```
-cdc-mysql-sync/target/site/jacoco/index.html   ← 主覆盖率报告
-flink-demo/target/site/jacoco/index.html        ← 已覆盖
-flink-demo/target/site/jacoco/index.html            ← 零覆盖
-```
+1. `cdc-paimon-sync` 鐨?LINE 瑕嗙洊鏈€浣庯紙15.5%锛夛紝涓斿垎鏀鐩栵紙36%锛夋槑鏄鹃珮浜庤瑕嗙洊 鈥斺€?璇存槑娴嬪埌鐨勫垎鏀泦涓湪灏戦噺鏂规硶閲岋紝涓绘祦绋嬪熀鏈湭瑕嗙洊
+2. `cdc-mysql-sync` 鐨?`SchemaEvolver`銆乣FlinkSqlWDS` 鏄悓姝ラ摼璺殑鏍稿績锛屼粛鏄富瑕佺己鍙?
+3. 闂ㄦ鍙殢瑕嗙洊鐜囨彁鍗囬€愭涓婅皟锛?5% 鈫?25% 鈫?35%
 
----
-
-## 六、JaCoCo 与 Maven 生命周期绑定说明
-
-JaCoCo 插件绑定在根 `pom.xml` 的 `verify` 阶段：
-
-| Execution | Phase | 说明 |
-|---|---|---|
-| `prepare-agent` | test（自动） | JVM agent 启动，数据写入 `jacoco.exec` |
-| `report` | test | 生成 XML/HTML 报告 |
-| `report-check` | verify | 校验覆盖率是否达到 `minimum` 门槛 |
-
-`test` 阶段执行单元测试时自动触发覆盖率收集；`verify` 阶段做门槛校验。
+> 娉細JaCoCo 鍦?*娌℃湁鎵ц鏁版嵁鏃朵細璺宠繃妫€鏌?*锛屽洜姝ら棬妲涘彧鍦?`-Djacoco.skip=false` 鐪熸璺戣繃娴嬭瘯鍚庢墠鏈夌害鏉熷姏銆?
 
 ---
 
-## 七、已知限制
+## 五、已知限制
 
-1. **flink-demo 0% 问题**：`flink-demo` 的 `IncrementMapFunctionTest` 运行了但主代码覆盖率仍为 0%，可能与 `provided` scope 依赖导致 instrumented class 路径问题有关，需进一步调查
-2. **不区分 main/test**：JaCoCo 默认同时统计 main 和 test 代码，当前计数中包含了测试代码本身的行数
-3. **CI 暂未上传覆盖率**：`.github/workflows/ci.yml` 已在 `lint-and-unit` job 中加入 `-Djacoco.skip=false`，但尚未配置覆盖率上传至 GitHub（如 Codecov/SonarQube）
+1. **JaCoCo 无数据时跳过检查**：若 `-Djacoco.skip=false` 未真正执行测试，`check` 与 `report` 都会输出 "Skipping JaCoCo execution due to missing execution data file" 并以成功结束 —— 门槛在这种情况下不具约束力
+2. **不区分 main/test**：JaCoCo 默认同时统计 main 与 test 代码；上表数字已按模块 bundle 汇总
+3. **集成测试未计入**：上表只统计单测（`!*IT,!*E2E`）覆盖；`*IT` 需 Docker，在 CI 的独立 job 中运行，未合并进覆盖率数据
+4. **未上传到外部服务**：报告以 CI 制品形式（`jacoco-<module>`）保存 7 天，尚未接入 Codecov/SonarQube

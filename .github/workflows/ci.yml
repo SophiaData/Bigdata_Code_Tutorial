@@ -86,10 +86,28 @@ jobs:
 
       - name: Run unit tests (skip *IT, *E2E and FlinkSqlWDSTest)
         # Surefire defaults do NOT pick up *IT.java — those run in job 2.
+        # -Djacoco.skip=false makes this run also produce target/jacoco.exec; the report is generated
+        # by the step below. Coverage used to be collected in a separate step that passed -DskipTests,
+        # which meant JaCoCo never received any execution data ("missing execution data file") and the
+        # coverage numbers were never actually measured.
         run: |
           set +H
           ./mvnw -pl ${{ matrix.module }} -am test \
+            -Djacoco.skip=false \
             -Dtest='!*IT,!*E2E,!*IntegrationTest,!*FlinkSqlWDSTest'
+
+      - name: Report JaCoCo coverage
+        # Reads the execution data produced above. Must not use -DskipTests.
+        run: ./mvnw -pl ${{ matrix.module }} -am jacoco:report -Djacoco.skip=false
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-${{ matrix.module }}
+          path: ${{ matrix.module }}/target/site/jacoco
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Run flink-demo integration tests (MiniCluster, no Docker)
         if: matrix.module == 'flink-demo'
@@ -97,9 +115,6 @@ jobs:
           set +H
           ./mvnw -pl flink-demo -am test \
             -Dtest='ProcessFunctionStateExampleIT,WindowWithProcessFunctionIT,MysqlCdcToKafkaSqlPipelineIT,MysqlCdcToKafkaPipelineIT,ElasticsearchSinkExampleIT,KafkaSourceExampleIT,JdbcSinkExampleIT,AsyncIoExampleIT,BroadcastStateExampleIT,IntervalJoinExampleIT,FlinkCdcSqlSourceExampleIT,TimerExampleIT,CoProcessFunctionExampleIT,DeadLetterQueueExampleIT,FlinkCepExampleIT'
-
-      - name: Collect JaCoCo coverage
-        run: ./mvnw -pl ${{ matrix.module }} -am verify -Djacoco.skip=false -DskipTests
 
       - name: Upload surefire reports on failure
         if: failure()
