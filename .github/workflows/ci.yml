@@ -45,13 +45,18 @@ jobs:
   # Job 1: lint + unit tests (fast feedback on every PR)
   # ---------------------------------------------------------------------------
   lint-and-unit:
-    name: Lint & Unit Tests (${{ matrix.module }})
+    name: Lint & Unit Tests (${{ matrix.module }}${{ matrix.flink-line == '2.2' && ' / Flink 2.2' || '' }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         module: [flink-demo, cdc-mysql-sync, cdc-paimon-sync]
+        # The repository ships two version lines from one source tree. The 2.x line is a real,
+        # documented configuration (-Pflink-2.2 -Pflink2) that CI never built, so anything breaking
+        # only against Flink 2.x stayed invisible until someone ran it by hand. Building both lines
+        # makes the dual-version support a tested claim rather than an intention.
+        flink-line: ['1.20', '2.2']
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -74,14 +79,20 @@ jobs:
       - name: Install local modules
         run: ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
 
+      # Style checks do not depend on the Flink version: the sources are the same and only
+      # src/main/flink20|flink2 is swapped per line. Running them on the default line keeps a
+      # formatting problem reported once instead of twice.
       - name: Verify spotless format
+        if: matrix.flink-line == '1.20'
         run: ./mvnw -pl ${{ matrix.module }} -am spotless:check
 
       - name: Run checkstyle analysis
+        if: matrix.flink-line == '1.20'
         run: ./mvnw -pl ${{ matrix.module }} -am checkstyle:check
         continue-on-error: false
 
       - name: Run PMD complexity analysis
+        if: matrix.flink-line == '1.20'
         run: ./mvnw -pl ${{ matrix.module }} -am pmd:check
 
       - name: Run unit tests (skip *IT, *E2E and FlinkSqlWDSTest)
@@ -90,10 +101,16 @@ jobs:
         # by the step below. Coverage used to be collected in a separate step that passed -DskipTests,
         # which meant JaCoCo never received any execution data ("missing execution data file") and the
         # coverage numbers were never actually measured.
+        #
+        # On the 2.x line -Pflink2 swaps in src/main/flink2, and -Pflink2-test-guava adds the
+        # guava33 test dependency that Flink 2.x runtime code reflects into (FLINK-39429). Without
+        # that profile the join/co-group tests fail with NoClassDefFoundError on
+        # org.apache.flink.shaded.guava33; see the note in flink-demo/pom.xml.
         run: |
           set +H
           ./mvnw -pl ${{ matrix.module }} -am test \
             -Djacoco.skip=false \
+            ${{ matrix.flink-line == '2.2' && '-Pflink-2.2 -Pflink2 -Pflink2-test-guava' || '' }} \
             -Dtest='!*IT,!*E2E,!*IntegrationTest,!*FlinkSqlWDSTest'
 
       - name: Report JaCoCo coverage
@@ -110,7 +127,7 @@ jobs:
           retention-days: 7
 
       - name: Run flink-demo integration tests (MiniCluster, no Docker)
-        if: matrix.module == 'flink-demo'
+        if: matrix.module == 'flink-demo' && matrix.flink-line == '1.20'
         run: |
           set +H
           ./mvnw -pl flink-demo -am test \
@@ -120,7 +137,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: surefire-${{ matrix.module }}
+          name: surefire-${{ matrix.module }}-${{ matrix.flink-line }}
           path: |
             ${{ matrix.module }}/target/surefire-reports
           if-no-files-found: ignore

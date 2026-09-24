@@ -125,6 +125,36 @@ bin/run-demo.sh io.sophiadata.flink.streaming.Sideout
 # 产物：cdc-mysql-sync/target/cdc-mysql-sync-1.1.0.jar
 ```
 
+### 场景 4.5：Flink 2.x 版本线
+
+本仓库用**同一份源码**同时支持两条版本线。默认是 Flink 1.20.5；切到 2.2.0 需要**三个** profile：
+
+```bash
+./mvnw -pl cdc-mysql-sync -am test \
+  -Pflink-2.2 -Pflink2 -Pflink2-test-guava
+```
+
+| Profile | 作用 |
+|---|---|
+| `flink-2.2` | 把 Flink / CDC / connector 的版本属性切到 2.x |
+| `flink2` | 切换到 `src/main/flink2/java` 源集（与 `flink20` 二选一，否则类重复） |
+| `flink2-test-guava` | 补上 `flink-shaded-guava` 33 shade（见下） |
+
+**为什么需要第三个 profile**：Flink 2.x 的运行时通过反射访问 `org.apache.flink.shaded.guava33`，
+而 CDC 连接器需要 `guava31`。两者**在同一个 artifact 里**（`org.apache.flink:flink-shaded-guava`），
+Maven 只会解析其中一个版本，另一个包在测试期就消失：
+
+```
+NoClassDefFoundError: org.apache.flink.shaded.guava33/com/google/common/collect/Lists
+```
+
+该 profile 把 guava33 声明为普通 test 依赖，并把 guava31 的 jar 追加到 Surefire classpath。
+两个 jar 的包树不相交（`guava31/*` 与 `guava33/*`，无重叠类），因此可安全共存。
+上游问题见 [FLINK-39429](https://issues.apache.org/jira/browse/FLINK-39429)（仍 Open）。
+
+> CI 的 `lint-and-unit` job 有 `flink-line: ['1.20', '2.2']` 两个 matrix 维度，两条线都会跑。
+> 只跑 1.20 时漏掉的 2.x 问题曾经长期无人发现 —— 加这个维度就是为了让「支持双版本」成为**被验证的事实**。
+
 ### 场景 5：CI（GitHub Actions / Jenkins）
 
 `./mvnw verify -Pintegration` 之类 —— CI 上挂上场景 2 的命令，每次 push 跑一次完整集成。本仓库已通过 GitHub Actions 接入 CI（见 `.github/workflows/ci.yml`）。
