@@ -130,6 +130,29 @@
         <plexus-utils.version>3.6.1</plexus-utils.version>
         <lz4.version>1.11.1</lz4.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <!--
+          Coverage ratchet. Set a little below the current measured value of each module so the gate
+          catches regressions without blocking work; see the note on the jacoco report-check execution.
+
+          Measured on JDK 17 with the unit-test selection CI uses. JaCoCo applies the BUNDLE rule per
+          module, so these are the module's own numbers - not the merged figure a -am build prints:
+            flink-compat     LINE 79.5%   BRANCH 71.4%
+            cdc-mysql-sync   LINE 42.7%   BRANCH 39.9%
+            flink-demo       LINE 30.3%   BRANCH 29.7%
+            cdc-paimon-sync  LINE 15.5%   BRANCH 36.0%
+
+          The LINE floor is still pinned by cdc-paimon-sync, whose remaining classes are the three
+          Pipeline classes: they need a full Flink runtime plus Paimon and Mongo, so they are not
+          unit-testable and the module is expected to stay the lowest. It can be raised to 0.28 once
+          MongoDBDebeziumDeserializer is covered (see the raised-coverage work in the paimon module).
+
+          The BRANCH floor tracks the lowest branch coverage, which is flink-demo at 29.7%. It is set
+          below that rather than at it: the same module measured 23% on a run that reused a stale
+          jacoco.exec, so a floor sitting exactly on the measured value turns any instrumentation
+          hiccup into a build failure.
+        -->
+        <jacoco.line.min>0.15</jacoco.line.min>
+        <jacoco.branch.min>0.27</jacoco.branch.min>
     </properties>
     
     <dependencyManagement>
@@ -699,6 +722,22 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
+                            <!--
+                              Ratchet, not a target. These thresholds sit just below the coverage each
+                              module has today, so the gate catches a regression (a new class landing
+                              with no tests) without blocking legitimate work. They are deliberately
+                              not uniform: measured LINE coverage differs by module, from ~15% in
+                              cdc-paimon-sync to ~80% in flink-compat, so one shared number would
+                              either be meaningless for the high-coverage modules or unmeetable for
+                              the low ones.
+
+                              Raise them as coverage improves; a module can override <jacoco.line.min>
+                              in its own POM when it outgrows the shared floor.
+
+                              Note that JaCoCo skips the check entirely when no execution data was
+                              produced, so this only reports what it actually measured once
+                              -Djacoco.skip=false has run the tests.
+                            -->
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
@@ -706,12 +745,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.00</minimum>
+                                            <minimum>${jacoco.line.min}</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.00</minimum>
+                                            <minimum>${jacoco.branch.min}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -788,8 +827,14 @@
 
                       These opens are the standard allowance for running Flink on a modular JDK. They
                       affect the test JVM only and do not change the artifacts.
+
+                      @{argLine} must stay first: JaCoCo publishes its -javaagent through the argLine
+                      *property*, and an explicitly configured <argLine> replaces that property
+                      outright. Without the interpolation the agent is never attached, JaCoCo reports
+                      "missing execution data file", and coverage silently stays empty while the tests
+                      themselves still pass.
                     -->
-                    <argLine>--add-opens=java.base/java.util=ALL-UNNAMED
+                    <argLine>@{argLine} --add-opens=java.base/java.util=ALL-UNNAMED
                         --add-opens=java.base/java.lang=ALL-UNNAMED
                         --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
                         --add-opens=java.base/java.lang.reflect=ALL-UNNAMED

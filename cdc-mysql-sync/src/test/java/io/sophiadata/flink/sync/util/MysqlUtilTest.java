@@ -149,4 +149,70 @@ class MysqlUtilTest {
                         Arrays.asList("uid", "gid"));
         assertTrue(sql.contains("PRIMARY KEY (uid,gid)"), sql);
     }
+
+    // --- validateIdentifier: the SQL-injection guard ---
+    //
+    // createTable only validates table and column names through this method, so a regression here
+    // would reintroduce injection in every statement the sync builds. Previously it was exercised
+    // only indirectly by two createTable cases, and its public contract was never pinned.
+
+    @Test
+    void validateIdentifier_acceptsOrdinaryNames() {
+        assertEquals("users", MysqlUtil.validateIdentifier("users"));
+        assertEquals("t_user_2", MysqlUtil.validateIdentifier("t_user_2"));
+        assertEquals("_leadingUnderscore", MysqlUtil.validateIdentifier("_leadingUnderscore"));
+        assertEquals("UPPER_CASE", MysqlUtil.validateIdentifier("UPPER_CASE"));
+    }
+
+    @Test
+    void validateIdentifier_rejectsNullAndEmpty() {
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier(null));
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier(""));
+    }
+
+    @Test
+    void validateIdentifier_rejectsLeadingDigit() {
+        // MySQL forbids an identifier starting with a digit, and the pattern must match that rule
+        // rather than merely rejecting obviously hostile input.
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier("1users"));
+    }
+
+    @Test
+    void validateIdentifier_rejectsInjectionAttempts() {
+        String[] attempts = {
+            "users; DROP TABLE orders",
+            "users`",
+            "users--",
+            "users/*x*/",
+            "users'",
+            "users\"",
+            "users OR 1=1",
+            "users\nDROP TABLE orders",
+            "users(name)",
+            "`users`",
+            "users.name",
+            "users%",
+        };
+        for (String attempt : attempts) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> MysqlUtil.validateIdentifier(attempt),
+                    "should have rejected: " + attempt);
+        }
+    }
+
+    @Test
+    void validateIdentifier_rejectsWhitespaceVariants() {
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier(" users"));
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier("users "));
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier("us ers"));
+    }
+
+    @Test
+    void validateIdentifier_rejectsNonAsciiLetters() {
+        // The pattern is ASCII-only on purpose; a Unicode letter would otherwise slip past a
+        // \w-based check.
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier("用户"));
+        assertThrows(IllegalArgumentException.class, () -> MysqlUtil.validateIdentifier("üser"));
+    }
 }
