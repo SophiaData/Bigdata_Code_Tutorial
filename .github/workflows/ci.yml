@@ -228,6 +228,19 @@ jobs:
           set +H
           ./mvnw install -DskipTests -Dspotless.check.skip=true -Dcheckstyle.skip=true
 
+      # e2e-tests is a module but is not in the lint-and-unit matrix, so nothing else checks its
+      # style or static analysis: the 1200+ lines of Testcontainers harness code went ungated. These
+      # run here because the module is already built, so the marginal cost is a few seconds.
+      - name: Verify spotless format (e2e-tests)
+        run: ./mvnw -pl e2e-tests spotless:check
+
+      - name: Run checkstyle analysis (e2e-tests)
+        run: ./mvnw -pl e2e-tests checkstyle:check
+        continue-on-error: false
+
+      - name: Run PMD complexity analysis (e2e-tests)
+        run: ./mvnw -pl e2e-tests pmd:check
+
       - name: Run e2e tests
         run: |
           set +H
