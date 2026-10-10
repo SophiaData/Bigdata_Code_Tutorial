@@ -10,13 +10,21 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     groups:
       # Keep all Flink minor versions together so a single PR tests compatibility.
       apache-flink:
         patterns:
           - "org.apache.flink:*"
           - "org.apache.flink:flink-shaded-*"
+        exclude-patterns:
+          # CDC connectors use Flink-versioned qualifiers (3.6.0-1.20 vs
+          # 3.6.0-2.2) that Dependabot misreads as version progression.
+          # They belong to the flink-cdc group below; excluding them from the
+          # apache-flink group prevents dual-group PRs that break the default
+          # build line.
+          - "org.apache.flink:flink-cdc-*"
+          - "org.apache.flink:flink-sql-connector-mysql-cdc"
       # CDC connector upgrades are coordinated with Flink group above.
       flink-cdc:
         patterns:
@@ -84,6 +92,29 @@ updates:
       - dependency-name: "org.jacoco:*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.codehaus.mojo:*"
+        update-types: ["version-update:semver-major"]
+      # CDC connectors use Flink-versioned qualifiers (3.6.0-1.20,
+      # 3.6.0-2.2). Dependabot reads "2.2 > 1.20" and proposes a
+      # "version bump" that changes which Flink line the connector
+      # targets, which breaks the default build. All CDC version
+      # changes must be manual.
+      - dependency-name: "org.apache.flink:flink-cdc-*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "org.apache.flink:flink-sql-connector-mysql-cdc"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      # ErrorProne: class-file version must match the build JDK.
+      # 2.41.0 is the last for JDK 17 (class file 61); 2.44.0+
+      # requires JDK 21 (class file 65). Any bump needs a JDK check.
+      - dependency-name: "com.google.errorprone:*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      # Paimon: major bumps (1.x → 2.x) change the storage format
+      # and the sink API. Patch bumps within the same major are safe.
+      - dependency-name: "org.apache.paimon:*"
+        update-types: ["version-update:semver-major"]
+      # HikariCP: the connection-pool API changes across major
+      # versions. 5.x is the last for the current Flink connector
+      # family; 6.x changes the metrics SPI.
+      - dependency-name: "com.zaxxer:HikariCP"
         update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
