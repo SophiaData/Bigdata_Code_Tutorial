@@ -682,9 +682,17 @@
                     </rulesets>
                     <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
-                    <generateReport>false</generateReport>
-                    <linkXref>false</linkXref>
-                    <sourceEncoding>UTF-8</sourceEncoding>
+                    <!--
+                      generateReport, linkXref and sourceEncoding used to be set here. None of them is
+                      a parameter of maven-pmd-plugin 3.21.0, so every build printed
+
+                        [WARNING] Parameter 'sourceEncoding' is unknown for plugin
+                                  'maven-pmd-plugin:3.21.0:check (pmd-check)'
+
+                      and the values were discarded - the encoding and the report settings never took
+                      effect. Removed so the remaining configuration is exactly what PMD honours, and
+                      so a genuinely unknown parameter stands out instead of hiding among these.
+                    -->
                 </configuration>
                 <executions>
                     <execution>
@@ -954,8 +962,13 @@
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Low</threshold>
+                    <!-- SpotBugs stays report-only: it flags too many false positives to gate on. -->
                     <failOnError>false</failOnError>
-                    <failOnViolation>false</failOnViolation>
+                    <!--
+                      failOnViolation used to be set here as well. It is not a parameter of
+                      spotbugs-maven-plugin 4.8.6.6 (the goal takes failOnError), so Maven warned
+                      on every build and ignored it. Removed; failOnError above is the real switch.
+                    -->
                     <includeFilterFile>tool/spotbugs-include.xml</includeFilterFile>
                     <excludeFilterFile>tool/spotbugs-exclude.xml</excludeFilterFile>
                     <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>

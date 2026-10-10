@@ -306,14 +306,33 @@ class SchemaEvolverBehaviourTest {
                 "column " + columnName + " to have length " + expectedLength);
     }
 
+    /**
+     * Polls until the condition holds, or fails after ten seconds.
+     *
+     * <p>A {@link SQLException} while polling counts as "not ready yet" rather than an error: the
+     * evolver applies ALTERs on a worker pool, so between the statement being issued and the schema
+     * becoming visible a query can legitimately fail (for example "table not found" while H2 is
+     * still settling). Letting that escape made the suite flaky - it failed in CI on
+     * evolverSurvivesJavaSerialization while passing locally.
+     */
     private void awaitTrue(final CheckedCondition condition, final String description)
             throws Exception {
         long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        Exception lastError = null;
         while (System.nanoTime() < deadline) {
-            if (condition.evaluate()) {
-                return;
+            try {
+                if (condition.evaluate()) {
+                    return;
+                }
+                lastError = null;
+            } catch (SQLException transientFailure) {
+                lastError = transientFailure;
             }
             Thread.sleep(25);
+        }
+        if (lastError != null) {
+            throw new AssertionError(
+                    "Timed out waiting for " + description + ", last error: " + lastError);
         }
         throw new AssertionError("Timed out waiting for " + description);
     }
@@ -353,12 +372,11 @@ class SchemaEvolverBehaviourTest {
                         Collections.singletonList(
                                 new AddColumnEvent.ColumnWithPosition(
                                         Column.physicalColumn("afterSer", DataTypes.INT())))));
-        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
-        while (System.nanoTime() < deadline && !hasColumn("afterSer")) {
-            Thread.sleep(25);
-        }
-        assertEquals(
-                true, hasColumn("afterSer"), "a deserialized evolver should still apply ALTERs");
+        // Reuse the polling helper rather than looping here: a bare hasColumn() outside its guard
+        // propagates a transient SQL error instead of retrying, which made this test fail
+        // intermittently in CI when the table was briefly not visible yet.
+        awaitColumn("afterSer");
+        assertTrue(hasColumn("afterSer"), "a deserialized evolver should still apply ALTERs");
         restored.shutdown();
     }
 }

@@ -128,6 +128,12 @@ public class CDBBatchSink extends RichSinkFunction<Event> {
                     conn.close();
                 }
             } catch (SQLException ignored) {
+                // Closing the broken connection is best-effort: the connection is already unusable
+                // and the next line replaces it. Logged at debug so a repeatedly failing close is
+                // still visible when diagnosing a flapping sink.
+                LOG.debug(
+                        "Ignoring error while closing the stale sink connection: {}",
+                        ignored.getMessage());
             }
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
